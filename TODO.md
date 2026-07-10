@@ -52,7 +52,7 @@ The central hypothesis is:
 
 ### Guarded `retain_mut` backshift (`perf/retain-backshift`)
 
-- Status: benchmark complete; correctness tests and implementation not started
+- Status: accepted
 - Baseline commit: `fdb889d`
 - Hypothesis: after the first rejection, moving each retained element once into the
   earliest hole will outperform `swap`, which moves both retained and rejected
@@ -80,6 +80,29 @@ The central hypothesis is:
   unexplained hot-function or whole-binary growth. Reject or record any tradeoff.
 - Scope: one guarded algorithm, two high-signal benchmark shapes, and focused
   correctness tests. Do not combine `dedup_by` or `truncate` changes.
+- Result: accepted. Against exact parent `fdb889d`, the 64-byte primary workload
+  improved 39.77% at the paired median, with a bootstrap interval of
+  [-41.07%, -38.63%]. The `u64` secondary improved 29.79%, with an interval of
+  [-30.00%, -28.10%]. Both effects are far outside the calibrated 1% envelope.
+- Control caveat: unchanged `Vec<u64>` was neutral at -0.22%, with an interval
+  spanning zero. Unchanged `Vec<[u64; 8]>` was 2.87% slower, with an interval of
+  [+1.33%, +3.68%]. Its retained `Vec::retain_mut` machine-code sequence and
+  0x287-byte symbol size are unchanged apart from relocation targets, but its
+  address/alignment moved with the candidate binary. Record this as unresolved
+  link-layout sensitivity; it is too small and opposite in direction to explain
+  the 39.77% ThinVec improvement, but it prevents treating the control as a clean
+  same-binary null result.
+- Codegen/size result: the candidate emits separate 173-byte (`u64`) and 213-byte
+  (64-byte element) ThinVec retain monomorphizations. The hot loops copy each
+  post-hole survivor once; the 64-byte form uses four 16-byte vector loads/stores
+  rather than swapping a survivor with a rejected value. Whole-ELF text grew
+  1,260 bytes, data shrank 40 bytes, and the file grew 6,232 bytes. Retain this
+  explicit code-size cost because the measured CPU wins are large.
+- Correctness result: native, no-default-feature, and Gecko test lanes pass;
+  formatting passes; supported Clippy lanes add no warnings; focused native and
+  Gecko strict-provenance Miri passes. Predicate and rejected-destructor unwinds
+  repair the hole, preserve the untouched suffix, and drop every owning element
+  exactly once. Empty, all-kept, all-rejected, and ZST cases are covered.
 
 ### Splice reserve accounting (`perf/splice-reserve`)
 
@@ -623,8 +646,8 @@ before combining it with another optimization.
   capacity required for the preserved prefix, moved tail, and replacement.
 - [x] Add a focused splice capacity regression test that demonstrates the current
   prefix double-count without expanding the benchmark suite.
-- [ ] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
-- [ ] Benchmark retain only if implementing it: mixed rejection and large `T` are
+- [x] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
+- [x] Benchmark retain only if implementing it: mixed rejection and large `T` are
   the high-signal cases.
 - [ ] Replace swap-based `dedup_by` with a guarded first-hole/backshift algorithm;
   avoid moving duplicate values into the retained prefix merely to drop them later.
