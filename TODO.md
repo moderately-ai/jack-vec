@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Direct array construction (`perf/from-array-bulk`)
 
-- Status: pre-registered; implementation not started
+- Status: baseline harness complete; implementation not started
+- Baseline commit: `1875f0a`
 - Hypothesis: `From<[T; N]>` knows the exact initialized element count at compile
   time, but currently enters array iteration and generic collection. Allocating an
   exact ThinVec once and relocating the array in one ownership transfer should
