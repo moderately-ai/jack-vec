@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Direct `ThinVec<T>` to `Vec<T>` relocation (`perf/thin-into-vec-bulk`)
 
-- Status: pre-registered; implementation not started
+- Status: baseline harness complete; implementation not started
+- Baseline commit: `414df4a`
 - Hypothesis: the current `From<ThinVec<T>> for Vec<T>` delegates to generic
   `IntoIterator::collect`, which optimized x86-64 and AArch64 code still implements
   as a per-element move loop with capacity checks, reserve fallback, and unwind
