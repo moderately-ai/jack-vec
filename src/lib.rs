@@ -1464,8 +1464,9 @@ impl<T> ThinVec<T> {
     /// Removes consecutive elements in the vector according to a predicate.
     ///
     /// The `same_bucket` function is passed references to two elements from the vector, and
-    /// returns `true` if the elements compare equal, or `false` if they do not. Only the first
-    /// of adjacent equal items is kept.
+    /// returns `true` if the elements compare equal, or `false` if they do not. The first
+    /// argument is the later element and the second is the earlier retained element. Only the
+    /// first of adjacent equal items is kept.
     ///
     /// If the vector is sorted, this removes all duplicates.
     ///
@@ -1483,37 +1484,81 @@ impl<T> ThinVec<T> {
     /// assert_eq!(vec, ["foo", "bar", "baz", "bar"]);
     /// # }
     /// ```
-    #[allow(clippy::swap_ptr_to_ref)]
     pub fn dedup_by<F>(&mut self, mut same_bucket: F)
     where
         F: FnMut(&mut T, &mut T) -> bool,
     {
-        // See the comments in `Vec::dedup` for a detailed explanation of this code.
-        unsafe {
-            let ln = self.len();
-            if ln <= 1 {
-                return;
+        let len = self.len();
+        if len <= 1 {
+            return;
+        }
+
+        // Avoid writes entirely when every element is unique, and establish a
+        // gap before using non-overlapping copies for later survivors.
+        let start = self.as_mut_ptr();
+        let mut first_duplicate = 1;
+        while first_duplicate != len {
+            let is_duplicate = unsafe {
+                same_bucket(
+                    &mut *start.add(first_duplicate),
+                    &mut *start.add(first_duplicate - 1),
+                )
+            };
+            if is_duplicate {
+                break;
             }
+            first_duplicate += 1;
+        }
+        if first_duplicate == len {
+            return;
+        }
 
-            // Avoid bounds checks by using raw pointers.
-            let p = self.as_mut_ptr();
-            let mut r: usize = 1;
-            let mut w: usize = 1;
+        struct FillGapOnDrop<'a, T> {
+            read: usize,
+            write: usize,
+            vec: &'a mut ThinVec<T>,
+        }
 
-            while r < ln {
-                let p_r = p.add(r);
-                let p_wm1 = p.add(w - 1);
-                if !same_bucket(&mut *p_r, &mut *p_wm1) {
-                    if r != w {
-                        let p_w = p_wm1.add(1);
-                        mem::swap(&mut *p_r, &mut *p_w);
-                    }
-                    w += 1;
+        impl<T> Drop for FillGapOnDrop<'_, T> {
+            fn drop(&mut self) {
+                unsafe {
+                    let data = self.vec.data_raw();
+                    let len = self.vec.len();
+                    let items_left = len - self.read;
+                    ptr::copy(data.add(self.read), data.add(self.write), items_left);
+                    self.vec
+                        .set_len_non_singleton(len - (self.read - self.write));
                 }
-                r += 1;
+            }
+        }
+
+        // Create the first gap before dropping the duplicate. If destruction
+        // panics, the guard treats that element as removed and repairs the tail.
+        let mut gap = FillGapOnDrop {
+            read: first_duplicate + 1,
+            write: first_duplicate,
+            vec: self,
+        };
+        unsafe {
+            ptr::drop_in_place(start.add(first_duplicate));
+
+            while gap.read < len {
+                let current = start.add(gap.read);
+                let previous = start.add(gap.write - 1);
+                if same_bucket(&mut *current, &mut *previous) {
+                    // Advance first so a panicking destructor is excluded from
+                    // the suffix repaired by the guard.
+                    gap.read += 1;
+                    ptr::drop_in_place(current);
+                } else {
+                    ptr::copy_nonoverlapping(current, start.add(gap.write), 1);
+                    gap.write += 1;
+                    gap.read += 1;
+                }
             }
 
-            self.truncate(w);
+            gap.vec.set_len_non_singleton(gap.write);
+            mem::forget(gap);
         }
     }
 
@@ -3982,6 +4027,122 @@ mod std_tests {
         });
 
         assert_eq!(vec, [("foo", 3), ("bar", 12)]);
+    }
+
+    #[test]
+    fn test_dedup_by_edge_cases() {
+        let mut empty = ThinVec::<()>::new();
+        empty.dedup_by(|_, _| unreachable!());
+
+        let mut singleton = thin_vec![1];
+        singleton.dedup_by(|_, _| unreachable!());
+        assert_eq!(singleton, [1]);
+
+        let mut unique = thin_vec![1, 2, 3, 4];
+        unique.dedup_by(|current, previous| current == previous);
+        assert_eq!(unique, [1, 2, 3, 4]);
+
+        let mut duplicate = thin_vec![1, 1, 1, 1];
+        duplicate.dedup_by(|current, previous| current == previous);
+        assert_eq!(duplicate, [1]);
+
+        let mut zst = thin_vec![(); 8];
+        let mut comparisons = 0;
+        zst.dedup_by(|_, _| {
+            comparisons += 1;
+            true
+        });
+        assert_eq!(zst.len(), 1);
+        assert_eq!(comparisons, 7);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_dedup_by_comparator_panic_repairs_gap() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct Counted {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                self.drops[self.id].set(self.drops[self.id].get() + 1);
+            }
+        }
+
+        let drops = Rc::new((0..6).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = (0..6)
+            .map(|id| Counted {
+                id,
+                drops: drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.dedup_by(|current, previous| {
+                if current.id == 4 {
+                    panic!("comparator panic");
+                }
+                current.id / 2 == previous.id / 2
+            });
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(
+            values.iter().map(|value| value.id).collect::<Vec<_>>(),
+            [0, 2, 4, 5]
+        );
+        assert_eq!(drops[1].get(), 1);
+        assert_eq!(drops[3].get(), 1);
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_dedup_by_duplicate_drop_panic_repairs_gap() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct PanicDrop {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for PanicDrop {
+            fn drop(&mut self) {
+                let old_count = self.drops[self.id].replace(self.drops[self.id].get() + 1);
+                if self.id == 1 && old_count == 0 {
+                    panic!("drop panic");
+                }
+            }
+        }
+
+        let drops = Rc::new((0..5).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = (0..5)
+            .map(|id| PanicDrop {
+                id,
+                drops: drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.dedup_by(|current, previous| current.id / 2 == previous.id / 2);
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(
+            values.iter().map(|value| value.id).collect::<Vec<_>>(),
+            [0, 2, 3, 4]
+        );
+        assert_eq!(drops[1].get(), 1);
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
     }
 
     #[test]
