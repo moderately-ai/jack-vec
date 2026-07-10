@@ -4054,6 +4054,17 @@ mod std_tests {
         });
         assert_eq!(zst.len(), 1);
         assert_eq!(comparisons, 7);
+
+        // Exercise the post-gap survivor copy for a ZST, whose source and
+        // destination have the same numerical address.
+        let mut zst_mixed = thin_vec![(); 8];
+        let mut comparisons = 0;
+        zst_mixed.dedup_by(|_, _| {
+            comparisons += 1;
+            comparisons % 2 == 1
+        });
+        assert_eq!(zst_mixed.len(), 4);
+        assert_eq!(comparisons, 7);
     }
 
     #[cfg(feature = "std")]
