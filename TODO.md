@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/box-into-thin-delegate`
+- Working branch: `perf/from-array-bulk`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,31 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Direct array construction (`perf/from-array-bulk`)
+
+- Status: pre-registered; implementation not started
+- Hypothesis: `From<[T; N]>` knows the exact initialized element count at compile
+  time, but currently enters array iteration and generic collection. Allocating an
+  exact ThinVec once and relocating the array in one ownership transfer should
+  remove iterator, reserve, and per-element publication machinery while preserving
+  compile-time arity information.
+- Primary workload: construct a `ThinVec<u64>` from a four-element array. Array
+  setup and returned ThinVec destruction are outside timing; ThinVec allocation,
+  relocation, and length publication remain inside.
+- Primary threshold: at least 10% faster at the paired median under cleared-preload
+  System malloc, interval entirely below zero, and outside the 1% envelope. Seven
+  rounds, seed `20260727`, CPU 0, sample size 100, 3-second warm-up, 5-second
+  measurement, and 100,000 resamples.
+- Memory/correctness gate: preserve one 48-byte requested allocation, no
+  reallocations, exact capacity, empty and singleton arrays, owning exact-once
+  drops, ZSTs, and native over-alignment. Run all feature/MSRV/Clippy lanes and
+  focused native/Gecko strict-provenance Miri.
+- Codegen/size gate: verify one allocation and direct fixed-size relocation without
+  iterator fallback; measure focused and whole size. Reject a timing result caused
+  by omitted destruction or materially larger generic monomorphization.
+- Scope: change only `From<[T; N]>`, focused tests, and one temporary four-element
+  benchmark. Do not add `one`/`two`/`from_fn` APIs or combine builder/Gecko work.
 
 ### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
 
@@ -1211,9 +1236,10 @@ before combining it with another optimization.
   the high-signal cases.
 - [x] Replace swap-based `dedup_by` with a guarded first-hole/backshift algorithm;
   avoid moving duplicate values into the retained prefix merely to drop them later.
-- [ ] Set final length once and bulk-drop the tail in `truncate`; `clear` already
-  drops the full slice behind a length-reset guard.
-- [ ] Verify panic behavior with destructors that panic.
+- [x] Test setting final length once and bulk-dropping the tail in `truncate`; reject
+  it after a 0.65% result, code growth, and observable drop-order change.
+- [x] Verify bulk-truncate panic behavior with destructors that panic before
+  rejecting and reverting the candidate.
 
 ### Bulk construction and extension
 
