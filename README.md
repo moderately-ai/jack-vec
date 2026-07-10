@@ -5,8 +5,7 @@
 ThinVec is a Vec that stores its length and capacity inline, making it take up
 less space.
 
-Currently this crate mostly exists to facilitate Gecko (Firefox) FFI, but it
-works perfectly fine as a native Rust library as well.
+This fork focuses exclusively on a compact, high-performance native Rust vector.
 
 See [`benches/README.md`](benches/README.md) for CPU and allocation benchmarks
 that compare `ThinVec` with `Vec`.

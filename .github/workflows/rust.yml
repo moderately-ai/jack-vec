@@ -24,9 +24,6 @@ jobs:
       # and if std can do it in non-magical data structure code, we can do it too.
       - name: Test (default) with Miri + Tree Borrows
         run: MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-tree-borrows" cargo miri test
-      # AutoThinVec needs tree borrows.
-      - name: Test (gecko-ffi) with Miri
-        run: MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-tree-borrows" cargo miri test --features=gecko-ffi
 
   build:
     runs-on: ubuntu-latest
@@ -42,8 +39,6 @@ jobs:
       run: cargo test --verbose
     - name: Run tests (serde)
       run: cargo test --features=serde --verbose
-    - name: Run tests (gecko-ffi)
-      run: cargo test --tests --features=gecko-ffi --verbose
     - name: Run tests (no_std)
       run: cargo test --tests --no-default-features --verbose
     - name: Run tests (unstable)

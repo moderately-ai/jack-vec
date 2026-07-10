@@ -30,124 +30,6 @@
 //!
 //! This feature makes `ThinVec::new()` a `const fn`.
 //!
-//!
-//! # Gecko FFI
-//!
-//! If you enable the gecko-ffi feature, `ThinVec` will verbatim bridge with the nsTArray type in
-//! Gecko (Firefox). That is, `ThinVec` and nsTArray have identical layouts *but not ABIs*,
-//! so nsTArrays/ThinVecs an be natively manipulated by C++ and Rust, and ownership can be
-//! transferred across the FFI boundary (**IF YOU ARE CAREFUL, SEE BELOW!!**).
-//!
-//! While this feature is handy, it is also inherently dangerous to use because Rust and C++ do not
-//! know about each other. Specifically, this can be an issue with non-POD types (types which
-//! have destructors, move constructors, or are `!Copy`).
-//!
-//! ## Do Not Pass By Value
-//!
-//! The biggest thing to keep in mind is that **FFI functions cannot pass ThinVec/nsTArray
-//! by-value**. That is, these are busted APIs:
-//!
-//! ```rust,ignore
-//! // BAD WRONG
-//! extern fn process_data(data: ThinVec<u32>) { ... }
-//! // BAD WRONG
-//! extern fn get_data() -> ThinVec<u32> { ... }
-//! ```
-//!
-//! You must instead pass by-reference:
-//!
-//! ```rust
-//! # use thin_vec::*;
-//! # use std::mem;
-//!
-//! // Read-only access, ok!
-//! extern fn process_data(data: &ThinVec<u32>) {
-//!     for val in data {
-//!         println!("{}", val);
-//!     }
-//! }
-//!
-//! // Replace with empty instance to take ownership, ok!
-//! extern fn consume_data(data: &mut ThinVec<u32>) {
-//!     let owned = mem::replace(data, ThinVec::new());
-//!     mem::drop(owned);
-//! }
-//!
-//! // Mutate input, ok!
-//! extern fn add_data(dataset: &mut ThinVec<u32>) {
-//!     dataset.push(37);
-//!     dataset.push(12);
-//! }
-//!
-//! // Return via out-param, usually ok!
-//! //
-//! // WARNING: output must be initialized! (Empty nsTArrays are free, so just do it!)
-//! extern fn get_data(output: &mut ThinVec<u32>) {
-//!     *output = thin_vec![1, 2, 3, 4, 5];
-//! }
-//! ```
-//!
-//! Ignorable Explanation For Those Who Really Want To Know Why:
-//!
-//! > The fundamental issue is that Rust and C++ can't currently communicate about destructors, and
-//! > the semantics of C++ require destructors of function arguments to be run when the function
-//! > returns. Whether the callee or caller is responsible for this is also platform-specific, so
-//! > trying to hack around it manually would be messy.
-//! >
-//! > Also a type having a destructor changes its C++ ABI, because that type must actually exist
-//! > in memory (unlike a trivial struct, which is often passed in registers). We don't currently
-//! > have a way to communicate to Rust that this is happening, so even if we worked out the
-//! > destructor issue with say, MaybeUninit, it would still be a non-starter without some RFCs
-//! > to add explicit rustc support.
-//! >
-//! > Realistically, the best answer here is to have a "heavier" bindgen that can secretly
-//! > generate FFI glue so we can pass things "by value" and have it generate by-reference code
-//! > behind our back (like the cxx crate does). This would muddy up debugging/searchfox though.
-//!
-//! ## Types Should Be Trivially Relocatable
-//!
-//! Types in Rust are always trivially relocatable (unless suitably borrowed/[pinned][]/hidden).
-//! This means all Rust types are legal to relocate with a bitwise copy, you cannot provide
-//! copy or move constructors to execute when this happens, and the old location won't have its
-//! destructor run. This will cause problems for types which have a significant location
-//! (types that intrusively point into themselves or have their location registered with a service).
-//!
-//! While relocations are generally predictable if you're very careful, **you should avoid using
-//! types with significant locations with Rust FFI**.
-//!
-//! Specifically, `ThinVec` will trivially relocate its contents whenever it needs to reallocate its
-//! buffer to change its capacity. This is the default reallocation strategy for nsTArray, and is
-//! suitable for the vast majority of types. Just be aware of this limitation!
-//!
-//! ## Auto Arrays Are Dangerous
-//!
-//! `ThinVec` has *some* support for handling auto arrays which store their buffer on the stack,
-//! but this isn't well tested.
-//!
-//! Regardless of how much support we provide, Rust won't be aware of the buffer's limited lifetime,
-//! so standard auto array safety caveats apply about returning/storing them! `ThinVec` won't ever
-//! produce an auto array on its own, so this is only an issue for transferring an nsTArray into
-//! Rust.
-//!
-//! ## Other Issues
-//!
-//! Standard FFI caveats also apply:
-//!
-//!  * Rust is more strict about POD types being initialized (use MaybeUninit if you must)
-//!  * `ThinVec<T>` has no idea if the C++ version of `T` has move/copy/assign/delete overloads
-//!  * `nsTArray<T>` has no idea if the Rust version of `T` has a Drop/Clone impl
-//!  * C++ can do all sorts of unsound things that Rust can't catch
-//!  * C++ and Rust don't agree on how zero-sized/empty types should be handled
-//!
-//! The gecko-ffi feature will not work if you aren't linking with code that has nsTArray
-//! defined. Specifically, we must share the symbol for nsTArray's empty singleton. You will get
-//! linking errors if that isn't defined.
-//!
-//! The gecko-ffi feature also limits `ThinVec` to the legacy behaviors of nsTArray. Most notably,
-//! nsTArray has a maximum capacity of i32::MAX (~2.1 billion items). Probably not an issue.
-//! Probably.
-//!
-//! [pinned]: https://doc.rust-lang.org/std/pin/index.html
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "unstable", feature(trusted_len))]
@@ -170,117 +52,10 @@ use core::ptr::NonNull;
 use core::slice::Iter;
 use core::{fmt, mem, ops, ptr, slice};
 
-use impl_details::*;
-
 #[cfg(feature = "malloc_size_of")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 
-// modules: a simple way to cfg a whole bunch of impl details at once
-
-#[cfg(not(feature = "gecko-ffi"))]
-mod impl_details {
-    pub type SizeType = usize;
-    pub const MAX_CAP: usize = !0;
-
-    #[inline(always)]
-    pub fn assert_size(x: usize) -> SizeType {
-        x
-    }
-
-    #[inline(always)]
-    pub fn pack_capacity_and_auto(cap: SizeType, auto: bool) -> SizeType {
-        debug_assert!(!auto);
-        cap
-    }
-
-    #[inline(always)]
-    pub fn unpack_capacity(cap: SizeType) -> usize {
-        cap
-    }
-
-    #[inline(always)]
-    pub fn is_auto(_: SizeType) -> bool {
-        false
-    }
-}
-
-#[cfg(feature = "gecko-ffi")]
-mod impl_details {
-    // Support for briding a gecko nsTArray verbatim into a ThinVec.
-    //
-    // `ThinVec` can't see copy/move/delete implementations
-    // from C++
-    //
-    // The actual layout of an nsTArray is:
-    //
-    // ```cpp
-    // struct {
-    //   uint32_t mLength;
-    //   uint32_t mCapacity: 31;
-    //   uint32_t mIsAutoArray : 1;
-    // }
-    // ```
-    //
-    // Rust doesn't natively support bit-fields, so we manually mask
-    // and shift the bit. When the "auto" bit is set, the header and buffer
-    // are actually on the stack, meaning the `ThinVec` pointer-to-header
-    // is essentially an "owned borrow", and therefore dangerous to handle.
-    // There are no safety guards for this situation.
-    //
-    // On little-endian platforms, the auto bit will be the high-bit of
-    // our capacity u32. On big-endian platforms, it will be the low bit.
-    // Hence we need some platform-specific CFGs for the necessary masking/shifting.
-    //
-    // Handling the auto bit mostly just means not freeing/reallocating the buffer.
-
-    pub type SizeType = u32;
-
-    pub const MAX_CAP: usize = i32::max_value() as usize;
-
-    // See kAutoTArrayHeaderOffset
-    pub const AUTO_ARRAY_HEADER_OFFSET: usize = 8;
-
-    // Little endian: the auto bit is the high bit, and the capacity is
-    // verbatim. So we just need to mask off the high bit. Note that
-    // this masking is unnecessary when packing, because assert_size
-    // guards against the high bit being set.
-    #[cfg(target_endian = "little")]
-    pub fn unpack_capacity(cap: SizeType) -> usize {
-        (cap as usize) & !(1 << 31)
-    }
-    #[cfg(target_endian = "little")]
-    pub fn is_auto(cap: SizeType) -> bool {
-        (cap & (1 << 31)) != 0
-    }
-    #[cfg(target_endian = "little")]
-    pub fn pack_capacity_and_auto(cap: SizeType, auto: bool) -> SizeType {
-        cap | ((auto as SizeType) << 31)
-    }
-
-    // Big endian: the auto bit is the low bit, and the capacity is
-    // shifted up one bit. Masking out the auto bit is unnecessary,
-    // as rust shifts always shift in 0's for unsigned integers.
-    #[cfg(target_endian = "big")]
-    pub fn unpack_capacity(cap: SizeType) -> usize {
-        (cap >> 1) as usize
-    }
-    #[cfg(target_endian = "big")]
-    pub fn is_auto(cap: SizeType) -> bool {
-        (cap & 1) != 0
-    }
-    #[cfg(target_endian = "big")]
-    pub fn pack_capacity_and_auto(cap: SizeType, auto: bool) -> SizeType {
-        (cap << 1) | (auto as SizeType)
-    }
-
-    #[inline]
-    pub fn assert_size(x: usize) -> SizeType {
-        if x > MAX_CAP as usize {
-            panic!("nsTArray size may not exceed the capacity of a 32-bit sized int");
-        }
-        x as SizeType
-    }
-}
+const MAX_CAP: usize = usize::MAX;
 
 #[cold]
 fn capacity_overflow() -> ! {
@@ -309,56 +84,30 @@ impl<T, E> UnwrapCapOverflow<T> for Result<T, E> {
     }
 }
 
-// The header of a ThinVec.
-//
-// The _cap can be a bitfield, so use accessors to avoid trouble.
-//
-// In "real" gecko-ffi mode, the empty singleton will be aligned
-// to 8 by gecko. But in tests we have to provide the singleton
-// ourselves, and Rust makes it hard to "just" align a static.
-// To avoid messing around with a wrapper type around the
-// singleton *just* for tests, we just force all headers to be
-// aligned to 8 in this weird "zombie" gecko mode.
-//
-// This shouldn't affect runtime layout (padding), but it will
-// result in us asking the allocator to needlessly overalign
-// non-empty ThinVecs containing align < 8 types in
-// zombie-mode, but not in "real" geck-ffi mode. Minor.
-#[cfg_attr(all(feature = "gecko-ffi", any(test, miri)), repr(align(8)))]
+// The allocation header of a ThinVec.
 #[repr(C)]
 struct Header {
-    _len: SizeType,
-    _cap: SizeType,
+    _len: usize,
+    _cap: usize,
 }
 
 impl Header {
     #[inline]
-    #[allow(clippy::unnecessary_cast)]
     fn len(&self) -> usize {
-        self._len as usize
+        self._len
     }
 
     #[inline]
     fn set_len(&mut self, len: usize) {
-        self._len = assert_size(len);
+        self._len = len;
     }
 
     fn cap(&self) -> usize {
-        unpack_capacity(self._cap)
+        self._cap
     }
 
-    fn set_cap_and_auto(&mut self, cap: usize, is_auto: bool) {
-        // debug check that our packing is working
-        debug_assert_eq!(
-            unpack_capacity(pack_capacity_and_auto(cap as SizeType, is_auto)),
-            cap
-        );
-        self._cap = pack_capacity_and_auto(assert_size(cap), is_auto);
-    }
-
-    #[inline]
-    fn is_auto(&self) -> bool {
-        is_auto(self._cap)
+    fn set_cap(&mut self, cap: usize) {
+        self._cap = cap;
     }
 }
 
@@ -367,14 +116,7 @@ impl Header {
 /// optimize everything to not do that (basically, make ptr == len and branch
 /// on size == 0 in every method), but it's a bunch of work for something that
 /// doesn't matter much.
-#[cfg(any(not(feature = "gecko-ffi"), test, miri))]
 static EMPTY_HEADER: Header = Header { _len: 0, _cap: 0 };
-
-#[cfg(all(feature = "gecko-ffi", not(test), not(miri)))]
-extern "C" {
-    #[link_name = "sEmptyTArrayHeader"]
-    static EMPTY_HEADER: Header;
-}
 
 // Utils for computing layouts of allocations
 
@@ -414,17 +156,7 @@ fn padding<T>() -> usize {
     let alloc_align = alloc_align::<T>();
     let header_size = mem::size_of::<Header>();
 
-    if alloc_align > header_size {
-        if cfg!(feature = "gecko-ffi") {
-            panic!(
-                "nsTArray does not handle alignment above > {} correctly",
-                header_size
-            );
-        }
-        alloc_align - header_size
-    } else {
-        0
-    }
+    alloc_align.saturating_sub(header_size)
 }
 
 /// Gets the align necessary to allocate a `ThinVec<T>`
@@ -448,7 +180,7 @@ fn layout<T>(cap: usize) -> Layout {
 /// # Panics
 ///
 /// Panics if the required size overflows `isize::MAX` when rounded up to the required alignment.
-fn header_with_capacity<T>(cap: usize, is_auto: bool) -> NonNull<Header> {
+fn header_with_capacity<T>(cap: usize) -> NonNull<Header> {
     debug_assert!(cap > 0);
     unsafe {
         let layout = layout::<T>(cap);
@@ -464,9 +196,9 @@ fn header_with_capacity<T>(cap: usize, is_auto: bool) -> NonNull<Header> {
                 _len: 0,
                 _cap: if mem::size_of::<T>() == 0 {
                     // "Infinite" capacity for zero-sized types:
-                    MAX_CAP as SizeType
+                    MAX_CAP
                 } else {
-                    pack_capacity_and_auto(assert_size(cap), is_auto)
+                    cap
                 },
             },
         );
@@ -487,9 +219,7 @@ unsafe impl<T: Send> Send for ThinVec<T> {}
 
 /// Creates a `ThinVec` containing the arguments.
 ///
-// A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-#[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-#[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+/// ```rust
 /// #[macro_use] extern crate thin_vec;
 ///
 /// fn main() {
@@ -595,7 +325,6 @@ impl<T> ThinVec<T> {
     /// // space is needed to store the actual elements.
     /// let vec_units = ThinVec::<()>::with_capacity(10);
     ///
-    /// // Only true **without** the gecko-ffi feature!
     /// // assert_eq!(vec_units.capacity(), usize::MAX);
     /// ```
     pub fn with_capacity(cap: usize) -> ThinVec<T> {
@@ -617,7 +346,7 @@ impl<T> ThinVec<T> {
             }
         } else {
             ThinVec {
-                ptr: header_with_capacity::<T>(cap, false),
+                ptr: header_with_capacity::<T>(cap),
                 boo: PhantomData,
             }
         }
@@ -647,20 +376,10 @@ impl<T> ThinVec<T> {
         // to the data, we include this guard which should only involve
         // compile-time constants. Ideally this should result in the branch
         // only be included for types with excessive alignment.
-        let empty_header_is_aligned = if cfg!(feature = "gecko-ffi") {
-            // in gecko-ffi mode `padding` will ensure this under
-            // the assumption that the header has size 8 and the
-            // static empty singleton is aligned to 8.
-            true
-        } else {
-            // In non-gecko-ffi mode, the empty singleton is just
-            // naturally aligned to the Header. If the Header is at
-            // least as aligned as T *and* the padding would have
-            // been 0, then one-past-the-end of the empty singleton
-            // *is* a valid data pointer and we can remove the
-            // `dangling` special case.
-            mem::align_of::<Header>() >= mem::align_of::<T>() && padding == 0
-        };
+        // If the singleton header is naturally aligned for T and requires no
+        // padding, one-past-the-header is already a valid empty data pointer.
+        let empty_header_is_aligned =
+            mem::align_of::<Header>() >= mem::align_of::<T>() && padding == 0;
 
         unsafe {
             if !empty_header_is_aligned && self.header().cap() == 0 {
@@ -1140,7 +859,6 @@ impl<T> ThinVec<T> {
     /// Panics if the new capacity overflows `usize`.
     ///
     /// Re-allocates only if `self.capacity() < self.len() + additional`.
-    #[cfg(not(feature = "gecko-ffi"))]
     pub fn reserve(&mut self, additional: usize) {
         let len = self.len();
         let old_cap = self.capacity();
@@ -1162,64 +880,6 @@ impl<T> ThinVec<T> {
         let new_cap = max(min_cap, double_cap);
         unsafe {
             self.reallocate(new_cap);
-        }
-    }
-
-    /// Reserve capacity for at least `additional` more elements to be inserted.
-    ///
-    /// This method mimics the growth algorithm used by the C++ implementation
-    /// of nsTArray.
-    #[cfg(feature = "gecko-ffi")]
-    pub fn reserve(&mut self, additional: usize) {
-        let elem_size = mem::size_of::<T>();
-
-        let len = self.len();
-        let old_cap = self.capacity();
-        let min_cap = len.checked_add(additional).unwrap_cap_overflow();
-        if min_cap <= old_cap {
-            return;
-        }
-
-        // The growth logic can't handle zero-sized types, so we have to exit
-        // early here.
-        if elem_size == 0 {
-            unsafe {
-                self.reallocate(min_cap);
-            }
-            return;
-        }
-
-        let min_cap_bytes = assert_size(min_cap)
-            .checked_mul(assert_size(elem_size))
-            .and_then(|x| x.checked_add(assert_size(mem::size_of::<Header>())))
-            .unwrap();
-
-        // Perform some checked arithmetic to ensure all of the numbers we
-        // compute will end up in range.
-        let will_fit = min_cap_bytes.checked_mul(2).is_some();
-        if !will_fit {
-            panic!("Exceeded maximum nsTArray size");
-        }
-
-        const SLOW_GROWTH_THRESHOLD: usize = 8 * 1024 * 1024;
-
-        let bytes = if min_cap_bytes as usize > SLOW_GROWTH_THRESHOLD {
-            // Grow by a minimum of 1.125x
-            let old_cap_bytes = old_cap * elem_size + mem::size_of::<Header>();
-            let min_growth = old_cap_bytes + (old_cap_bytes >> 3);
-            let growth = max(min_growth, min_cap_bytes as usize);
-
-            // Round up to the next megabyte.
-            const MB: usize = 1 << 20;
-            MB * ((growth + MB - 1) / MB)
-        } else {
-            // Try to allocate backing buffers in powers of two.
-            min_cap_bytes.next_power_of_two() as usize
-        };
-
-        let cap = (bytes - core::mem::size_of::<Header>()) / elem_size;
-        unsafe {
-            self.reallocate(cap);
         }
     }
 
@@ -1260,24 +920,6 @@ impl<T> ThinVec<T> {
         if new_cap >= old_cap {
             return;
         }
-        #[cfg(feature = "gecko-ffi")]
-        unsafe {
-            let stack_buf = self.auto_array_header_mut();
-            if !stack_buf.is_null() && (*stack_buf).cap() >= new_cap {
-                // Try to switch to our auto-buffer.
-                if stack_buf == self.ptr.as_ptr() {
-                    return;
-                }
-                stack_buf
-                    .add(1)
-                    .cast::<T>()
-                    .copy_from_nonoverlapping(self.data_raw(), new_cap);
-                dealloc(self.ptr() as *mut u8, layout::<T>(old_cap));
-                self.ptr = NonNull::new_unchecked(stack_buf);
-                self.ptr.as_mut().set_len(new_cap);
-                return;
-            }
-        }
         if new_cap == 0 {
             *self = ThinVec::new();
         } else {
@@ -1295,9 +937,7 @@ impl<T> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec![1, 2, 3, 4];
@@ -1320,9 +960,7 @@ impl<T> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec![1, 2, 3, 4, 5];
@@ -1425,9 +1063,7 @@ impl<T> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec![10, 20, 21, 30, 20];
@@ -1456,9 +1092,7 @@ impl<T> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec!["foo", "bar", "Bar", "baz", "bar"];
@@ -1872,7 +1506,7 @@ impl<T> ThinVec<T> {
     /// Unsafe because it can cause length to be greater than capacity.
     unsafe fn reallocate(&mut self, new_cap: usize) {
         debug_assert!(new_cap > 0);
-        if self.has_allocation() {
+        if !self.is_singleton() {
             let old_cap = self.capacity();
             let ptr = realloc(
                 self.ptr() as *mut u8,
@@ -1883,34 +1517,10 @@ impl<T> ThinVec<T> {
             if ptr.is_null() {
                 handle_alloc_error(layout::<T>(new_cap))
             }
-            (*ptr).set_cap_and_auto(new_cap, (*ptr).is_auto());
+            (*ptr).set_cap(new_cap);
             self.ptr = NonNull::new_unchecked(ptr);
         } else {
-            let mut new_header = header_with_capacity::<T>(new_cap, self.is_auto_array());
-
-            // If we get here and have a non-zero len, then we must be handling
-            // a gecko auto array, and we have items in a stack buffer. We shouldn't
-            // free it, but we should memcopy the contents out of it and mark it as empty.
-            //
-            // T is assumed to be trivially relocatable, as this is ~required
-            // for Rust compatibility anyway. Furthermore, we assume C++ won't try
-            // to unconditionally destroy the contents of the stack allocated buffer
-            // (i.e. it's obfuscated behind a union).
-            //
-            // In effect, we are partially reimplementing the auto array move constructor
-            // by leaving behind a valid empty instance.
-            let len = self.len();
-            if cfg!(feature = "gecko-ffi") && len > 0 {
-                new_header
-                    .as_ptr()
-                    .add(1)
-                    .cast::<T>()
-                    .copy_from_nonoverlapping(self.data_raw(), len);
-                self.set_len_non_singleton(0);
-                new_header.as_mut().set_len(len);
-            }
-
-            self.ptr = new_header;
+            self.ptr = header_with_capacity::<T>(new_cap);
         }
     }
 
@@ -1920,40 +1530,10 @@ impl<T> ThinVec<T> {
         unsafe { self.ptr.as_ptr() as *const Header == &EMPTY_HEADER }
     }
 
-    #[cfg(feature = "gecko-ffi")]
     #[inline]
-    fn auto_array_header_mut(&mut self) -> *mut Header {
-        if !self.is_auto_array() {
-            return ptr::null_mut();
-        }
-        unsafe { (self as *mut Self).byte_add(AUTO_ARRAY_HEADER_OFFSET) as *mut Header }
-    }
-
-    #[cfg(feature = "gecko-ffi")]
-    #[inline]
-    fn auto_array_header(&self) -> *const Header {
-        if !self.is_auto_array() {
-            return ptr::null_mut();
-        }
-        unsafe { (self as *const Self).byte_add(AUTO_ARRAY_HEADER_OFFSET) as *const Header }
-    }
-
-    #[inline]
-    fn is_auto_array(&self) -> bool {
-        unsafe { self.ptr.as_ref().is_auto() }
-    }
-
-    #[inline]
-    fn uses_stack_allocated_buffer(&self) -> bool {
-        #[cfg(feature = "gecko-ffi")]
-        return self.auto_array_header() == self.ptr.as_ptr();
-        #[cfg(not(feature = "gecko-ffi"))]
-        return false;
-    }
-
-    #[inline]
+    #[cfg(test)]
     fn has_allocation(&self) -> bool {
-        !self.is_singleton() && !self.uses_stack_allocated_buffer()
+        !self.is_singleton()
     }
 }
 
@@ -1966,9 +1546,7 @@ impl<T: Clone> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec!["hello"];
@@ -2055,9 +1633,7 @@ impl<T: PartialEq> ThinVec<T> {
     ///
     /// # Examples
     ///
-    // A hack to avoid linking problems with `cargo test --features=gecko-ffi`.
-    #[cfg_attr(not(feature = "gecko-ffi"), doc = "```")]
-    #[cfg_attr(feature = "gecko-ffi", doc = "```ignore")]
+    /// ```rust
     /// # #[macro_use] extern crate thin_vec;
     /// # fn main() {
     /// let mut vec = thin_vec![1, 2, 2, 3, 2];
@@ -2080,10 +1656,6 @@ impl<T> Drop for ThinVec<T> {
         fn drop_non_singleton<T>(this: &mut ThinVec<T>) {
             unsafe {
                 ptr::drop_in_place(&mut this[..]);
-
-                if this.uses_stack_allocated_buffer() {
-                    return;
-                }
 
                 dealloc(this.ptr() as *mut u8, layout::<T>(this.capacity()))
             }
@@ -2308,7 +1880,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for ThinVec<T> {
 #[cfg(feature = "malloc_size_of")]
 impl<T> MallocShallowSizeOf for ThinVec<T> {
     fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
-        if self.capacity() == 0 || self.uses_stack_allocated_buffer() {
+        if self.capacity() == 0 {
             // We're not a heap pointer.
             return 0;
         }
@@ -3099,100 +2671,6 @@ impl<I: Iterator> Drop for Splice<'_, I> {
     }
 }
 
-#[cfg(feature = "gecko-ffi")]
-#[repr(C, align(8))]
-struct AutoBuffer<T, const N: usize> {
-    header: Header,
-    buffer: mem::MaybeUninit<[T; N]>,
-}
-
-#[doc(hidden)]
-#[cfg(feature = "gecko-ffi")]
-#[repr(C)]
-pub struct AutoThinVec<T, const N: usize> {
-    inner: ThinVec<T>,
-    buffer: AutoBuffer<T, N>,
-    _pinned: core::marker::PhantomPinned,
-}
-
-#[cfg(feature = "gecko-ffi")]
-impl<T, const N: usize> AutoThinVec<T, N> {
-    /// Implementation detail for the auto_thin_vec macro.
-    #[inline]
-    #[doc(hidden)]
-    pub fn new_unpinned() -> Self {
-        // This condition is hard-coded in nsTArray.h
-        assert!(
-            core::mem::align_of::<T>() <= 8,
-            "Can't handle alignments greater than 8"
-        );
-        assert_eq!(
-            core::mem::offset_of!(Self, buffer),
-            AUTO_ARRAY_HEADER_OFFSET
-        );
-        Self {
-            inner: ThinVec::new(),
-            buffer: AutoBuffer {
-                header: Header {
-                    _len: 0,
-                    _cap: pack_capacity_and_auto(N as SizeType, true),
-                },
-                buffer: mem::MaybeUninit::uninit(),
-            },
-            _pinned: core::marker::PhantomPinned,
-        }
-    }
-
-    /// Returns a raw pointer to the inner ThinVec. Note that if you dereference it from rust, you
-    /// need to make sure not to move the ThinVec manually via something like
-    /// `std::mem::take(&mut auto_vec)`.
-    pub fn as_mut_ptr(self: core::pin::Pin<&mut Self>) -> *mut ThinVec<T> {
-        debug_assert!(self.is_auto_array());
-        unsafe { &mut self.get_unchecked_mut().inner }
-    }
-
-    #[inline]
-    pub unsafe fn shrink_to_fit_known_singleton(self: core::pin::Pin<&mut Self>) {
-        debug_assert!(self.is_singleton());
-        let this = unsafe { self.get_unchecked_mut() };
-        this.buffer.header.set_len(0);
-        // TODO(emilio): Use NonNull::from_mut when msrv allows.
-        this.inner.ptr = NonNull::new_unchecked(&mut this.buffer.header);
-        debug_assert!(this.inner.is_auto_array());
-        debug_assert!(this.inner.uses_stack_allocated_buffer());
-    }
-
-    pub fn shrink_to_fit(self: core::pin::Pin<&mut Self>) {
-        let this = unsafe { self.get_unchecked_mut() };
-        this.inner.shrink_to_fit();
-        debug_assert!(this.inner.is_auto_array());
-    }
-}
-
-// NOTE(emilio): DerefMut wouldn't be safe, see the comment in as_mut_ptr.
-#[cfg(feature = "gecko-ffi")]
-impl<T, const N: usize> Deref for AutoThinVec<T, N> {
-    type Target = ThinVec<T>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-/// Create a ThinVec<$ty> named `$name`, with capacity for `$cap` inline elements.
-///
-/// TODO(emilio): This would be a lot more convenient to use with super let, see
-/// <https://github.com/rust-lang/rust/issues/139076>
-#[cfg(feature = "gecko-ffi")]
-#[macro_export]
-macro_rules! auto_thin_vec {
-    (let $name:ident : [$ty:ty; $cap:literal]) => {
-        let auto_vec = $crate::AutoThinVec::<$ty, $cap>::new_unpinned();
-        let mut $name = core::pin::pin!(auto_vec);
-        unsafe { $name.as_mut().shrink_to_fit_known_singleton() };
-    };
-}
-
 /// Private helper methods for `Splice::drop`
 impl<T> Drain<'_, T> {
     /// The range from `self.vec.len` to `self.tail_start` contains elements
@@ -3370,8 +2848,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(feature = "gecko-ffi", should_panic)]
-    fn test_overaligned_type_is_rejected_for_gecko_ffi_mode() {
+    fn test_overaligned_type() {
         #[repr(align(16))]
         #[allow(unused)]
         struct Align16(u8);
@@ -3403,22 +2880,6 @@ mod tests {
         assert!(v.has_allocation());
         v = ThinVec::with_capacity(0);
         assert!(!v.has_allocation());
-    }
-
-    #[test]
-    #[cfg(feature = "gecko-ffi")]
-    fn gecko_growth_threshold_uses_total_requested_bytes() {
-        const MIB: usize = 1024 * 1024;
-        const HEADER: usize = core::mem::size_of::<super::Header>();
-
-        let mut at_threshold = ThinVec::<u8>::new();
-        at_threshold.reserve(8 * MIB - HEADER);
-        assert_eq!(at_threshold.capacity(), 8 * MIB - HEADER);
-        drop(at_threshold);
-
-        let mut above_threshold = ThinVec::<u8>::new();
-        above_threshold.reserve(8 * MIB - HEADER + 1);
-        assert_eq!(above_threshold.capacity(), 9 * MIB - HEADER);
     }
 
     #[test]
@@ -3837,8 +3298,6 @@ mod std_tests {
 
         let zsts = Vec::from(thin_vec![Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
-
-        #[cfg(not(feature = "gecko-ffi"))]
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
@@ -3889,8 +3348,6 @@ mod std_tests {
 
         let zsts = Box::<[Zst]>::from(thin_vec![Zst, Zst, Zst]);
         assert_eq!(&*zsts, [Zst, Zst, Zst]);
-
-        #[cfg(not(feature = "gecko-ffi"))]
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
@@ -3942,8 +3399,6 @@ mod std_tests {
 
         let zsts = ThinVec::from(vec![Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
-
-        #[cfg(not(feature = "gecko-ffi"))]
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
@@ -3987,8 +3442,6 @@ mod std_tests {
         struct Zst;
         let zsts = ThinVec::from([Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
-
-        #[cfg(not(feature = "gecko-ffi"))]
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
@@ -5026,7 +4479,6 @@ mod std_tests {
     }
 
     #[test]
-    #[cfg(not(feature = "gecko-ffi"))]
     fn test_drain_max_vec_size() {
         let mut v = ThinVec::<()>::with_capacity(usize::MAX);
         unsafe {
@@ -5275,7 +4727,6 @@ mod std_tests {
     */
 
     #[test]
-    #[cfg_attr(feature = "gecko-ffi", ignore)]
     fn overaligned_allocations() {
         #[repr(align(256))]
         struct Foo(usize);
@@ -5663,47 +5114,7 @@ mod std_tests {
         }
     */
 
-    #[cfg(feature = "gecko-ffi")]
     #[test]
-    fn auto_t_array_basic() {
-        crate::auto_thin_vec!(let t: [u8; 10]);
-        assert_eq!(t.capacity(), 10);
-        assert!(t.is_auto_array());
-        assert!(t.uses_stack_allocated_buffer());
-        assert!(!t.has_allocation());
-        assert_eq!(t.len(), 0);
-        {
-            let inner = unsafe { &mut *t.as_mut().as_mut_ptr() };
-            for i in 0..30 {
-                inner.push(i as u8);
-            }
-        }
-
-        assert!(t.is_auto_array());
-        assert!(!t.uses_stack_allocated_buffer());
-        assert_eq!(t.len(), 30);
-        assert!(t.has_allocation());
-        assert_eq!(t[5], 5);
-        assert_eq!(t[29], 29);
-        assert!(t.capacity() >= 30);
-
-        {
-            let inner = unsafe { &mut *t.as_mut().as_mut_ptr() };
-            inner.truncate(5);
-        }
-
-        assert_eq!(t.len(), 5);
-        assert!(t.capacity() >= 30);
-        assert!(t.has_allocation());
-        t.as_mut().shrink_to_fit();
-        assert!(!t.has_allocation());
-        assert!(t.is_auto_array());
-        assert!(t.uses_stack_allocated_buffer());
-        assert_eq!(t.capacity(), 10);
-    }
-
-    #[test]
-    #[cfg_attr(feature = "gecko-ffi", ignore)]
     fn test_header_data() {
         macro_rules! assert_aligned_head_ptr {
             ($typename:ty) => {{
@@ -5845,24 +5256,5 @@ mod std_tests {
         v.push(PanicBomb("panic"));
         v.push(PanicBomb("normal2"));
         v.clear();
-    }
-
-    #[cfg(all(feature = "gecko-ffi", feature = "malloc_size_of"))]
-    #[test]
-    fn malloc_size_of_auto_array() {
-        use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps};
-        use std::ffi::c_void;
-
-        extern "C" {
-            fn malloc_usable_size(ptr: *const c_void) -> usize;
-        }
-
-        unsafe extern "C" fn malloc_size_of(ptr: *const c_void) -> usize {
-            unsafe { malloc_usable_size(ptr) }
-        }
-
-        crate::auto_thin_vec!(let t: [u8; 4]);
-        let mut ops = MallocSizeOfOps::new(malloc_size_of, None, None);
-        let _ = MallocShallowSizeOf::shallow_size_of(&**t, &mut ops);
     }
 }

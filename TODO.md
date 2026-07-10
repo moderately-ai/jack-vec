@@ -30,14 +30,13 @@ The central hypothesis is:
 - `Send` and `Sync` behavior remains determined by `T`.
 - Strict-provenance Miri validation is required for pointer tagging or alternate
   representations.
-- Gecko/nsTArray ABI compatibility remains a separate, exact representation lane.
 - Final inline element storage is out of scope because it destroys empty-container
   density in recursive structures.
 
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `fix/gecko-growth-threshold`
+- Working branch: `refactor/remove-gecko`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +48,35 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Remove Gecko compatibility (`refactor/remove-gecko`)
+
+- Status: implementation complete; native performance audit pending
+- Decision: this fork targets native Rust and sqlparsers. Remove the `gecko-ffi`
+  feature, nsTArray representation, external singleton linkage, Gecko growth policy,
+  AutoThinVec support, Gecko-only tests, documentation, and CI lanes.
+- Rationale: the alternate representation does not benefit the proving workload and
+  forces every safety/performance change to preserve a second allocator, capacity,
+  FFI, alignment, and stack-buffer model. Removing it makes the native one-word
+  owner the only supported representation.
+- Compatibility: intentionally breaking for users of `gecko-ffi`, `AutoThinVec`, or
+  `auto_thin_vec!`. Native ThinVec, no-std, serde, malloc-size reporting, and
+  benchmark APIs must remain intact.
+- Acceptance: no Gecko configuration, public symbols, or implementation CFGs remain
+  in source, manifest, README, or CI; native layout and Option niche remain one word;
+  all native/no-default/serde/malloc/MSRV/docs/Clippy/Miri lanes pass; CPU and
+  allocation smoke suites remain operational.
+- Native audit: compare this branch against its exact parent (`2c6d9a0`) on the
+  pinned Linux builder using `push_preallocated/ThinVec/1024`, 7 interleaved rounds,
+  seed 20260728, glibc System allocator, 100 samples, 3 s warm-up, and 5 s
+  measurement. Treat the removal as performance-neutral only if no repeatable
+  regression above 1% appears; also compare optimized benchmark executable size.
+- Validation result: source, manifest, README, and CI contain no current Gecko,
+  AutoThinVec, nsTArray, or external-singleton surface. Default/all-target,
+  no-default, serde, malloc-size, Rust 1.86, formatting, warning-denied Clippy,
+  warning-denied docs plus 49 doctests, strict-provenance Tree Borrows Miri, and
+  diff hygiene all pass. The remaining Gecko mentions in this ledger are preserved
+  historical experiment evidence, not supported code or configuration.
 
 ### Gecko total-byte slow-growth threshold (`fix/gecko-growth-threshold`)
 
@@ -1214,7 +1242,7 @@ and do not tune the benchmark after inspecting a favorable implementation result
   and panicking clone/drop/predicate cases as relevant.
 - Test iterators with exact, underestimated, overestimated, and adversarial size
   hints. Safe iterator metadata is never an unsafe initialization guarantee.
-- Run native, `no_std`, Gecko, MSRV, Clippy, documentation, and strict-provenance
+- Run native, `no_std`, MSRV, Clippy, documentation, and strict-provenance
   Miri lanes appropriate to the changed code.
 - Check final length, capacity, allocation layout, source ownership, exactly-once
   destruction, and unwind state explicitly; output equality alone is insufficient.
@@ -1329,19 +1357,16 @@ before combining it with another optimization.
   move, but ThinVec into Vec uses generic per-element collection and ThinVec into
   boxed slice inherits it before a possible exact-capacity shrink.
 
-### Gecko correctness and performance
+### Removed compatibility lane
 
-- [x] Correct the slow-growth threshold to use total requested allocation bytes,
-  matching current nsTArray semantics.
-- [ ] Decide and document whether first allocation should be exact like nsTArray.
-- [x] Add requested-byte boundary tests around the 8 MiB slow-growth threshold.
-- [ ] Build a linkable Gecko benchmark fixture, including AutoThinVec spill and
-  return-to-inline behavior.
+- [x] Remove Gecko/nsTArray representation and growth behavior.
+- [x] Remove AutoThinVec and its stack-buffer ownership model.
+- [x] Remove Gecko-only tests, documentation, feature flags, and CI lanes.
 
 ## P1: spiritual-successor prototype
 
 Use a separate experimental type until representation, safety, and performance are
-proven. Do not silently alter ThinVec's stable native or Gecko layouts.
+proven. Do not silently alter ThinVec's stable native layout.
 
 ### Compact final representation
 
@@ -1484,7 +1509,6 @@ when it satisfies the relevant subset below:
 - All allocation layouts reconstruct exactly.
 - Existing tests, feature combinations, formatting, Clippy, and documentation pass.
 - Miri passes strict-provenance and panic/drop torture cases for unsafe changes.
-- Gecko behavior remains exact when the Gecko representation is involved.
 - sqlparsers final AST size pins and semantic APIs remain valid for AST-focused work.
 - Raw artifacts and null/negative results are retained and summarized.
 
