@@ -126,6 +126,14 @@ The central hypothesis is:
   Gecko strict-provenance Miri gates passed. Slice drop glue correctly finished the
   removed suffix after one destructor panicked. Correctness did not override the
   failed performance and semantic-risk gates.
+- Mechanism explanation: retained disassembly confirms the baseline performs one
+  header length load/store and walks backward for every removed value, while the
+  candidate publishes length once and walks forward. Both execute exactly 1,024
+  calls to the deliberately non-inlined cheap destructor. The hot header remains in
+  L1 and its stores retire under destructor-call latency, so they are not the
+  throughput bottleneck. Slice-drop unwind machinery also explains the candidate's
+  larger code. The null result therefore reflects non-critical removed work, not a
+  failed transformation or benchmark boundary error.
 - Decision: restore the original reverse, per-element length-publishing truncate
   implementation and remove the temporary permanent benchmark. Preserve the raw
   remote artifacts and this negative result so the idea is not repeated without a
