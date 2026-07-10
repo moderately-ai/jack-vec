@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/clone-inlining`
+- Working branch: `perf/thin-into-vec-bulk`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,46 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Direct `ThinVec<T>` to `Vec<T>` relocation (`perf/thin-into-vec-bulk`)
+
+- Status: pre-registered; implementation not started
+- Hypothesis: the current `From<ThinVec<T>> for Vec<T>` delegates to generic
+  `IntoIterator::collect`, which optimized x86-64 and AArch64 code still implements
+  as a per-element move loop with capacity checks, reserve fallback, and unwind
+  state. Allocating the destination once, relocating the initialized slice in bulk,
+  publishing its length once, and emptying the source before deallocation should
+  remove that work without changing the required two-layout ownership transfer.
+- Primary workload: consume a preconstructed 1,024-element `ThinVec<u64>` into a
+  `Vec<u64>`. Source cloning/setup stays outside timing; destination allocation,
+  element relocation, source-header deallocation, and length publication remain
+  inside. Destination destruction/deallocation stays outside timing.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope.
+- Declared secondary workload: the same conversion at four elements. It must not
+  regress beyond the calibrated 1% envelope. There is no Vec identity control:
+  moving a Vec into itself would omit the layout-changing allocation and is not
+  semantically comparable. Decide only on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260722`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Memory/allocation gate: compare allocation count, requested destination bytes,
+  peak live requested bytes while both layouts coexist, final Vec capacity, source
+  deallocation, and output contents. The candidate must not hide work by changing
+  the timing boundary or retaining the source allocation.
+- Correctness gates: singleton empty and allocated-empty sources, singleton and
+  nonempty values, spare source capacity, owning values with exact once-only drops,
+  ZSTs, and over-aligned elements. Require native and Gecko strict-provenance Miri
+  plus native, no-default-feature, Gecko, MSRV, formatting, and Clippy lanes.
+- Codegen/size gate: confirm one allocation, one bulk relocation, one length
+  publication, and matching source deallocation with no per-element capacity loop.
+  Measure the focused monomorphization and whole ELF; reject or explicitly record
+  unexplained growth.
+- Scope: change only `From<ThinVec<T>> for Vec<T>`, its focused tests, and two
+  temporary benchmark sizes. Do not combine `Vec`/boxed-slice into ThinVec,
+  ThinVec-to-boxed-slice, clone specialization, growth, or Gecko policy changes.
 
 ### Nonempty clone outlining policy (`perf/clone-inlining`)
 
