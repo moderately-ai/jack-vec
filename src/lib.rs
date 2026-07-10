@@ -1203,7 +1203,7 @@ impl<T> ThinVec<T> {
 
         const SLOW_GROWTH_THRESHOLD: usize = 8 * 1024 * 1024;
 
-        let bytes = if min_cap > SLOW_GROWTH_THRESHOLD {
+        let bytes = if min_cap_bytes as usize > SLOW_GROWTH_THRESHOLD {
             // Grow by a minimum of 1.125x
             let old_cap_bytes = old_cap * elem_size + mem::size_of::<Header>();
             let min_growth = old_cap_bytes + (old_cap_bytes >> 3);
