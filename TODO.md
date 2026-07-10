@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Guarded reserved `resize` growth (`perf/resize-guard`)
 
-- Status: benchmark complete; implementation not started
+- Status: accepted
 - Baseline commit: `5acd1a4`
+- Candidate commit: `d1e1e42`
 - Hypothesis: after `resize` reserves the full growth, cloning directly into the
   uninitialized suffix while carrying length in a panic guard will eliminate every
   repeated public `push` capacity check and header length publication. The final
@@ -79,6 +80,24 @@ The central hypothesis is:
 - Scope: one guarded resize growth loop and one high-signal benchmark size. Preserve
   move-the-last-value behavior; do not combine `extend_from_slice`, clone inlining,
   truncate, or Gecko growth changes.
+- Result: accepted. Against exact parent `5acd1a4`, resizing reserved capacity to
+  1,024 `u64` values improved 27.17% at the paired median, with a bootstrap interval
+  of [-27.38%, -26.96%]. This clears the 15% gate and calibrated 1% envelope.
+- Control result: unchanged Vec measured +0.37%, with an interval of
+  [+0.18%, +0.97%]. This is directional but remains inside the pre-registered 1%
+  envelope; one round reached +8.36%, so preserve the full range as an outlier.
+- Codegen/size result: the focused Criterion monomorphization shrank 113 bytes, from
+  0x609 to 0x598. The old loop retains a capacity branch and publishes header length
+  after every cloned value. The candidate broadcasts the scalar value, vectorizes
+  four suffix stores per iteration, carries initialized length locally, and
+  publishes it once. Whole-ELF text grew 440 bytes, data was unchanged, and the file
+  grew 176 bytes; record this as unwind/general-code growth despite the smaller hot
+  monomorphization.
+- Correctness result: native, no-default-feature, and Gecko test lanes pass;
+  formatting passes; supported Clippy lanes add no warnings; focused native and
+  Gecko strict-provenance Miri passes. Normal grow/no-op/shrink, nonempty vectors,
+  ZSTs, and clone panic after two initialized suffix values are covered with exact
+  once-only destruction.
 
 ### Clone partial-initialization guard (`fix/clone-panic-guard`)
 
@@ -833,7 +852,7 @@ before combining it with another optimization.
 - [ ] Give exact/trusted internal construction paths a guarded direct-write loop;
   safe `ExactSizeIterator` remains only a reservation hint, never an unsafe trust
   boundary.
-- [ ] Make `resize` use its already-reserved unchecked construction path instead
+- [x] Make `resize` use its already-reserved unchecked construction path instead
   of repeating the public push capacity branch for every new element.
 - [ ] Specialize `extend_from_slice` around a guarded clone loop before adding a
   benchmark; use small and moderately large slices only if implementation begins.
