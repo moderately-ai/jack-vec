@@ -47,6 +47,28 @@ The central hypothesis is:
 
 ## Active experiment
 
+### Post-append implementation audit
+
+- Status: research complete; no implementation started
+- Highest-confidence finding: `Drain::move_tail`, used by `splice`, passes
+  `end + tail + additional` to `ThinVec::reserve`. `reserve` interprets its
+  argument as elements additional to the vector's current initialized prefix,
+  so the prefix is counted twice and splice can grow substantially beyond the
+  required capacity. Rust's `Vec` passes the initialized layout length and the
+  true additional count as separate arguments to `RawVec::reserve`; ThinVec
+  cannot copy that expression directly through its public reserve API.
+- Next generalized candidates: guarded hole/backshift algorithms for
+  `retain_mut` and `dedup_by`, one-shot length publication for bulk extension,
+  and slice-tail destruction in `truncate`.
+- Measurement finding: Criterion's time-based profiling mode performs a
+  different number of operations for implementations with different throughput.
+  Raw `perf stat` totals from those runs are therefore not comparable. Hardware
+  counter comparisons require a fixed-work driver or per-operation normalization.
+- Profiling tools: Linux `perf`, Samply, and Valgrind are available on the remote
+  host. Use `perf stat` for deterministic fixed-work counters and Samply only
+  when attribution is needed; neither should add benchmarks without a concrete
+  decision to distinguish.
+
 ### Bulk append (`perf/bulk-append`)
 
 - Status: accepted
@@ -189,15 +211,38 @@ before combining it with another optimization.
 
 - [x] Replace `append(other.drain(..))` with reserve plus bulk relocation.
 - [x] Add one focused append benchmark with small and large source lengths.
+- [ ] Correct `Drain::move_tail` reserve accounting so splice reserves only the
+  capacity required for the preserved prefix, moved tail, and replacement.
+- [ ] Add a focused splice capacity regression test that demonstrates the current
+  prefix double-count without expanding the benchmark suite.
 - [ ] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
 - [ ] Benchmark retain only if implementing it: mixed rejection and large `T` are
   the high-signal cases.
-- [ ] Set final length once and bulk-drop the tail in `truncate`/`clear`.
+- [ ] Replace swap-based `dedup_by` with a guarded first-hole/backshift algorithm;
+  avoid moving duplicate values into the retained prefix merely to drop them later.
+- [ ] Set final length once and bulk-drop the tail in `truncate`; `clear` already
+  drops the full slice behind a length-reset guard.
 - [ ] Verify panic behavior with destructors that panic.
+
+### Bulk construction and extension
+
+- [ ] Keep a local initialized length while consuming the reserved lower-bound
+  portion of `Extend`, publishing header length through a panic guard instead of
+  loading and storing it for every element.
+- [ ] Give exact/trusted internal construction paths a guarded direct-write loop;
+  safe `ExactSizeIterator` remains only a reservation hint, never an unsafe trust
+  boundary.
+- [ ] Make `resize` use its already-reserved unchecked construction path instead
+  of repeating the public push capacity branch for every new element.
+- [ ] Specialize `extend_from_slice` around a guarded clone loop before adding a
+  benchmark; use small and moderately large slices only if implementation begins.
 
 ### Clone and conversions
 
 - [ ] Add a partial-initialization guard to nonempty cloning.
+- [ ] Treat the current clone panic leak as a quality/correctness issue: cloned
+  elements written before a later `T::clone` panic are not represented by `len`
+  and therefore are not dropped.
 - [ ] Reevaluate `cold`/`inline(never)` on the nonempty clone path.
 - [ ] Benchmark empty, small, and moderately large nonempty clones.
 - [ ] Inspect whether `Vec`/`ThinVec`/boxed-slice conversions already become bulk
@@ -324,6 +369,8 @@ Tasks:
 - [ ] Use `perf stat` for cycles, instructions, branches/misses, cache misses, dTLB
   misses, faults, context switches, and migrations.
 - [ ] Use `perf record` only to attribute demonstrated regressions or wins.
+- [ ] Add a fixed-operation micro-driver before comparing `perf stat` counter
+  totals; Criterion `--profile-time` totals are throughput-dependent.
 - [ ] Compare glibc System allocation with mimalloc and, where relevant,
   mozjemalloc.
 
@@ -417,3 +464,16 @@ general wins.
 - Added owning-element and ZST coverage; source elements drop exactly once.
 - Native, no_std, Gecko, Rust 1.86, Clippy, and focused strict-provenance Miri gates
   pass.
+
+### 2026-07-10: re-audit post-append mutation paths
+
+- Compared ThinVec's mutation algorithms directly with Rust 1.86 `Vec`/`RawVec`.
+- Found splice tail growth double-counting the initialized prefix through the
+  mismatched `reserve` API semantics; prioritize its correction before new
+  performance experiments.
+- Identified `retain_mut`, `dedup_by`, `truncate`, `Extend`, `resize`, and clone as
+  the remaining generalized implementation-level opportunities.
+- Confirmed sequential traversal and the new push/append paths no longer justify
+  broad optimization work.
+- Rejected raw time-based profiler counter totals as cross-implementation evidence;
+  fixed work is required for counter comparison.
