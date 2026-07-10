@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Gecko total-byte slow-growth threshold (`fix/gecko-growth-threshold`)
 
-- Status: falsification confirmed; correction not started
+- Status: accepted
 - Falsification commit: `ab460e8`
+- Correction commit: `1656fcc`
 - Hypothesis: Gecko reserve computes `min_cap_bytes` including header bytes, but
   selects slow growth with `min_cap > 8 MiB`, accidentally treating an element
   count as bytes. nsTArray's threshold is total requested allocation bytes. Requests
@@ -75,6 +76,16 @@ The central hypothesis is:
 - Falsification result: confirmed exactly. The header-inclusive request one byte
   above 8 MiB produced capacity 16,777,208 (`16 MiB - 8`) rather than the required
   9,437,176 (`9 MiB - 8`); the exact 8 MiB boundary remained `8 MiB - 8`.
+- Correction result: comparing the already-validated `min_cap_bytes` against 8 MiB
+  preserves the exact boundary and changes the one-byte crossing to capacity
+  9,437,176. Requested allocation falls from 16 MiB to 9 MiB: 7 MiB/43.75% less,
+  with identical minimum capacity and one allocation.
+- Validation: full native, no-default-feature, Gecko, and Rust 1.86 lanes pass;
+  formatting and supported Clippy pass with only the three existing Gecko warnings;
+  the boundary passes strict-provenance Gecko Miri. ZST, overflow, native growth,
+  first-allocation policy, ABI, header layout, and AutoThinVec code are unchanged.
+- Decision: retain the one-comparison correction and deterministic boundary test;
+  no CPU benchmark is justified for a growth-policy memory fix.
 
 ### Direct array construction (`perf/from-array-bulk`)
 
@@ -1320,10 +1331,10 @@ before combining it with another optimization.
 
 ### Gecko correctness and performance
 
-- [ ] Correct the slow-growth threshold to use total requested allocation bytes,
+- [x] Correct the slow-growth threshold to use total requested allocation bytes,
   matching current nsTArray semantics.
 - [ ] Decide and document whether first allocation should be exact like nsTArray.
-- [ ] Add requested-byte boundary tests around the 8 MiB slow-growth threshold.
+- [x] Add requested-byte boundary tests around the 8 MiB slow-growth threshold.
 - [ ] Build a linkable Gecko benchmark fixture, including AutoThinVec spill and
   return-to-inline behavior.
 
@@ -1656,3 +1667,12 @@ general wins.
 - Improved four-element construction 19.21% with one unchanged exact allocation and
   exact-once ownership transfer.
 - The focused wrapper shrank 25 bytes; retained one small exact-construction lane.
+
+### 2026-07-10: correct Gecko slow-growth threshold units
+
+- Confirmed Gecko compared an element count with an 8 MiB byte threshold even
+  though it had already computed header-inclusive requested bytes.
+- One byte above the threshold previously jumped from an 8 MiB to a 16 MiB size
+  class; corrected slow growth requests 9 MiB, saving 7 MiB/43.75%.
+- Added exact boundary tests and left native, ZST, overflow, first-allocation,
+  AutoThinVec, and ABI behavior unchanged.
