@@ -1059,14 +1059,16 @@ impl<T> ThinVec<T> {
     /// [`drain`]: ThinVec::drain
     pub fn truncate(&mut self, len: usize) {
         unsafe {
-            // drop any extra elements
-            while len < self.len() {
-                // decrement len before the drop_in_place(), so a panic on Drop
-                // doesn't re-drop the just-failed value.
-                let new_len = self.len() - 1;
-                self.set_len_non_singleton(new_len);
-                ptr::drop_in_place(self.data_raw().add(new_len));
+            let old_len = self.len();
+            if len >= old_len {
+                return;
             }
+
+            let removed = ptr::slice_from_raw_parts_mut(self.data_raw().add(len), old_len - len);
+            // Publish the retained prefix before running destructors. Slice drop
+            // glue owns the removed suffix if one destructor panics.
+            self.set_len_non_singleton(len);
+            ptr::drop_in_place(removed);
         }
     }
 
@@ -4563,6 +4565,99 @@ mod std_tests {
         assert_eq!(unsafe { DROPS }, 2);
         v.truncate(0);
         assert_eq!(unsafe { DROPS }, 5);
+    }
+
+    #[test]
+    fn test_truncate_drops_removed_suffix_forward() {
+        use alloc::rc::Rc;
+        use core::cell::RefCell;
+
+        struct OrderedDrop {
+            id: usize,
+            order: Rc<RefCell<Vec<usize>>>,
+        }
+
+        impl Drop for OrderedDrop {
+            fn drop(&mut self) {
+                self.order.as_ref().borrow_mut().push(self.id);
+            }
+        }
+
+        let order = Rc::new(RefCell::new(Vec::new()));
+        let mut values = (0..5)
+            .map(|id| OrderedDrop {
+                id,
+                order: order.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        values.truncate(5);
+        values.truncate(8);
+        assert!(order.as_ref().borrow().is_empty());
+        values.truncate(2);
+        assert_eq!(&*order.as_ref().borrow(), &[2, 3, 4]);
+        drop(values);
+        assert_eq!(&*order.as_ref().borrow(), &[2, 3, 4, 0, 1]);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_truncate_drop_panic_finishes_removed_suffix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct PanicDrop {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for PanicDrop {
+            fn drop(&mut self) {
+                let old_count = self.drops[self.id].replace(self.drops[self.id].get() + 1);
+                if self.id == 2 && old_count == 0 {
+                    panic!("drop panic");
+                }
+            }
+        }
+
+        let drops = Rc::new((0..5).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = (0..5)
+            .map(|id| PanicDrop {
+                id,
+                drops: drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| values.truncate(1)));
+
+        assert!(result.is_err());
+        assert_eq!(values.len(), 1);
+        assert_eq!(drops[0].get(), 0);
+        assert!(drops[1..].iter().all(|count| count.get() == 1));
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
+    }
+
+    #[test]
+    fn test_truncate_zst_drop() {
+        use core::sync::atomic::{AtomicUsize, Ordering};
+
+        static DROPS: AtomicUsize = AtomicUsize::new(0);
+        struct Zst;
+
+        impl Drop for Zst {
+            fn drop(&mut self) {
+                DROPS.fetch_add(1, Ordering::Relaxed);
+            }
+        }
+
+        DROPS.store(0, Ordering::Relaxed);
+        let mut values = thin_vec![Zst, Zst, Zst, Zst];
+        values.truncate(1);
+        assert_eq!(DROPS.load(Ordering::Relaxed), 3);
+        drop(values);
+        assert_eq!(DROPS.load(Ordering::Relaxed), 4);
     }
 
     #[test]
