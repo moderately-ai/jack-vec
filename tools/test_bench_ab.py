@@ -42,13 +42,13 @@ class BenchAbTests(unittest.TestCase):
                     {
                         "round": round_number,
                         "label": "baseline",
-                        "benchmark": "operation/ThinVec/4",
+                        "benchmark": "operation/JackVec/4",
                         "mean_ns": baseline,
                     },
                     {
                         "round": round_number,
                         "label": "candidate",
-                        "benchmark": "operation/ThinVec/4",
+                        "benchmark": "operation/JackVec/4",
                         "mean_ns": candidate,
                     },
                 ]
@@ -64,7 +64,7 @@ class BenchAbTests(unittest.TestCase):
                 for position, label in enumerate(("baseline", "candidate"), start=1):
                     run_dir = root / "runs" / f"{round_number:03d}-{position}"
                     estimate_dir = (
-                        run_dir / "criterion" / "group" / "ThinVec" / "4" / "new"
+                        run_dir / "criterion" / "group" / "JackVec" / "4" / "new"
                     )
                     estimate_dir.mkdir(parents=True)
                     (run_dir / "order.json").write_text(
@@ -78,7 +78,7 @@ class BenchAbTests(unittest.TestCase):
                     )
             rows = bench_ab.collect_estimates(root, 2)
             self.assertEqual(len(rows), 4)
-            self.assertEqual(rows[0]["benchmark"], "group/ThinVec/4")
+            self.assertEqual(rows[0]["benchmark"], "group/JackVec/4")
 
 
 if __name__ == "__main__":

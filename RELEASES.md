@@ -1,6 +1,7 @@
 # Unreleased
-* Begin preparing the JackVec project identity while retaining explicit attribution
-  to Mozilla's ThinVec and leaving the published Rust API unchanged.
+* Rename the fork to JackVec: the package is `jackvec`, the primary type is
+  `JackVec`, and the construction macro is `jack_vec!`. The project remains
+  directly derived from and attributed to Mozilla's ThinVec.
 * Raise the minimum supported Rust version to 1.86.
 * Add CPU and allocation benchmarks comparing ThinVec with Vec.
 

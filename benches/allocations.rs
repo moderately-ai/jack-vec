@@ -6,7 +6,7 @@ use std::hint::black_box;
 use std::mem::size_of;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use thin_vec::ThinVec;
+use jackvec::JackVec;
 
 use support::{
     build_growing, build_nested, build_reserved, BenchVector, NestedWorkload, NESTED_VECTOR_COUNT,
@@ -163,16 +163,16 @@ where
     );
 }
 
-fn report_thin_into_vec(len: usize) {
+fn report_jack_into_vec(len: usize) {
     let measurement = measure(|| {
-        let output = Vec::from(build_reserved::<ThinVec<u64>>(len));
+        let output = Vec::from(build_reserved::<JackVec<u64>>(len));
         assert_eq!(output.len(), len);
         assert_eq!(output.capacity(), len);
         output
     });
     assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
     println!(
-        "thin_into_vec,{},ThinVec_to_Vec,{},{},{},{},{},{},{},{}",
+        "jack_into_vec,{},JackVec_to_Vec,{},{},{},{},{},{},{},{}",
         len,
         1,
         size_of::<Vec<u64>>(),
@@ -185,16 +185,16 @@ fn report_thin_into_vec(len: usize) {
     );
 }
 
-fn report_thin_into_box() {
+fn report_jack_into_box() {
     let len = 1_024;
     let measurement = measure(|| {
-        let output = Box::<[u64]>::from(build_reserved::<ThinVec<u64>>(len));
+        let output = Box::<[u64]>::from(build_reserved::<JackVec<u64>>(len));
         assert_eq!(output.len(), len);
         output
     });
     assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
     println!(
-        "thin_into_box,{},ThinVec_to_Box,{},{},{},{},{},{},{},{}",
+        "jack_into_box,{},JackVec_to_Box,{},{},{},{},{},{},{},{}",
         len,
         1,
         size_of::<Box<[u64]>>(),
@@ -207,20 +207,20 @@ fn report_thin_into_box() {
     );
 }
 
-fn report_vec_into_thin() {
+fn report_vec_into_jack() {
     let len = 1_024;
     let measurement = measure(|| {
-        let output = ThinVec::from(build_reserved::<Vec<u64>>(len));
+        let output = JackVec::from(build_reserved::<Vec<u64>>(len));
         assert_eq!(output.len(), len);
         assert_eq!(output.capacity(), len);
         output
     });
     assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
     println!(
-        "vec_into_thin,{},Vec_to_ThinVec,{},{},{},{},{},{},{},{}",
+        "vec_into_jack,{},Vec_to_JackVec,{},{},{},{},{},{},{},{}",
         len,
         1,
-        size_of::<ThinVec<u64>>(),
+        size_of::<JackVec<u64>>(),
         measurement.live_before_drop,
         measurement.peak_live,
         measurement.live_after_drop,
@@ -240,25 +240,25 @@ fn main() {
         report::<Vec<u64>, _>("nested", workload.label(), NESTED_VECTOR_COUNT, || {
             build_nested::<Vec<u64>>(workload, NESTED_VECTOR_COUNT)
         });
-        report::<ThinVec<u64>, _>("nested", workload.label(), NESTED_VECTOR_COUNT, || {
-            build_nested::<ThinVec<u64>>(workload, NESTED_VECTOR_COUNT)
+        report::<JackVec<u64>, _>("nested", workload.label(), NESTED_VECTOR_COUNT, || {
+            build_nested::<JackVec<u64>>(workload, NESTED_VECTOR_COUNT)
         });
     }
 
     for &len in OPERATION_SIZES {
         report_vector::<Vec<u64>, _>("build_growing", len, || build_growing::<Vec<u64>>(len));
-        report_vector::<ThinVec<u64>, _>("build_growing", len, || {
-            build_growing::<ThinVec<u64>>(len)
+        report_vector::<JackVec<u64>, _>("build_growing", len, || {
+            build_growing::<JackVec<u64>>(len)
         });
         report_vector::<Vec<u64>, _>("push_reserved", len, || build_reserved::<Vec<u64>>(len));
-        report_vector::<ThinVec<u64>, _>("push_reserved", len, || {
-            build_reserved::<ThinVec<u64>>(len)
+        report_vector::<JackVec<u64>, _>("push_reserved", len, || {
+            build_reserved::<JackVec<u64>>(len)
         });
     }
 
     for &len in &[4, 1_024] {
-        report_thin_into_vec(len);
+        report_jack_into_vec(len);
     }
-    report_thin_into_box();
-    report_vec_into_thin();
+    report_jack_into_box();
+    report_vec_into_jack();
 }

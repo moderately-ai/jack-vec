@@ -520,7 +520,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
     status_path = output_root / "status.json"
     write_status(status_path, "running")
 
-    temporary_root = Path(tempfile.mkdtemp(prefix="thin-vec-bench-ab-"))
+    temporary_root = Path(tempfile.mkdtemp(prefix="jackvec-bench-ab-"))
     worktrees = {
         "baseline": temporary_root / "baseline",
         "candidate": temporary_root / "candidate",
@@ -563,7 +563,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 temporary_root / f"target-{label}",
                 args.toolchain,
                 args.bench,
-                "/thin-vec",
+                "/jackvec",
                 build_log,
                 effective_env,
             )

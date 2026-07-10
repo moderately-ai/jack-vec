@@ -1,24 +1,24 @@
 #![deny(missing_docs)]
 
-//! `ThinVec` is exactly the same as `Vec`, except that it stores its `len` and `capacity` in the buffer
+//! `JackVec` is exactly the same as `Vec`, except that it stores its `len` and `capacity` in the buffer
 //! it allocates.
 //!
-//! This makes the memory footprint of ThinVecs lower; notably in cases where space is reserved for
-//! a non-existence `ThinVec<T>`. So `Vec<ThinVec<T>>` and `Option<ThinVec<T>>::None` will waste less
+//! This makes the memory footprint of JackVecs lower; notably in cases where space is reserved for
+//! a non-existence `JackVec<T>`. So `Vec<JackVec<T>>` and `Option<JackVec<T>>::None` will waste less
 //! space. Being pointer-sized also means it can be passed/stored in registers.
 //!
-//! Of course, any actually constructed `ThinVec` will theoretically have a bigger allocation, but
+//! Of course, any actually constructed `JackVec` will theoretically have a bigger allocation, but
 //! the fuzzy nature of allocators means that might not actually be the case.
 //!
 //! Properties of `Vec` that are preserved:
-//! * `ThinVec::new()` doesn't allocate (it points to a statically allocated singleton)
+//! * `JackVec::new()` doesn't allocate (it points to a statically allocated singleton)
 //! * reallocation can be done in place
-//! * `size_of::<ThinVec<T>>()` == `size_of::<Option<ThinVec<T>>>()`
+//! * `size_of::<JackVec<T>>()` == `size_of::<Option<JackVec<T>>>()`
 //!
 //! Properties of `Vec` that aren't preserved:
-//! * `ThinVec<T>` can't ever be zero-cost roundtripped to a `Box<[T]>`, `String`, or `*mut T`
+//! * `JackVec<T>` can't ever be zero-cost roundtripped to a `Box<[T]>`, `String`, or `*mut T`
 //! * `from_raw_parts` doesn't exist
-//! * `ThinVec` currently doesn't bother to not-allocate for Zero Sized Types (e.g. `ThinVec<()>`),
+//! * `JackVec` currently doesn't bother to not-allocate for Zero Sized Types (e.g. `JackVec<()>`),
 //!   but it could be done if someone cared enough to implement it.
 //!
 //!
@@ -28,7 +28,7 @@
 //!
 //! **This feature requires Rust 1.83.**
 //!
-//! This feature makes `ThinVec::new()` a `const fn`.
+//! This feature makes `JackVec::new()` a `const fn`.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -84,7 +84,7 @@ impl<T, E> UnwrapCapOverflow<T> for Result<T, E> {
     }
 }
 
-// The allocation header of a ThinVec.
+// The allocation header of a JackVec.
 #[repr(C)]
 struct Header {
     _len: usize,
@@ -120,7 +120,7 @@ static EMPTY_HEADER: Header = Header { _len: 0, _cap: 0 };
 
 // Utils for computing layouts of allocations
 
-/// Gets the size necessary to allocate a `ThinVec<T>` with the give capacity.
+/// Gets the size necessary to allocate a `JackVec<T>` with the give capacity.
 ///
 /// # Panics
 ///
@@ -151,7 +151,7 @@ fn alloc_size<T>(cap: usize) -> usize {
     final_size as usize
 }
 
-/// Gets the padding necessary for the array of a `ThinVec<T>`
+/// Gets the padding necessary for the array of a `JackVec<T>`
 fn padding<T>() -> usize {
     let alloc_align = alloc_align::<T>();
     let header_size = mem::size_of::<Header>();
@@ -159,12 +159,12 @@ fn padding<T>() -> usize {
     alloc_align.saturating_sub(header_size)
 }
 
-/// Gets the align necessary to allocate a `ThinVec<T>`
+/// Gets the align necessary to allocate a `JackVec<T>`
 fn alloc_align<T>() -> usize {
     max(mem::align_of::<T>(), mem::align_of::<Header>())
 }
 
-/// Gets the layout necessary to allocate a `ThinVec<T>`
+/// Gets the layout necessary to allocate a `JackVec<T>`
 ///
 /// # Panics
 ///
@@ -175,7 +175,7 @@ fn layout<T>(cap: usize) -> Layout {
         .unwrap_cap_overflow()
 }
 
-/// Allocates a header (and array) for a `ThinVec<T>` with the given capacity.
+/// Allocates a header (and array) for a `JackVec<T>` with the given capacity.
 ///
 /// # Panics
 ///
@@ -209,72 +209,72 @@ fn header_with_capacity<T>(cap: usize) -> NonNull<Header> {
 
 /// See the crate's top level documentation for a description of this type.
 #[repr(C)]
-pub struct ThinVec<T> {
+pub struct JackVec<T> {
     ptr: NonNull<Header>,
     boo: PhantomData<T>,
 }
 
-unsafe impl<T: Sync> Sync for ThinVec<T> {}
-unsafe impl<T: Send> Send for ThinVec<T> {}
+unsafe impl<T: Sync> Sync for JackVec<T> {}
+unsafe impl<T: Send> Send for JackVec<T> {}
 
-/// Creates a `ThinVec` containing the arguments.
+/// Creates a `JackVec` containing the arguments.
 ///
 /// ```rust
-/// #[macro_use] extern crate thin_vec;
+/// #[macro_use] extern crate jackvec;
 ///
 /// fn main() {
-///     let v = thin_vec![1, 2, 3];
+///     let v = jack_vec![1, 2, 3];
 ///     assert_eq!(v.len(), 3);
 ///     assert_eq!(v[0], 1);
 ///     assert_eq!(v[1], 2);
 ///     assert_eq!(v[2], 3);
 ///
-///     let v = thin_vec![1; 3];
+///     let v = jack_vec![1; 3];
 ///     assert_eq!(v, [1, 1, 1]);
 /// }
 /// ```
 #[macro_export]
-macro_rules! thin_vec {
+macro_rules! jack_vec {
     (@UNIT $($t:tt)*) => (());
 
     ($elem:expr; $n:expr) => ({
-        let mut vec = $crate::ThinVec::new();
+        let mut vec = $crate::JackVec::new();
         vec.resize($n, $elem);
         vec
     });
-    () => {$crate::ThinVec::new()};
+    () => {$crate::JackVec::new()};
     ($($x:expr),*) => ({
-        let len = [$($crate::thin_vec!(@UNIT $x)),*].len();
-        let mut vec = $crate::ThinVec::with_capacity(len);
+        let len = [$($crate::jack_vec!(@UNIT $x)),*].len();
+        let mut vec = $crate::JackVec::with_capacity(len);
         $(vec.push($x);)*
         vec
     });
-    ($($x:expr,)*) => ($crate::thin_vec![$($x),*]);
+    ($($x:expr,)*) => ($crate::jack_vec![$($x),*]);
 }
 
-impl<T> ThinVec<T> {
-    /// Creates a new empty ThinVec.
+impl<T> JackVec<T> {
+    /// Creates a new empty JackVec.
     ///
     /// This will not allocate.
     #[cfg(not(feature = "const_new"))]
-    pub fn new() -> ThinVec<T> {
-        ThinVec::with_capacity(0)
+    pub fn new() -> JackVec<T> {
+        JackVec::with_capacity(0)
     }
 
-    /// Creates a new empty ThinVec.
+    /// Creates a new empty JackVec.
     ///
     /// This will not allocate.
     #[cfg(feature = "const_new")]
-    pub const fn new() -> ThinVec<T> {
+    pub const fn new() -> JackVec<T> {
         unsafe {
-            ThinVec {
+            JackVec {
                 ptr: NonNull::new_unchecked(&EMPTY_HEADER as *const Header as *mut Header),
                 boo: PhantomData,
             }
         }
     }
 
-    /// Constructs a new, empty `ThinVec<T>` with at least the specified capacity.
+    /// Constructs a new, empty `JackVec<T>` with at least the specified capacity.
     ///
     /// The vector will be able to hold at least `capacity` elements without
     /// reallocating. This method is allowed to allocate for more elements than
@@ -283,11 +283,11 @@ impl<T> ThinVec<T> {
     /// It is important to note that although the returned vector has the
     /// minimum *capacity* specified, the vector will have a zero *length*.
     ///
-    /// If it is important to know the exact allocated capacity of a `ThinVec`,
+    /// If it is important to know the exact allocated capacity of a `JackVec`,
     /// always use the [`capacity`] method after construction.
     ///
-    /// **NOTE**: unlike `Vec`, `ThinVec` **MUST** allocate once to keep track of non-zero
-    /// lengths. As such, we cannot provide the same guarantees about ThinVecs
+    /// **NOTE**: unlike `Vec`, `JackVec` **MUST** allocate once to keep track of non-zero
+    /// lengths. As such, we cannot provide the same guarantees about JackVecs
     /// of ZSTs not allocating. However the allocation never needs to be resized
     /// to add more ZSTs, since the underlying array is still length 0.
     ///
@@ -301,9 +301,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::ThinVec;
+    /// use jackvec::JackVec;
     ///
-    /// let mut vec = ThinVec::with_capacity(10);
+    /// let mut vec = JackVec::with_capacity(10);
     ///
     /// // The vector contains no items, even though it has capacity for more
     /// assert_eq!(vec.len(), 0);
@@ -323,14 +323,14 @@ impl<T> ThinVec<T> {
     ///
     /// // A vector of a zero-sized type will always over-allocate, since no
     /// // space is needed to store the actual elements.
-    /// let vec_units = ThinVec::<()>::with_capacity(10);
+    /// let vec_units = JackVec::<()>::with_capacity(10);
     ///
     /// // assert_eq!(vec_units.capacity(), usize::MAX);
     /// ```
-    pub fn with_capacity(cap: usize) -> ThinVec<T> {
+    pub fn with_capacity(cap: usize) -> JackVec<T> {
         // `padding` contains ~static assertions against types that are
         // incompatible with the current feature flags. We also call it to
-        // invoke these assertions when getting a pointer to the `ThinVec`
+        // invoke these assertions when getting a pointer to the `JackVec`
         // contents, but since we also get a pointer to the contents in the
         // `Drop` impl, trippng an assertion along that code path causes a
         // double panic. We duplicate the assertion here so that it is
@@ -339,13 +339,13 @@ impl<T> ThinVec<T> {
 
         if cap == 0 {
             unsafe {
-                ThinVec {
+                JackVec {
                     ptr: NonNull::new_unchecked(&EMPTY_HEADER as *const Header as *mut Header),
                     boo: PhantomData,
                 }
             }
         } else {
-            ThinVec {
+            JackVec {
                 ptr: header_with_capacity::<T>(cap),
                 boo: PhantomData,
             }
@@ -405,9 +405,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let a = thin_vec![1, 2, 3];
+    /// let a = jack_vec![1, 2, 3];
     /// assert_eq!(a.len(), 3);
     /// ```
     pub fn len(&self) -> usize {
@@ -419,9 +419,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::ThinVec;
+    /// use jackvec::JackVec;
     ///
-    /// let mut v = ThinVec::new();
+    /// let mut v = JackVec::new();
     /// assert!(v.is_empty());
     ///
     /// v.push(1);
@@ -437,9 +437,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::ThinVec;
+    /// use jackvec::JackVec;
     ///
-    /// let vec: ThinVec<i32> = ThinVec::with_capacity(10);
+    /// let vec: JackVec<i32> = JackVec::with_capacity(10);
     /// assert_eq!(vec.capacity(), 10);
     /// ```
     pub fn capacity(&self) -> usize {
@@ -458,17 +458,17 @@ impl<T> ThinVec<T> {
     /// is done using one of the safe operations instead, such as
     /// [`truncate`], [`resize`], [`extend`], or [`clear`].
     ///
-    /// [`truncate`]: ThinVec::truncate
-    /// [`resize`]: ThinVec::resize
-    /// [`extend`]: ThinVec::extend
-    /// [`clear`]: ThinVec::clear
+    /// [`truncate`]: JackVec::truncate
+    /// [`resize`]: JackVec::resize
+    /// [`extend`]: JackVec::extend
+    /// [`clear`]: JackVec::clear
     ///
     /// # Safety
     ///
     /// - `new_len` must be less than or equal to [`capacity()`].
     /// - The elements at `old_len..new_len` must be initialized.
     ///
-    /// [`capacity()`]: ThinVec::capacity
+    /// [`capacity()`]: JackVec::capacity
     ///
     /// # Examples
     ///
@@ -476,7 +476,7 @@ impl<T> ThinVec<T> {
     /// is serving as a buffer for other code, particularly over FFI:
     ///
     /// ```no_run
-    /// use thin_vec::ThinVec;
+    /// use jackvec::JackVec;
     ///
     /// # // This is just a minimal skeleton for the doc example;
     /// # // don't use this as a starting point for a real library.
@@ -490,9 +490,9 @@ impl<T> ThinVec<T> {
     /// #     ) -> i32;
     /// # }
     /// # impl StreamWrapper {
-    /// pub fn get_dictionary(&self) -> Option<ThinVec<u8>> {
+    /// pub fn get_dictionary(&self) -> Option<JackVec<u8>> {
     ///     // Per the FFI method's docs, "32768 bytes is always enough".
-    ///     let mut dict = ThinVec::with_capacity(32_768);
+    ///     let mut dict = JackVec::with_capacity(32_768);
     ///     let mut dict_length = 0;
     ///     // SAFETY: When `deflateGetDictionary` returns `Z_OK`, it holds that:
     ///     // 1. `dict_length` elements were initialized.
@@ -517,11 +517,11 @@ impl<T> ThinVec<T> {
     /// the inner vectors were not freed prior to the `set_len` call:
     ///
     /// ```no_run
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![thin_vec![1, 0, 0],
-    ///                    thin_vec![0, 1, 0],
-    ///                    thin_vec![0, 0, 1]];
+    /// let mut vec = jack_vec![jack_vec![1, 0, 0],
+    ///                    jack_vec![0, 1, 0],
+    ///                    jack_vec![0, 0, 1]];
     /// // SAFETY:
     /// // 1. `old_len..0` is empty so no elements need to be initialized.
     /// // 2. `0 <= capacity` always holds whatever `capacity` is.
@@ -536,7 +536,7 @@ impl<T> ThinVec<T> {
         if self.is_singleton() {
             // A prerequisite of `Vec::set_len` is that `new_len` must be
             // less than or equal to capacity(). The same applies here.
-            debug_assert!(len == 0, "invalid set_len({}) on empty ThinVec", len);
+            debug_assert!(len == 0, "invalid set_len({}) on empty JackVec", len);
         } else {
             self.header_mut().set_len(len)
         }
@@ -556,9 +556,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2];
+    /// let mut vec = jack_vec![1, 2];
     /// vec.push(3);
     /// assert_eq!(vec, [1, 2, 3]);
     /// ```
@@ -601,9 +601,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
+    /// let mut vec = jack_vec![1, 2, 3];
     /// assert_eq!(vec.pop(), Some(3));
     /// assert_eq!(vec, [1, 2]);
     /// ```
@@ -629,9 +629,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
+    /// let mut vec = jack_vec![1, 2, 3];
     /// vec.insert(1, 4);
     /// assert_eq!(vec, [1, 4, 2, 3]);
     /// vec.insert(4, 5);
@@ -658,9 +658,9 @@ impl<T> ThinVec<T> {
     /// Note: Because this shifts over the remaining elements, it has a
     /// worst-case performance of *O*(*n*). If you don't need the order of elements
     /// to be preserved, use [`swap_remove`] instead. If you'd like to remove
-    /// elements from the beginning of the `ThinVec`, consider using `std::collections::VecDeque`.
+    /// elements from the beginning of the `JackVec`, consider using `std::collections::VecDeque`.
     ///
-    /// [`swap_remove`]: ThinVec::swap_remove
+    /// [`swap_remove`]: JackVec::swap_remove
     ///
     /// # Panics
     ///
@@ -669,9 +669,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut v = thin_vec![1, 2, 3];
+    /// let mut v = jack_vec![1, 2, 3];
     /// assert_eq!(v.remove(1), 2);
     /// assert_eq!(v, [1, 3]);
     /// ```
@@ -696,7 +696,7 @@ impl<T> ThinVec<T> {
     /// This does not preserve ordering, but is *O*(1).
     /// If you need to preserve the element order, use [`remove`] instead.
     ///
-    /// [`remove`]: ThinVec::remove
+    /// [`remove`]: JackVec::remove
     ///
     /// # Panics
     ///
@@ -705,9 +705,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut v = thin_vec!["foo", "bar", "baz", "qux"];
+    /// let mut v = jack_vec!["foo", "bar", "baz", "qux"];
     ///
     /// assert_eq!(v.swap_remove(1), "bar");
     /// assert_eq!(v, ["foo", "qux", "baz"]);
@@ -745,9 +745,9 @@ impl<T> ThinVec<T> {
     /// Truncating a five element vector to two elements:
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3, 4, 5];
+    /// let mut vec = jack_vec![1, 2, 3, 4, 5];
     /// vec.truncate(2);
     /// assert_eq!(vec, [1, 2]);
     /// ```
@@ -756,9 +756,9 @@ impl<T> ThinVec<T> {
     /// length:
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
+    /// let mut vec = jack_vec![1, 2, 3];
     /// vec.truncate(8);
     /// assert_eq!(vec, [1, 2, 3]);
     /// ```
@@ -767,15 +767,15 @@ impl<T> ThinVec<T> {
     /// method.
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
+    /// let mut vec = jack_vec![1, 2, 3];
     /// vec.truncate(0);
     /// assert_eq!(vec, []);
     /// ```
     ///
-    /// [`clear`]: ThinVec::clear
-    /// [`drain`]: ThinVec::drain
+    /// [`clear`]: JackVec::clear
+    /// [`drain`]: JackVec::drain
     pub fn truncate(&mut self, len: usize) {
         unsafe {
             // drop any extra elements
@@ -797,16 +797,16 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut v = thin_vec![1, 2, 3];
+    /// let mut v = jack_vec![1, 2, 3];
     /// v.clear();
     /// assert!(v.is_empty());
     /// ```
     pub fn clear(&mut self) {
         unsafe {
             // Decrement len even in the case of a panic.
-            struct DropGuard<'a, T>(&'a mut ThinVec<T>);
+            struct DropGuard<'a, T>(&'a mut JackVec<T>);
             impl<T> Drop for DropGuard<'_, T> {
                 fn drop(&mut self) {
                     unsafe {
@@ -827,9 +827,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     /// use std::io::{self, Write};
-    /// let buffer = thin_vec![1, 2, 3, 5, 8];
+    /// let buffer = jack_vec![1, 2, 3, 5, 8];
     /// io::sink().write(buffer.as_slice()).unwrap();
     /// ```
     pub fn as_slice(&self) -> &[T] {
@@ -843,7 +843,7 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     /// use std::io::{self, Read};
     /// let mut buffer = vec![0; 3];
     /// io::repeat(0b101).read_exact(buffer.as_mut_slice()).unwrap();
@@ -868,7 +868,7 @@ impl<T> ThinVec<T> {
         }
         // Ensure the new capacity is at least double, to guarantee exponential growth.
         let double_cap = if old_cap == 0 {
-            // skip to 4 because tiny ThinVecs are dumb; but not if that would cause overflow
+            // skip to 4 because tiny JackVecs are dumb; but not if that would cause overflow
             if mem::size_of::<T>() > (!0) / 8 {
                 1
             } else {
@@ -906,9 +906,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::ThinVec;
+    /// use jackvec::JackVec;
     ///
-    /// let mut vec = ThinVec::with_capacity(10);
+    /// let mut vec = JackVec::with_capacity(10);
     /// vec.extend([1, 2, 3]);
     /// assert_eq!(vec.capacity(), 10);
     /// vec.shrink_to_fit();
@@ -921,7 +921,7 @@ impl<T> ThinVec<T> {
             return;
         }
         if new_cap == 0 {
-            *self = ThinVec::new();
+            *self = JackVec::new();
         } else {
             unsafe {
                 self.reallocate(new_cap);
@@ -938,9 +938,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec![1, 2, 3, 4];
+    /// let mut vec = jack_vec![1, 2, 3, 4];
     /// vec.retain(|&x| x%2 == 0);
     /// assert_eq!(vec, [2, 4]);
     /// # }
@@ -961,9 +961,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec![1, 2, 3, 4, 5];
+    /// let mut vec = jack_vec![1, 2, 3, 4, 5];
     /// vec.retain_mut(|x| {
     ///     *x += 1;
     ///     (*x)%2 == 0
@@ -987,7 +987,7 @@ impl<T> ThinVec<T> {
         }
 
         struct BackshiftOnDrop<'a, T> {
-            vec: &'a mut ThinVec<T>,
+            vec: &'a mut JackVec<T>,
             processed_len: usize,
             deleted_count: usize,
             original_len: usize,
@@ -1064,9 +1064,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec![10, 20, 21, 30, 20];
+    /// let mut vec = jack_vec![10, 20, 21, 30, 20];
     ///
     /// vec.dedup_by_key(|i| *i / 10);
     ///
@@ -1093,9 +1093,9 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec!["foo", "bar", "Bar", "baz", "bar"];
+    /// let mut vec = jack_vec!["foo", "bar", "Bar", "baz", "bar"];
     ///
     /// vec.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
     ///
@@ -1134,7 +1134,7 @@ impl<T> ThinVec<T> {
         struct FillGapOnDrop<'a, T> {
             read: usize,
             write: usize,
-            vec: &'a mut ThinVec<T>,
+            vec: &'a mut JackVec<T>,
         }
 
         impl<T> Drop for FillGapOnDrop<'_, T> {
@@ -1193,21 +1193,21 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
+    /// let mut vec = jack_vec![1, 2, 3];
     /// let vec2 = vec.split_off(1);
     /// assert_eq!(vec, [1]);
     /// assert_eq!(vec2, [2, 3]);
     /// ```
-    pub fn split_off(&mut self, at: usize) -> ThinVec<T> {
+    pub fn split_off(&mut self, at: usize) -> JackVec<T> {
         let old_len = self.len();
         let new_vec_len = old_len - at;
 
         assert!(at <= old_len, "Index out of bounds");
 
         unsafe {
-            let mut new_vec = ThinVec::with_capacity(new_vec_len);
+            let mut new_vec = JackVec::with_capacity(new_vec_len);
 
             ptr::copy_nonoverlapping(self.data_raw().add(at), new_vec.data_raw(), new_vec_len);
 
@@ -1227,15 +1227,15 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1, 2, 3];
-    /// let mut vec2 = thin_vec![4, 5, 6];
+    /// let mut vec = jack_vec![1, 2, 3];
+    /// let mut vec2 = jack_vec![4, 5, 6];
     /// vec.append(&mut vec2);
     /// assert_eq!(vec, [1, 2, 3, 4, 5, 6]);
     /// assert_eq!(vec2, []);
     /// ```
-    pub fn append(&mut self, other: &mut ThinVec<T>) {
+    pub fn append(&mut self, other: &mut JackVec<T>) {
         let other_len = other.len();
         if other_len == 0 {
             return;
@@ -1276,10 +1276,10 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// let mut v = thin_vec![1, 2, 3];
-    /// let u: ThinVec<_> = v.drain(1..).collect();
+    /// let mut v = jack_vec![1, 2, 3];
+    /// let u: JackVec<_> = v.drain(1..).collect();
     /// assert_eq!(v, &[1]);
     /// assert_eq!(u, &[2, 3]);
     ///
@@ -1348,11 +1348,11 @@ impl<T> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// let mut v = thin_vec![1, 2, 3, 4];
+    /// let mut v = jack_vec![1, 2, 3, 4];
     /// let new = [7, 8, 9];
-    /// let u: ThinVec<_> = v.splice(1..3, new).collect();
+    /// let u: JackVec<_> = v.splice(1..3, new).collect();
     /// assert_eq!(v, &[1, 7, 8, 9, 4]);
     /// assert_eq!(u, &[2, 3]);
     /// ```
@@ -1376,14 +1376,14 @@ impl<T> ThinVec<T> {
     ///
     /// If the returned `ExtractIf` is not exhausted, e.g. because it is dropped without iterating
     /// or the iteration short-circuits, then the remaining elements will be retained.
-    /// Use [`ThinVec::retain`] with a negated predicate if you do not need the returned iterator.
+    /// Use [`JackVec::retain`] with a negated predicate if you do not need the returned iterator.
     ///
     /// Using this method is equivalent to the following code:
     ///
     /// ```
-    /// # use thin_vec::{ThinVec, thin_vec};
+    /// # use jackvec::{JackVec, jack_vec};
     /// # let some_predicate = |x: &mut i32| { *x == 2 || *x == 3 || *x == 6 };
-    /// # let mut vec = thin_vec![1, 2, 3, 4, 5, 6];
+    /// # let mut vec = jack_vec![1, 2, 3, 4, 5, 6];
     /// let mut i = 0;
     /// while i < vec.len() {
     ///     if some_predicate(&mut vec[i]) {
@@ -1394,7 +1394,7 @@ impl<T> ThinVec<T> {
     ///     }
     /// }
     ///
-    /// # assert_eq!(vec, thin_vec![1, 4, 5]);
+    /// # assert_eq!(vec, jack_vec![1, 4, 5]);
     /// ```
     ///
     /// But `extract_if` is easier to use. `extract_if` is also more efficient,
@@ -1408,15 +1408,15 @@ impl<T> ThinVec<T> {
     /// Splitting an array into evens and odds, reusing the original allocation:
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// let mut numbers = thin_vec![1, 2, 3, 4, 5, 6, 8, 9, 11, 13, 14, 15];
+    /// let mut numbers = jack_vec![1, 2, 3, 4, 5, 6, 8, 9, 11, 13, 14, 15];
     ///
-    /// let evens = numbers.extract_if(.., |x| *x % 2 == 0).collect::<ThinVec<_>>();
+    /// let evens = numbers.extract_if(.., |x| *x % 2 == 0).collect::<JackVec<_>>();
     /// let odds = numbers;
     ///
-    /// assert_eq!(evens, thin_vec![2, 4, 6, 8, 14]);
-    /// assert_eq!(odds, thin_vec![1, 3, 5, 9, 11, 13, 15]);
+    /// assert_eq!(evens, jack_vec![2, 4, 6, 8, 14]);
+    /// assert_eq!(odds, jack_vec![1, 3, 5, 9, 11, 13, 15]);
     /// ```
     pub fn extract_if<F, R: RangeBounds<usize>>(
         &mut self,
@@ -1537,7 +1537,7 @@ impl<T> ThinVec<T> {
     }
 }
 
-impl<T: Clone> ThinVec<T> {
+impl<T: Clone> JackVec<T> {
     /// Resizes the `Vec` in-place so that `len()` is equal to `new_len`.
     ///
     /// If `new_len` is greater than `len()`, the `Vec` is extended by the
@@ -1547,13 +1547,13 @@ impl<T: Clone> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec!["hello"];
+    /// let mut vec = jack_vec!["hello"];
     /// vec.resize(3, "world");
     /// assert_eq!(vec, ["hello", "world", "world"]);
     ///
-    /// let mut vec = thin_vec![1, 2, 3, 4];
+    /// let mut vec = jack_vec![1, 2, 3, 4];
     /// vec.resize(2, 0);
     /// assert_eq!(vec, [1, 2]);
     /// # }
@@ -1566,7 +1566,7 @@ impl<T: Clone> ThinVec<T> {
             self.reserve(additional);
 
             struct SetLenOnDrop<'a, T> {
-                vec: &'a mut ThinVec<T>,
+                vec: &'a mut JackVec<T>,
                 initialized_len: usize,
             }
 
@@ -1600,10 +1600,10 @@ impl<T: Clone> ThinVec<T> {
         }
     }
 
-    /// Clones and appends all elements in a slice to the `ThinVec`.
+    /// Clones and appends all elements in a slice to the `JackVec`.
     ///
     /// Iterates over the slice `other`, clones each element, and then appends
-    /// it to this `ThinVec`. The `other` slice is traversed in-order.
+    /// it to this `JackVec`. The `other` slice is traversed in-order.
     ///
     /// Note that this function is same as [`extend`] except that it is
     /// specialized to work with slices instead. If and when Rust gets
@@ -1613,20 +1613,20 @@ impl<T: Clone> ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec![1];
+    /// let mut vec = jack_vec![1];
     /// vec.extend_from_slice(&[2, 3, 4]);
     /// assert_eq!(vec, [1, 2, 3, 4]);
     /// ```
     ///
-    /// [`extend`]: ThinVec::extend
+    /// [`extend`]: JackVec::extend
     pub fn extend_from_slice(&mut self, other: &[T]) {
         self.extend(other.iter().cloned())
     }
 }
 
-impl<T: PartialEq> ThinVec<T> {
+impl<T: PartialEq> JackVec<T> {
     /// Removes consecutive repeated elements in the vector.
     ///
     /// If the vector is sorted, this removes all duplicates.
@@ -1634,9 +1634,9 @@ impl<T: PartialEq> ThinVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate thin_vec;
+    /// # #[macro_use] extern crate jackvec;
     /// # fn main() {
-    /// let mut vec = thin_vec![1, 2, 2, 3, 2];
+    /// let mut vec = jack_vec![1, 2, 2, 3, 2];
     ///
     /// vec.dedup();
     ///
@@ -1648,12 +1648,12 @@ impl<T: PartialEq> ThinVec<T> {
     }
 }
 
-impl<T> Drop for ThinVec<T> {
+impl<T> Drop for JackVec<T> {
     #[inline]
     fn drop(&mut self) {
         #[cold]
         #[inline(never)]
-        fn drop_non_singleton<T>(this: &mut ThinVec<T>) {
+        fn drop_non_singleton<T>(this: &mut JackVec<T>) {
             unsafe {
                 ptr::drop_in_place(&mut this[..]);
 
@@ -1667,7 +1667,7 @@ impl<T> Drop for ThinVec<T> {
     }
 }
 
-impl<T> Deref for ThinVec<T> {
+impl<T> Deref for JackVec<T> {
     type Target = [T];
 
     fn deref(&self) -> &[T] {
@@ -1675,31 +1675,31 @@ impl<T> Deref for ThinVec<T> {
     }
 }
 
-impl<T> DerefMut for ThinVec<T> {
+impl<T> DerefMut for JackVec<T> {
     fn deref_mut(&mut self) -> &mut [T] {
         self.as_mut_slice()
     }
 }
 
-impl<T> Borrow<[T]> for ThinVec<T> {
+impl<T> Borrow<[T]> for JackVec<T> {
     fn borrow(&self) -> &[T] {
         self.as_slice()
     }
 }
 
-impl<T> BorrowMut<[T]> for ThinVec<T> {
+impl<T> BorrowMut<[T]> for JackVec<T> {
     fn borrow_mut(&mut self) -> &mut [T] {
         self.as_mut_slice()
     }
 }
 
-impl<T> AsRef<[T]> for ThinVec<T> {
+impl<T> AsRef<[T]> for JackVec<T> {
     fn as_ref(&self) -> &[T] {
         self.as_slice()
     }
 }
 
-impl<T> Extend<T> for ThinVec<T> {
+impl<T> Extend<T> for JackVec<T> {
     #[inline]
     fn extend<I>(&mut self, iter: I)
     where
@@ -1711,7 +1711,7 @@ impl<T> Extend<T> for ThinVec<T> {
             self.reserve(hint);
 
             struct SetLenOnDrop<'a, T> {
-                vec: &'a mut ThinVec<T>,
+                vec: &'a mut JackVec<T>,
                 initialized_len: usize,
             }
 
@@ -1748,13 +1748,13 @@ impl<T> Extend<T> for ThinVec<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for ThinVec<T> {
+impl<T: fmt::Debug> fmt::Debug for JackVec<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&**self, f)
     }
 }
 
-impl<T> Hash for ThinVec<T>
+impl<T> Hash for JackVec<T>
 where
     T: Hash,
 {
@@ -1766,37 +1766,37 @@ where
     }
 }
 
-impl<T> PartialOrd for ThinVec<T>
+impl<T> PartialOrd for JackVec<T>
 where
     T: PartialOrd,
 {
     #[inline]
-    fn partial_cmp(&self, other: &ThinVec<T>) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &JackVec<T>) -> Option<Ordering> {
         self[..].partial_cmp(&other[..])
     }
 }
 
-impl<T> Ord for ThinVec<T>
+impl<T> Ord for JackVec<T>
 where
     T: Ord,
 {
     #[inline]
-    fn cmp(&self, other: &ThinVec<T>) -> Ordering {
+    fn cmp(&self, other: &JackVec<T>) -> Ordering {
         self[..].cmp(&other[..])
     }
 }
 
-impl<A, B> PartialEq<ThinVec<B>> for ThinVec<A>
+impl<A, B> PartialEq<JackVec<B>> for JackVec<A>
 where
     A: PartialEq<B>,
 {
     #[inline]
-    fn eq(&self, other: &ThinVec<B>) -> bool {
+    fn eq(&self, other: &JackVec<B>) -> bool {
         self[..] == other[..]
     }
 }
 
-impl<A, B> PartialEq<Vec<B>> for ThinVec<A>
+impl<A, B> PartialEq<Vec<B>> for JackVec<A>
 where
     A: PartialEq<B>,
 {
@@ -1806,7 +1806,7 @@ where
     }
 }
 
-impl<A, B> PartialEq<[B]> for ThinVec<A>
+impl<A, B> PartialEq<[B]> for JackVec<A>
 where
     A: PartialEq<B>,
 {
@@ -1816,7 +1816,7 @@ where
     }
 }
 
-impl<'a, A, B> PartialEq<&'a [B]> for ThinVec<A>
+impl<'a, A, B> PartialEq<&'a [B]> for JackVec<A>
 where
     A: PartialEq<B>,
 {
@@ -1829,7 +1829,7 @@ where
 // Serde impls based on
 // https://github.com/bluss/arrayvec/blob/67ec907a98c0f40c4b76066fed3c1af59d35cf6a/src/arrayvec.rs#L1222-L1267
 #[cfg(feature = "serde")]
-impl<T: serde::Serialize> serde::Serialize for ThinVec<T> {
+impl<T: serde::Serialize> serde::Serialize for JackVec<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -1839,7 +1839,7 @@ impl<T: serde::Serialize> serde::Serialize for ThinVec<T> {
 }
 
 #[cfg(feature = "serde")]
-impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for ThinVec<T> {
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for JackVec<T> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -1847,10 +1847,10 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for ThinVec<T> {
         use serde::de::{SeqAccess, Visitor};
         use serde::Deserialize;
 
-        struct ThinVecVisitor<T>(PhantomData<T>);
+        struct JackVecVisitor<T>(PhantomData<T>);
 
-        impl<'de, T: Deserialize<'de>> Visitor<'de> for ThinVecVisitor<T> {
-            type Value = ThinVec<T>;
+        impl<'de, T: Deserialize<'de>> Visitor<'de> for JackVecVisitor<T> {
+            type Value = JackVec<T>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 write!(formatter, "a sequence")
@@ -1863,7 +1863,7 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for ThinVec<T> {
                 // Same policy as
                 // https://github.com/serde-rs/serde/blob/ce0844b9ecc32377b5e4545d759d385a8c46bc6a/serde/src/private/size_hint.rs#L13
                 let initial_capacity = seq.size_hint().unwrap_or_default().min(4096);
-                let mut values = ThinVec::<T>::with_capacity(initial_capacity);
+                let mut values = JackVec::<T>::with_capacity(initial_capacity);
 
                 while let Some(value) = seq.next_element()? {
                     values.push(value);
@@ -1873,12 +1873,12 @@ impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for ThinVec<T> {
             }
         }
 
-        deserializer.deserialize_seq(ThinVecVisitor::<T>(PhantomData))
+        deserializer.deserialize_seq(JackVecVisitor::<T>(PhantomData))
     }
 }
 
 #[cfg(feature = "malloc_size_of")]
-impl<T> MallocShallowSizeOf for ThinVec<T> {
+impl<T> MallocShallowSizeOf for JackVec<T> {
     fn shallow_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         if self.capacity() == 0 {
             // We're not a heap pointer.
@@ -1890,7 +1890,7 @@ impl<T> MallocShallowSizeOf for ThinVec<T> {
 }
 
 #[cfg(feature = "malloc_size_of")]
-impl<T: MallocSizeOf> MallocSizeOf for ThinVec<T> {
+impl<T: MallocSizeOf> MallocSizeOf for JackVec<T> {
     fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         let mut n = self.shallow_size_of(ops);
         for elem in self.iter() {
@@ -1902,12 +1902,12 @@ impl<T: MallocSizeOf> MallocSizeOf for ThinVec<T> {
 
 macro_rules! array_impls {
     ($($N:expr)*) => {$(
-        impl<A, B> PartialEq<[B; $N]> for ThinVec<A> where A: PartialEq<B> {
+        impl<A, B> PartialEq<[B; $N]> for JackVec<A> where A: PartialEq<B> {
             #[inline]
             fn eq(&self, other: &[B; $N]) -> bool { self[..] == other[..] }
         }
 
-        impl<'a, A, B> PartialEq<&'a [B; $N]> for ThinVec<A> where A: PartialEq<B> {
+        impl<'a, A, B> PartialEq<&'a [B; $N]> for JackVec<A> where A: PartialEq<B> {
             #[inline]
             fn eq(&self, other: &&'a [B; $N]) -> bool { self[..] == other[..] }
         }
@@ -1921,9 +1921,9 @@ array_impls! {
     30 31 32
 }
 
-impl<T> Eq for ThinVec<T> where T: Eq {}
+impl<T> Eq for JackVec<T> where T: Eq {}
 
-impl<T> IntoIterator for ThinVec<T> {
+impl<T> IntoIterator for JackVec<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
 
@@ -1935,7 +1935,7 @@ impl<T> IntoIterator for ThinVec<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a ThinVec<T> {
+impl<'a, T> IntoIterator for &'a JackVec<T> {
     type Item = &'a T;
     type IntoIter = slice::Iter<'a, T>;
 
@@ -1944,7 +1944,7 @@ impl<'a, T> IntoIterator for &'a ThinVec<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a mut ThinVec<T> {
+impl<'a, T> IntoIterator for &'a mut JackVec<T> {
     type Item = &'a mut T;
     type IntoIter = slice::IterMut<'a, T>;
 
@@ -1953,25 +1953,25 @@ impl<'a, T> IntoIterator for &'a mut ThinVec<T> {
     }
 }
 
-impl<T> Clone for ThinVec<T>
+impl<T> Clone for JackVec<T>
 where
     T: Clone,
 {
     #[inline]
-    fn clone(&self) -> ThinVec<T> {
+    fn clone(&self) -> JackVec<T> {
         #[cold]
         #[inline(never)]
-        fn clone_non_singleton<T: Clone>(this: &ThinVec<T>) -> ThinVec<T> {
+        fn clone_non_singleton<T: Clone>(this: &JackVec<T>) -> JackVec<T> {
             let len = this.len();
             if len == 0 {
-                return ThinVec::new();
+                return JackVec::new();
             }
 
-            let mut new_vec = ThinVec::<T>::with_capacity(len);
+            let mut new_vec = JackVec::<T>::with_capacity(len);
             let data = new_vec.data_raw();
 
             struct SetLenOnDrop<'a, T> {
-                vec: &'a mut ThinVec<T>,
+                vec: &'a mut JackVec<T>,
                 initialized_len: usize,
             }
 
@@ -1998,74 +1998,74 @@ where
         }
 
         if self.is_singleton() {
-            ThinVec::new()
+            JackVec::new()
         } else {
             clone_non_singleton(self)
         }
     }
 }
 
-impl<T> Default for ThinVec<T> {
-    fn default() -> ThinVec<T> {
-        ThinVec::new()
+impl<T> Default for JackVec<T> {
+    fn default() -> JackVec<T> {
+        JackVec::new()
     }
 }
 
-impl<T> FromIterator<T> for ThinVec<T> {
+impl<T> FromIterator<T> for JackVec<T> {
     #[inline]
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> ThinVec<T> {
-        let mut vec = ThinVec::new();
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> JackVec<T> {
+        let mut vec = JackVec::new();
         vec.extend(iter);
         vec
     }
 }
 
-impl<T: Clone> From<&[T]> for ThinVec<T> {
-    /// Allocate a `ThinVec<T>` and fill it by cloning `s`'s items.
+impl<T: Clone> From<&[T]> for JackVec<T> {
+    /// Allocate a `JackVec<T>` and fill it by cloning `s`'s items.
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// assert_eq!(ThinVec::from(&[1, 2, 3][..]), thin_vec![1, 2, 3]);
+    /// assert_eq!(JackVec::from(&[1, 2, 3][..]), jack_vec![1, 2, 3]);
     /// ```
-    fn from(s: &[T]) -> ThinVec<T> {
+    fn from(s: &[T]) -> JackVec<T> {
         s.iter().cloned().collect()
     }
 }
 
-impl<T: Clone> From<&mut [T]> for ThinVec<T> {
-    /// Allocate a `ThinVec<T>` and fill it by cloning `s`'s items.
+impl<T: Clone> From<&mut [T]> for JackVec<T> {
+    /// Allocate a `JackVec<T>` and fill it by cloning `s`'s items.
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// assert_eq!(ThinVec::from(&mut [1, 2, 3][..]), thin_vec![1, 2, 3]);
+    /// assert_eq!(JackVec::from(&mut [1, 2, 3][..]), jack_vec![1, 2, 3]);
     /// ```
-    fn from(s: &mut [T]) -> ThinVec<T> {
+    fn from(s: &mut [T]) -> JackVec<T> {
         s.iter().cloned().collect()
     }
 }
 
-impl<T, const N: usize> From<[T; N]> for ThinVec<T> {
-    /// Allocate a `ThinVec<T>` and move `s`'s items into it.
+impl<T, const N: usize> From<[T; N]> for JackVec<T> {
+    /// Allocate a `JackVec<T>` and move `s`'s items into it.
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// assert_eq!(ThinVec::from([1, 2, 3]), thin_vec![1, 2, 3]);
+    /// assert_eq!(JackVec::from([1, 2, 3]), jack_vec![1, 2, 3]);
     /// ```
-    fn from(s: [T; N]) -> ThinVec<T> {
+    fn from(s: [T; N]) -> JackVec<T> {
         if N == 0 {
-            return ThinVec::new();
+            return JackVec::new();
         }
 
-        let mut vec = ThinVec::with_capacity(N);
+        let mut vec = JackVec::with_capacity(N);
         let s = mem::ManuallyDrop::new(s);
         unsafe {
             ptr::copy_nonoverlapping(s.as_ptr(), vec.data_raw(), N);
@@ -2075,7 +2075,7 @@ impl<T, const N: usize> From<[T; N]> for ThinVec<T> {
     }
 }
 
-impl<T> From<Box<[T]>> for ThinVec<T> {
+impl<T> From<Box<[T]>> for JackVec<T> {
     /// Convert a boxed slice into a vector by transferring ownership of
     /// the existing heap allocation.
     ///
@@ -2084,10 +2084,10 @@ impl<T> From<Box<[T]>> for ThinVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// let b: Box<[i32]> = thin_vec![1, 2, 3].into_iter().collect();
-    /// assert_eq!(ThinVec::from(b), thin_vec![1, 2, 3]);
+    /// let b: Box<[i32]> = jack_vec![1, 2, 3].into_iter().collect();
+    /// assert_eq!(JackVec::from(b), jack_vec![1, 2, 3]);
     /// ```
     fn from(s: Box<[T]>) -> Self {
         // Can just lean on the fact that `Box<[T]>` -> `Vec<T>` is Free.
@@ -2095,30 +2095,30 @@ impl<T> From<Box<[T]>> for ThinVec<T> {
     }
 }
 
-impl<T> From<Vec<T>> for ThinVec<T> {
-    /// Convert a `std::Vec` into a `ThinVec`.
+impl<T> From<Vec<T>> for JackVec<T> {
+    /// Convert a `std::Vec` into a `JackVec`.
     ///
     /// **NOTE:** this must reallocate to change the layout!
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
     /// let b: Vec<i32> = vec![1, 2, 3];
-    /// assert_eq!(ThinVec::from(b), thin_vec![1, 2, 3]);
+    /// assert_eq!(JackVec::from(b), jack_vec![1, 2, 3]);
     /// ```
     fn from(mut s: Vec<T>) -> Self {
         let len = s.len();
         if len == 0 {
-            return ThinVec::new();
+            return JackVec::new();
         }
 
-        let mut vec = ThinVec::with_capacity(len);
+        let mut vec = JackVec::with_capacity(len);
         unsafe {
             ptr::copy_nonoverlapping(s.as_ptr(), vec.data_raw(), len);
 
-            // Transfer ownership to ThinVec before either container can drop.
+            // Transfer ownership to JackVec before either container can drop.
             s.set_len(0);
             vec.set_len_non_singleton(len);
         }
@@ -2126,20 +2126,20 @@ impl<T> From<Vec<T>> for ThinVec<T> {
     }
 }
 
-impl<T> From<ThinVec<T>> for Vec<T> {
-    /// Convert a `ThinVec` into a `std::Vec`.
+impl<T> From<JackVec<T>> for Vec<T> {
+    /// Convert a `JackVec` into a `std::Vec`.
     ///
     /// **NOTE:** this must reallocate to change the layout!
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// let b: ThinVec<i32> = thin_vec![1, 2, 3];
+    /// let b: JackVec<i32> = jack_vec![1, 2, 3];
     /// assert_eq!(Vec::from(b), vec![1, 2, 3]);
     /// ```
-    fn from(mut s: ThinVec<T>) -> Self {
+    fn from(mut s: JackVec<T>) -> Self {
         let len = s.len();
         if len == 0 {
             return Vec::new();
@@ -2147,7 +2147,7 @@ impl<T> From<ThinVec<T>> for Vec<T> {
 
         let mut vec = Vec::with_capacity(len);
         unsafe {
-            // ThinVec and Vec necessarily use different allocation layouts, but
+            // JackVec and Vec necessarily use different allocation layouts, but
             // their initialized element regions are both contiguous.
             ptr::copy_nonoverlapping(s.data_raw(), vec.as_mut_ptr(), len);
 
@@ -2160,7 +2160,7 @@ impl<T> From<ThinVec<T>> for Vec<T> {
     }
 }
 
-impl<T> From<ThinVec<T>> for Box<[T]> {
+impl<T> From<JackVec<T>> for Box<[T]> {
     /// Convert a vector into a boxed slice.
     ///
     /// If `v` has excess capacity, its items will be moved into a
@@ -2171,10 +2171,10 @@ impl<T> From<ThinVec<T>> for Box<[T]> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
-    /// assert_eq!(Box::from(thin_vec![1, 2, 3]), thin_vec![1, 2, 3].into_iter().collect());
+    /// use jackvec::{JackVec, jack_vec};
+    /// assert_eq!(Box::from(jack_vec![1, 2, 3]), jack_vec![1, 2, 3].into_iter().collect());
     /// ```
-    fn from(mut v: ThinVec<T>) -> Self {
+    fn from(mut v: JackVec<T>) -> Self {
         let len = v.len();
         if len == 0 {
             return Box::default();
@@ -2192,60 +2192,60 @@ impl<T> From<ThinVec<T>> for Box<[T]> {
     }
 }
 
-impl From<&str> for ThinVec<u8> {
-    /// Allocate a `ThinVec<u8>` and fill it with a UTF-8 string.
+impl From<&str> for JackVec<u8> {
+    /// Allocate a `JackVec<u8>` and fill it with a UTF-8 string.
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     ///
-    /// assert_eq!(ThinVec::from("123"), thin_vec![b'1', b'2', b'3']);
+    /// assert_eq!(JackVec::from("123"), jack_vec![b'1', b'2', b'3']);
     /// ```
-    fn from(s: &str) -> ThinVec<u8> {
+    fn from(s: &str) -> JackVec<u8> {
         From::from(s.as_bytes())
     }
 }
 
-impl<T, const N: usize> TryFrom<ThinVec<T>> for [T; N] {
-    type Error = ThinVec<T>;
+impl<T, const N: usize> TryFrom<JackVec<T>> for [T; N] {
+    type Error = JackVec<T>;
 
-    /// Gets the entire contents of the `ThinVec<T>` as an array,
+    /// Gets the entire contents of the `JackVec<T>` as an array,
     /// if its size exactly matches that of the requested array.
     ///
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
-    /// assert_eq!(thin_vec![1, 2, 3].try_into(), Ok([1, 2, 3]));
-    /// assert_eq!(<ThinVec<i32>>::new().try_into(), Ok([]));
+    /// assert_eq!(jack_vec![1, 2, 3].try_into(), Ok([1, 2, 3]));
+    /// assert_eq!(<JackVec<i32>>::new().try_into(), Ok([]));
     /// ```
     ///
     /// If the length doesn't match, the input comes back in `Err`:
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
-    /// let r: Result<[i32; 4], _> = (0..10).collect::<ThinVec<_>>().try_into();
-    /// assert_eq!(r, Err(thin_vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
+    /// let r: Result<[i32; 4], _> = (0..10).collect::<JackVec<_>>().try_into();
+    /// assert_eq!(r, Err(jack_vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
     /// ```
     ///
-    /// If you're fine with just getting a prefix of the `ThinVec<T>`,
-    /// you can call [`.truncate(N)`](ThinVec::truncate) first.
+    /// If you're fine with just getting a prefix of the `JackVec<T>`,
+    /// you can call [`.truncate(N)`](JackVec::truncate) first.
     /// ```
-    /// use thin_vec::{ThinVec, thin_vec};
+    /// use jackvec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
-    /// let mut v = ThinVec::from("hello world");
+    /// let mut v = JackVec::from("hello world");
     /// v.sort();
     /// v.truncate(2);
     /// let [a, b]: [_; 2] = v.try_into().unwrap();
     /// assert_eq!(a, b' ');
     /// assert_eq!(b, b'd');
     /// ```
-    fn try_from(mut vec: ThinVec<T>) -> Result<[T; N], ThinVec<T>> {
+    fn try_from(mut vec: JackVec<T>) -> Result<[T; N], JackVec<T>> {
         if vec.len() != N {
             return Err(vec);
         }
@@ -2253,11 +2253,11 @@ impl<T, const N: usize> TryFrom<ThinVec<T>> for [T; N] {
         // SAFETY: `.set_len(0)` is always sound.
         unsafe { vec.set_len(0) };
 
-        // SAFETY: A `ThinVec`'s pointer is always aligned properly, and
+        // SAFETY: A `JackVec`'s pointer is always aligned properly, and
         // the alignment the array needs is the same as the items.
         // We checked earlier that we have sufficient items.
         // The items will not double-drop as the `set_len`
-        // tells the `ThinVec` not to also drop them.
+        // tells the `JackVec` not to also drop them.
         let array = unsafe { ptr::read(vec.data_raw() as *const [T; N]) };
         Ok(array)
     }
@@ -2265,19 +2265,19 @@ impl<T, const N: usize> TryFrom<ThinVec<T>> for [T; N] {
 
 /// An iterator that moves out of a vector.
 ///
-/// This `struct` is created by the [`ThinVec::into_iter`][]
+/// This `struct` is created by the [`JackVec::into_iter`][]
 /// (provided by the [`IntoIterator`] trait).
 ///
 /// # Example
 ///
 /// ```
-/// use thin_vec::thin_vec;
+/// use jackvec::jack_vec;
 ///
-/// let v = thin_vec![0, 1, 2];
-/// let iter: thin_vec::IntoIter<_> = v.into_iter();
+/// let v = jack_vec![0, 1, 2];
+/// let iter: jackvec::IntoIter<_> = v.into_iter();
 /// ```
 pub struct IntoIter<T> {
-    vec: ThinVec<T>,
+    vec: JackVec<T>,
     start: usize,
 }
 
@@ -2287,9 +2287,9 @@ impl<T> IntoIter<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let vec = thin_vec!['a', 'b', 'c'];
+    /// let vec = jack_vec!['a', 'b', 'c'];
     /// let mut into_iter = vec.into_iter();
     /// assert_eq!(into_iter.as_slice(), &['a', 'b', 'c']);
     /// let _ = into_iter.next().unwrap();
@@ -2304,9 +2304,9 @@ impl<T> IntoIter<T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let vec = thin_vec!['a', 'b', 'c'];
+    /// let vec = jack_vec!['a', 'b', 'c'];
     /// let mut into_iter = vec.into_iter();
     /// assert_eq!(into_iter.as_slice(), &['a', 'b', 'c']);
     /// into_iter.as_mut_slice()[2] = 'z';
@@ -2403,42 +2403,42 @@ impl<T> AsRef<[T]> for IntoIter<T> {
 impl<T: Clone> Clone for IntoIter<T> {
     #[allow(clippy::into_iter_on_ref)]
     fn clone(&self) -> Self {
-        // Just create a new `ThinVec` from the remaining elements and IntoIter it
+        // Just create a new `JackVec` from the remaining elements and IntoIter it
         self.as_slice()
             .into_iter()
             .cloned()
-            .collect::<ThinVec<_>>()
+            .collect::<JackVec<_>>()
             .into_iter()
     }
 }
 
-/// A draining iterator for `ThinVec<T>`.
+/// A draining iterator for `JackVec<T>`.
 ///
-/// This `struct` is created by [`ThinVec::drain`].
+/// This `struct` is created by [`JackVec::drain`].
 /// See its documentation for more.
 ///
 /// # Example
 ///
 /// ```
-/// use thin_vec::thin_vec;
+/// use jackvec::jack_vec;
 ///
-/// let mut v = thin_vec![0, 1, 2];
-/// let iter: thin_vec::Drain<_> = v.drain(..);
+/// let mut v = jack_vec![0, 1, 2];
+/// let iter: jackvec::Drain<_> = v.drain(..);
 /// ```
 pub struct Drain<'a, T> {
-    // Ok so ThinVec::drain takes a range of the ThinVec and yields the contents by-value,
+    // Ok so JackVec::drain takes a range of the JackVec and yields the contents by-value,
     // then backshifts the array. During iteration the array is in an unsound state
     // (big deinitialized hole in it), and this is very dangerous.
     //
     // Our first line of defense is the borrow checker: we have a mutable borrow, so nothing
-    // can access the ThinVec while we exist. As long as we make sure the ThinVec is in a valid
+    // can access the JackVec while we exist. As long as we make sure the JackVec is in a valid
     // state again before we release the borrow, everything should be A-OK! We do this cleanup
     // in our Drop impl.
     //
     // Unfortunately, that's unsound, because mem::forget exists and The Leakpocalypse Is Real.
     // So we can't actually guarantee our destructor runs before our borrow expires. Thankfully
-    // this isn't fatal: we can just set the ThinVec's len to 0 at the start, so if anyone
-    // leaks the Drain, we just leak everything the ThinVec contained out of spite! If they
+    // this isn't fatal: we can just set the JackVec's len to 0 at the start, so if anyone
+    // leaks the Drain, we just leak everything the JackVec contained out of spite! If they
     // *don't* leak us then we can properly repair the len in our Drop impl. This is known
     // as "leak amplification", and is the same approach std uses.
     //
@@ -2492,13 +2492,13 @@ pub struct Drain<'a, T> {
     /// It's ok to use Iter here because it promises to only take refs to the parts
     /// we haven't yielded yet.
     iter: Iter<'a, T>,
-    /// The actual ThinVec, which we need to hold onto to undo the leak amplification
+    /// The actual JackVec, which we need to hold onto to undo the leak amplification
     /// and backshift the tail into place. This should only be accessed when we're
     /// completely done with the Iter in the `drop` impl of this type (or miri will get mad).
     ///
     /// Since we set the `len` of this to be before `Iter`, we can use that `len`
     /// to retrieve the index of the start of the drain range later.
-    vec: NonNull<ThinVec<T>>,
+    vec: NonNull<JackVec<T>>,
     /// The one-past-the-end index of the drain range, or equivalently the start of the tail.
     end: usize,
     /// The length of the tail.
@@ -2563,9 +2563,9 @@ impl<'a, T> Drain<'a, T> {
     /// # Examples
     ///
     /// ```
-    /// use thin_vec::thin_vec;
+    /// use jackvec::jack_vec;
     ///
-    /// let mut vec = thin_vec!['a', 'b', 'c'];
+    /// let mut vec = jack_vec!['a', 'b', 'c'];
     /// let mut drain = vec.drain(..);
     /// assert_eq!(drain.as_slice(), &['a', 'b', 'c']);
     /// let _ = drain.next().unwrap();
@@ -2585,19 +2585,19 @@ impl<'a, T> AsRef<[T]> for Drain<'a, T> {
     }
 }
 
-/// A splicing iterator for `ThinVec`.
+/// A splicing iterator for `JackVec`.
 ///
-/// This struct is created by [`ThinVec::splice`][].
+/// This struct is created by [`JackVec::splice`][].
 /// See its documentation for more.
 ///
 /// # Example
 ///
 /// ```
-/// use thin_vec::thin_vec;
+/// use jackvec::jack_vec;
 ///
-/// let mut v = thin_vec![0, 1, 2];
+/// let mut v = jack_vec![0, 1, 2];
 /// let new = [7, 8];
-/// let iter: thin_vec::Splice<_> = v.splice(1.., new);
+/// let iter: jackvec::Splice<_> = v.splice(1.., new);
 /// ```
 #[derive(Debug)]
 pub struct Splice<'a, I: Iterator + 'a> {
@@ -2631,7 +2631,7 @@ impl<I: Iterator> Drop for Splice<'_, I> {
         self.drain.by_ref().for_each(drop);
 
         unsafe {
-            // If there's no tail elements, then the inner ThinVec is already
+            // If there's no tail elements, then the inner JackVec is already
             // correct and we can just extend it like normal.
             if self.drain.tail == 0 {
                 self.drain.vec.as_mut().extend(self.replace_with.by_ref());
@@ -2713,10 +2713,10 @@ impl<T> Drain<'_, T> {
     }
 }
 
-/// An iterator for [`ThinVec`] which uses a closure to determine if an element should be removed.
+/// An iterator for [`JackVec`] which uses a closure to determine if an element should be removed.
 #[must_use = "iterators are lazy and do nothing unless consumed"]
 pub struct ExtractIf<'a, T, F> {
-    vec: &'a mut ThinVec<T>,
+    vec: &'a mut JackVec<T>,
     /// The index of the item that will be inspected by the next call to `next`.
     idx: usize,
     /// Elements at and beyond this point will be retained. Must be equal or smaller than `old_len`.
@@ -2786,11 +2786,11 @@ impl<A, F> Drop for ExtractIf<'_, A, F> {
     }
 }
 
-/// Write is implemented for `ThinVec<u8>` by appending to the vector.
+/// Write is implemented for `JackVec<u8>` by appending to the vector.
 /// The vector will grow as needed.
 /// This implementation is identical to the one for `Vec<u8>`.
 #[cfg(feature = "std")]
-impl std::io::Write for ThinVec<u8> {
+impl std::io::Write for JackVec<u8> {
     #[inline]
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         self.extend_from_slice(buf);
@@ -2813,37 +2813,37 @@ impl std::io::Write for ThinVec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ThinVec, MAX_CAP};
+    use super::{JackVec, MAX_CAP};
     use crate::alloc::{string::ToString, vec};
 
     #[test]
     fn test_size_of() {
         use core::mem::size_of;
-        assert_eq!(size_of::<ThinVec<u8>>(), size_of::<&u8>());
+        assert_eq!(size_of::<JackVec<u8>>(), size_of::<&u8>());
 
-        assert_eq!(size_of::<Option<ThinVec<u8>>>(), size_of::<&u8>());
+        assert_eq!(size_of::<Option<JackVec<u8>>>(), size_of::<&u8>());
     }
 
     #[test]
     fn test_drop_empty() {
-        ThinVec::<u8>::new();
+        JackVec::<u8>::new();
     }
 
     #[test]
     #[should_panic]
     fn test_cap_plus_header_rounded_up_overflows() {
-        let _ = ThinVec::<u8>::with_capacity(isize::MAX as usize - size_of::<super::Header>());
+        let _ = JackVec::<u8>::with_capacity(isize::MAX as usize - size_of::<super::Header>());
     }
 
     #[test]
     fn test_data_ptr_alignment() {
-        let v = ThinVec::<u16>::new();
+        let v = JackVec::<u16>::new();
         assert!(v.data_raw() as usize % core::mem::align_of::<u16>() == 0);
 
-        let v = ThinVec::<u32>::new();
+        let v = JackVec::<u32>::new();
         assert!(v.data_raw() as usize % core::mem::align_of::<u32>() == 0);
 
-        let v = ThinVec::<u64>::new();
+        let v = JackVec::<u64>::new();
         assert!(v.data_raw() as usize % core::mem::align_of::<u64>() == 0);
     }
 
@@ -2853,20 +2853,20 @@ mod tests {
         #[allow(unused)]
         struct Align16(u8);
 
-        let v = ThinVec::<Align16>::new();
+        let v = JackVec::<Align16>::new();
         assert!(v.data_raw() as usize % 16 == 0);
     }
 
     #[test]
     fn test_partial_eq() {
-        assert_eq!(thin_vec![0], thin_vec![0]);
-        assert_ne!(thin_vec![0], thin_vec![1]);
-        assert_eq!(thin_vec![1, 2, 3], vec![1, 2, 3]);
+        assert_eq!(jack_vec![0], jack_vec![0]);
+        assert_ne!(jack_vec![0], jack_vec![1]);
+        assert_eq!(jack_vec![1, 2, 3], vec![1, 2, 3]);
     }
 
     #[test]
     fn test_alloc() {
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         assert!(!v.has_allocation());
         v.push(1);
         assert!(v.has_allocation());
@@ -2876,16 +2876,16 @@ mod tests {
         assert!(!v.has_allocation());
         v.reserve(64);
         assert!(v.has_allocation());
-        v = ThinVec::with_capacity(64);
+        v = JackVec::with_capacity(64);
         assert!(v.has_allocation());
-        v = ThinVec::with_capacity(0);
+        v = JackVec::with_capacity(0);
         assert!(!v.has_allocation());
     }
 
     #[test]
     fn test_drain_items() {
-        let mut vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..) {
             vec2.push(i);
         }
@@ -2895,8 +2895,8 @@ mod tests {
 
     #[test]
     fn test_drain_items_reverse() {
-        let mut vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..).rev() {
             vec2.push(i);
         }
@@ -2906,8 +2906,8 @@ mod tests {
 
     #[test]
     fn test_drain_items_zero_sized() {
-        let mut vec = thin_vec![(), (), ()];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![(), (), ()];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..) {
             vec2.push(i);
         }
@@ -2918,32 +2918,32 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_drain_out_of_bounds() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         v.drain(5..6);
     }
 
     #[test]
     fn test_drain_range() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         for _ in v.drain(4..) {}
         assert_eq!(v, &[1, 2, 3, 4]);
 
-        let mut v: ThinVec<_> = (1..6).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (1..6).map(|x| x.to_string()).collect();
         for _ in v.drain(1..4) {}
         assert_eq!(v, &[1.to_string(), 5.to_string()]);
 
-        let mut v: ThinVec<_> = (1..6).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (1..6).map(|x| x.to_string()).collect();
         for _ in v.drain(1..4).rev() {}
         assert_eq!(v, &[1.to_string(), 5.to_string()]);
 
-        let mut v: ThinVec<_> = thin_vec![(); 5];
+        let mut v: JackVec<_> = jack_vec![(); 5];
         for _ in v.drain(1..4).rev() {}
         assert_eq!(v, &[(), ()]);
     }
 
     #[test]
     fn test_drain_max_vec_size() {
-        let mut v = ThinVec::<()>::with_capacity(MAX_CAP);
+        let mut v = JackVec::<()>::with_capacity(MAX_CAP);
         unsafe {
             v.set_len(MAX_CAP);
         }
@@ -2953,7 +2953,7 @@ mod tests {
 
     #[test]
     fn test_clear() {
-        let mut v = ThinVec::<i32>::new();
+        let mut v = JackVec::<i32>::new();
         assert_eq!(v.len(), 0);
         assert_eq!(v.capacity(), 0);
         assert_eq!(&v[..], &[]);
@@ -2994,7 +2994,7 @@ mod tests {
     #[test]
     fn test_empty_singleton_torture() {
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
             assert!(v.is_empty());
@@ -3008,10 +3008,10 @@ mod tests {
         }
 
         {
-            let v = ThinVec::<i32>::new();
+            let v = JackVec::<i32>::new();
             assert_eq!(v.into_iter().count(), 0);
 
-            let v = ThinVec::<i32>::new();
+            let v = JackVec::<i32>::new();
             #[allow(clippy::never_loop)]
             for _ in v.into_iter() {
                 unreachable!();
@@ -3019,7 +3019,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             assert_eq!(v.drain(..).len(), 0);
 
             #[allow(clippy::never_loop)]
@@ -3033,7 +3033,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             assert_eq!(v.splice(.., []).len(), 0);
 
             #[allow(clippy::never_loop)]
@@ -3047,7 +3047,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.truncate(1);
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
@@ -3060,7 +3060,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.shrink_to_fit();
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
@@ -3068,7 +3068,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             let new = v.split_off(0);
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
@@ -3080,8 +3080,8 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
-            let mut other = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
+            let mut other = JackVec::<i32>::new();
             v.append(&mut other);
 
             assert_eq!(v.len(), 0);
@@ -3094,7 +3094,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.reserve(0);
 
             assert_eq!(v.len(), 0);
@@ -3103,7 +3103,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.reserve_exact(0);
 
             assert_eq!(v.len(), 0);
@@ -3112,7 +3112,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.reserve(0);
 
             assert_eq!(v.len(), 0);
@@ -3121,7 +3121,7 @@ mod tests {
         }
 
         {
-            let v = ThinVec::<i32>::with_capacity(0);
+            let v = JackVec::<i32>::with_capacity(0);
 
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
@@ -3129,7 +3129,7 @@ mod tests {
         }
 
         {
-            let v = ThinVec::<i32>::default();
+            let v = JackVec::<i32>::default();
 
             assert_eq!(v.len(), 0);
             assert_eq!(v.capacity(), 0);
@@ -3137,7 +3137,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.retain(|_| unreachable!());
 
             assert_eq!(v.len(), 0);
@@ -3146,7 +3146,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.retain_mut(|_| unreachable!());
 
             assert_eq!(v.len(), 0);
@@ -3155,7 +3155,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.dedup_by_key(|x| *x);
 
             assert_eq!(v.len(), 0);
@@ -3164,7 +3164,7 @@ mod tests {
         }
 
         {
-            let mut v = ThinVec::<i32>::new();
+            let mut v = JackVec::<i32>::new();
             v.dedup_by(|_, _| unreachable!());
 
             assert_eq!(v.len(), 0);
@@ -3173,7 +3173,7 @@ mod tests {
         }
 
         {
-            let v = ThinVec::<i32>::new();
+            let v = JackVec::<i32>::new();
             let v = v.clone();
 
             assert_eq!(v.len(), 0);
@@ -3184,7 +3184,7 @@ mod tests {
 
     #[test]
     fn test_clone() {
-        let mut v = ThinVec::<i32>::new();
+        let mut v = JackVec::<i32>::new();
         assert!(v.is_singleton());
         v.push(0);
         v.pop();
@@ -3218,21 +3218,21 @@ mod std_tests {
 
     #[test]
     fn test_small_vec_struct() {
-        assert!(size_of::<ThinVec<u8>>() == size_of::<usize>());
+        assert!(size_of::<JackVec<u8>>() == size_of::<usize>());
     }
 
     #[test]
     fn test_double_drop() {
         struct TwoVec<T> {
-            x: ThinVec<T>,
-            y: ThinVec<T>,
+            x: JackVec<T>,
+            y: JackVec<T>,
         }
 
         let (mut count_x, mut count_y) = (0, 0);
         {
             let mut tv = TwoVec {
-                x: ThinVec::new(),
-                y: ThinVec::new(),
+                x: JackVec::new(),
+                y: JackVec::new(),
             };
             tv.x.push(DropCounter {
                 count: &mut count_x,
@@ -3241,7 +3241,7 @@ mod std_tests {
                 count: &mut count_y,
             });
 
-            // If ThinVec had a drop flag, here is where it would be zeroed.
+            // If JackVec had a drop flag, here is where it would be zeroed.
             // Instead, it should rely on its internal state to prevent
             // doing anything significant when dropped multiple times.
             drop(tv.x);
@@ -3258,15 +3258,15 @@ mod std_tests {
         use alloc::rc::Rc;
         use core::cell::Cell;
 
-        let empty = Vec::from(ThinVec::<u64>::new());
+        let empty = Vec::from(JackVec::<u64>::new());
         assert!(empty.is_empty());
         assert_eq!(empty.capacity(), 0);
 
-        let allocated_empty = Vec::from(ThinVec::<u64>::with_capacity(8));
+        let allocated_empty = Vec::from(JackVec::<u64>::with_capacity(8));
         assert!(allocated_empty.is_empty());
         assert_eq!(allocated_empty.capacity(), 0);
 
-        let mut source = ThinVec::with_capacity(16);
+        let mut source = JackVec::with_capacity(16);
         source.extend([10, 20, 30]);
         let values = Vec::from(source);
         assert_eq!(values, [10, 20, 30]);
@@ -3280,7 +3280,7 @@ mod std_tests {
         }
 
         let drops = Rc::new(Cell::new(0));
-        let source = thin_vec![
+        let source = jack_vec![
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
@@ -3296,14 +3296,14 @@ mod std_tests {
             fn drop(&mut self) {}
         }
 
-        let zsts = Vec::from(thin_vec![Zst, Zst, Zst]);
+        let zsts = Vec::from(jack_vec![Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
             struct Aligned(u8);
 
-            let aligned = Vec::from(thin_vec![Aligned(1), Aligned(2)]);
+            let aligned = Vec::from(jack_vec![Aligned(1), Aligned(2)]);
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
@@ -3314,10 +3314,10 @@ mod std_tests {
         use alloc::rc::Rc;
         use core::cell::Cell;
 
-        assert!(Box::<[u64]>::from(ThinVec::new()).is_empty());
-        assert!(Box::<[u64]>::from(ThinVec::with_capacity(8)).is_empty());
+        assert!(Box::<[u64]>::from(JackVec::new()).is_empty());
+        assert!(Box::<[u64]>::from(JackVec::with_capacity(8)).is_empty());
 
-        let mut source = ThinVec::with_capacity(16);
+        let mut source = JackVec::with_capacity(16);
         source.extend([10, 20, 30]);
         let values = Box::<[u64]>::from(source);
         assert_eq!(&*values, [10, 20, 30]);
@@ -3330,7 +3330,7 @@ mod std_tests {
         }
 
         let drops = Rc::new(Cell::new(0));
-        let source = thin_vec![
+        let source = jack_vec![
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
@@ -3346,14 +3346,14 @@ mod std_tests {
             fn drop(&mut self) {}
         }
 
-        let zsts = Box::<[Zst]>::from(thin_vec![Zst, Zst, Zst]);
+        let zsts = Box::<[Zst]>::from(jack_vec![Zst, Zst, Zst]);
         assert_eq!(&*zsts, [Zst, Zst, Zst]);
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
             struct Aligned(u8);
 
-            let aligned = Box::<[Aligned]>::from(thin_vec![Aligned(1), Aligned(2)]);
+            let aligned = Box::<[Aligned]>::from(jack_vec![Aligned(1), Aligned(2)]);
             assert_eq!(&*aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
@@ -3364,12 +3364,12 @@ mod std_tests {
         use alloc::{rc::Rc, vec};
         use core::cell::Cell;
 
-        assert!(ThinVec::<u64>::from(Vec::new()).is_empty());
-        assert!(ThinVec::<u64>::from(Vec::with_capacity(8)).is_empty());
+        assert!(JackVec::<u64>::from(Vec::new()).is_empty());
+        assert!(JackVec::<u64>::from(Vec::with_capacity(8)).is_empty());
 
         let mut source = Vec::with_capacity(16);
         source.extend([10, 20, 30]);
-        let values = ThinVec::from(source);
+        let values = JackVec::from(source);
         assert_eq!(values, [10, 20, 30]);
         assert_eq!(values.capacity(), values.len());
 
@@ -3386,7 +3386,7 @@ mod std_tests {
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
         ];
-        let values = ThinVec::from(source);
+        let values = JackVec::from(source);
         assert_eq!(drops.get(), 0);
         drop(values);
         assert_eq!(drops.get(), 3);
@@ -3397,14 +3397,14 @@ mod std_tests {
             fn drop(&mut self) {}
         }
 
-        let zsts = ThinVec::from(vec![Zst, Zst, Zst]);
+        let zsts = JackVec::from(vec![Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
             struct Aligned(u8);
 
-            let aligned = ThinVec::from(vec![Aligned(1), Aligned(2)]);
+            let aligned = JackVec::from(vec![Aligned(1), Aligned(2)]);
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
@@ -3415,9 +3415,9 @@ mod std_tests {
         use alloc::rc::Rc;
         use core::cell::Cell;
 
-        assert!(ThinVec::<u64>::from([]).is_empty());
-        assert_eq!(ThinVec::from([10]), [10]);
-        let values = ThinVec::from([10, 20, 30, 40]);
+        assert!(JackVec::<u64>::from([]).is_empty());
+        assert_eq!(JackVec::from([10]), [10]);
+        let values = JackVec::from([10, 20, 30, 40]);
         assert_eq!(values, [10, 20, 30, 40]);
         assert_eq!(values.capacity(), 4);
 
@@ -3429,7 +3429,7 @@ mod std_tests {
         }
 
         let drops = Rc::new(Cell::new(0));
-        let values = ThinVec::from([
+        let values = JackVec::from([
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
             CountDrop(drops.clone()),
@@ -3440,14 +3440,14 @@ mod std_tests {
 
         #[derive(Debug, PartialEq)]
         struct Zst;
-        let zsts = ThinVec::from([Zst, Zst, Zst]);
+        let zsts = JackVec::from([Zst, Zst, Zst]);
         assert_eq!(zsts, [Zst, Zst, Zst]);
         {
             #[repr(align(64))]
             #[derive(Debug, PartialEq)]
             struct Aligned(u8);
 
-            let aligned = ThinVec::from([Aligned(1), Aligned(2)]);
+            let aligned = JackVec::from([Aligned(1), Aligned(2)]);
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
@@ -3455,7 +3455,7 @@ mod std_tests {
 
     #[test]
     fn test_reserve() {
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         assert_eq!(v.capacity(), 0);
 
         v.reserve(2);
@@ -3477,8 +3477,8 @@ mod std_tests {
 
     #[test]
     fn test_extend() {
-        let mut v = ThinVec::<usize>::new();
-        let mut w = ThinVec::new();
+        let mut v = JackVec::<usize>::new();
+        let mut w = JackVec::new();
         v.extend(w.clone());
         assert_eq!(v, &[]);
 
@@ -3503,8 +3503,8 @@ mod std_tests {
         #[derive(PartialEq, Debug)]
         struct Foo;
 
-        let mut a = ThinVec::new();
-        let b = thin_vec![Foo, Foo];
+        let mut a = JackVec::new();
+        let b = jack_vec![Foo, Foo];
 
         a.extend(b);
         assert_eq!(a, &[Foo, Foo]);
@@ -3512,8 +3512,8 @@ mod std_tests {
         // Double drop
         let mut count_x = 0;
         {
-            let mut x = ThinVec::new();
-            let y = thin_vec![DropCounter {
+            let mut x = JackVec::new();
+            let y = jack_vec![DropCounter {
                 count: &mut count_x
             }];
             x.extend(y);
@@ -3541,21 +3541,21 @@ mod std_tests {
             }
         }
 
-        let mut overestimated = thin_vec![9];
+        let mut overestimated = jack_vec![9];
         overestimated.extend(Hint {
             inner: 0..2,
             lower: 4,
         });
         assert_eq!(overestimated, [9, 0, 1]);
 
-        let mut underestimated = thin_vec![9];
+        let mut underestimated = jack_vec![9];
         underestimated.extend(Hint {
             inner: 0..4,
             lower: 2,
         });
         assert_eq!(underestimated, [9, 0, 1, 2, 3]);
 
-        let mut empty = thin_vec![9];
+        let mut empty = jack_vec![9];
         empty.extend(core::iter::empty());
         assert_eq!(empty, [9]);
     }
@@ -3604,7 +3604,7 @@ mod std_tests {
         }
 
         let drops = Rc::new((0..3).map(|_| Cell::new(0)).collect::<Vec<_>>());
-        let mut values = thin_vec![Counted {
+        let mut values = jack_vec![Counted {
             id: 0,
             drops: drops.clone(),
         }];
@@ -3627,7 +3627,7 @@ mod std_tests {
 
     #[test]
     fn test_resize() {
-        let mut values = thin_vec![1, 2];
+        let mut values = jack_vec![1, 2];
         values.resize(5, 9);
         assert_eq!(values, [1, 2, 9, 9, 9]);
         values.resize(5, 7);
@@ -3635,7 +3635,7 @@ mod std_tests {
         values.resize(2, 0);
         assert_eq!(values, [1, 2]);
 
-        let mut zst = ThinVec::new();
+        let mut zst = JackVec::new();
         zst.resize(8, ());
         assert_eq!(zst.len(), 8);
         zst.resize(1, ());
@@ -3703,7 +3703,7 @@ mod std_tests {
             value_drops: value_drops.clone(),
             clone_drops: clone_drops.clone(),
         };
-        let mut values = thin_vec![make(Kind::Existing)];
+        let mut values = jack_vec![make(Kind::Existing)];
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             values.resize(5, make(Kind::Value));
@@ -3724,13 +3724,13 @@ mod std_tests {
     /* TODO: implement extend for Iter<&Copy>
         #[test]
         fn test_extend_ref() {
-            let mut v = thin_vec![1, 2];
+            let mut v = jack_vec![1, 2];
             v.extend(&[3, 4, 5]);
 
             assert_eq!(v.len(), 5);
             assert_eq!(v, [1, 2, 3, 4, 5]);
 
-            let w = thin_vec![6, 7];
+            let w = jack_vec![6, 7];
             v.extend(&w);
 
             assert_eq!(v.len(), 7);
@@ -3740,7 +3740,7 @@ mod std_tests {
 
     #[test]
     fn test_slice_from_mut() {
-        let mut values = thin_vec![1, 2, 3, 4, 5];
+        let mut values = jack_vec![1, 2, 3, 4, 5];
         {
             let slice = &mut values[2..];
             assert!(slice == [3, 4, 5]);
@@ -3754,7 +3754,7 @@ mod std_tests {
 
     #[test]
     fn test_slice_to_mut() {
-        let mut values = thin_vec![1, 2, 3, 4, 5];
+        let mut values = jack_vec![1, 2, 3, 4, 5];
         {
             let slice = &mut values[..2];
             assert!(slice == [1, 2]);
@@ -3768,7 +3768,7 @@ mod std_tests {
 
     #[test]
     fn test_split_at_mut() {
-        let mut values = thin_vec![1, 2, 3, 4, 5];
+        let mut values = jack_vec![1, 2, 3, 4, 5];
         {
             let (left, right) = values.split_at_mut(2);
             {
@@ -3793,8 +3793,8 @@ mod std_tests {
 
     #[test]
     fn test_clone() {
-        let v: ThinVec<i32> = thin_vec![];
-        let w = thin_vec![1, 2, 3];
+        let v: JackVec<i32> = jack_vec![];
+        let w = jack_vec![1, 2, 3];
 
         assert_eq!(v, v.clone());
 
@@ -3852,7 +3852,7 @@ mod std_tests {
                 original_drops: original_drops.clone(),
                 clone_drops: clone_drops.clone(),
             })
-            .collect::<ThinVec<_>>();
+            .collect::<JackVec<_>>();
 
         let result = catch_unwind(AssertUnwindSafe(|| source.clone()));
 
@@ -3871,9 +3871,9 @@ mod std_tests {
 
     #[test]
     fn test_clone_from() {
-        let mut v = thin_vec![];
-        let three: ThinVec<Box<_>> = thin_vec![Box::new(1), Box::new(2), Box::new(3)];
-        let two: ThinVec<Box<_>> = thin_vec![Box::new(4), Box::new(5)];
+        let mut v = jack_vec![];
+        let three: JackVec<Box<_>> = jack_vec![Box::new(1), Box::new(2), Box::new(3)];
+        let two: JackVec<Box<_>> = jack_vec![Box::new(4), Box::new(5)];
         // zero, long
         v.clone_from(&three);
         assert_eq!(v, three);
@@ -3893,14 +3893,14 @@ mod std_tests {
 
     #[test]
     fn test_retain() {
-        let mut vec = thin_vec![1, 2, 3, 4];
+        let mut vec = jack_vec![1, 2, 3, 4];
         vec.retain(|&x| x % 2 == 0);
         assert_eq!(vec, [2, 4]);
     }
 
     #[test]
     fn test_retain_mut() {
-        let mut vec = thin_vec![9, 9, 9, 9];
+        let mut vec = jack_vec![9, 9, 9, 9];
         let mut i = 0;
         vec.retain_mut(|x| {
             i += 1;
@@ -3912,10 +3912,10 @@ mod std_tests {
 
     #[test]
     fn test_retain_mut_edge_cases() {
-        let mut empty = ThinVec::<()>::new();
+        let mut empty = JackVec::<()>::new();
         empty.retain_mut(|_| unreachable!());
 
-        let mut zst = thin_vec![(); 8];
+        let mut zst = jack_vec![(); 8];
         let mut index = 0;
         zst.retain_mut(|_| {
             let keep = index % 2 == 0;
@@ -3924,7 +3924,7 @@ mod std_tests {
         });
         assert_eq!(zst.len(), 4);
 
-        let mut values = thin_vec![1, 2, 3, 4];
+        let mut values = jack_vec![1, 2, 3, 4];
         values.retain_mut(|_| true);
         assert_eq!(values, [1, 2, 3, 4]);
         values.retain_mut(|_| false);
@@ -3955,7 +3955,7 @@ mod std_tests {
                 id,
                 drops: drops.clone(),
             })
-            .collect::<ThinVec<_>>();
+            .collect::<JackVec<_>>();
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             values.retain_mut(|value| match value.id {
@@ -4002,7 +4002,7 @@ mod std_tests {
                 id,
                 drops: drops.clone(),
             })
-            .collect::<ThinVec<_>>();
+            .collect::<JackVec<_>>();
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             values.retain_mut(|value| value.id != 1);
@@ -4020,46 +4020,46 @@ mod std_tests {
 
     #[test]
     fn test_dedup() {
-        fn case(a: ThinVec<i32>, b: ThinVec<i32>) {
+        fn case(a: JackVec<i32>, b: JackVec<i32>) {
             let mut v = a;
             v.dedup();
             assert_eq!(v, b);
         }
-        case(thin_vec![], thin_vec![]);
-        case(thin_vec![1], thin_vec![1]);
-        case(thin_vec![1, 1], thin_vec![1]);
-        case(thin_vec![1, 2, 3], thin_vec![1, 2, 3]);
-        case(thin_vec![1, 1, 2, 3], thin_vec![1, 2, 3]);
-        case(thin_vec![1, 2, 2, 3], thin_vec![1, 2, 3]);
-        case(thin_vec![1, 2, 3, 3], thin_vec![1, 2, 3]);
-        case(thin_vec![1, 1, 2, 2, 2, 3, 3], thin_vec![1, 2, 3]);
+        case(jack_vec![], jack_vec![]);
+        case(jack_vec![1], jack_vec![1]);
+        case(jack_vec![1, 1], jack_vec![1]);
+        case(jack_vec![1, 2, 3], jack_vec![1, 2, 3]);
+        case(jack_vec![1, 1, 2, 3], jack_vec![1, 2, 3]);
+        case(jack_vec![1, 2, 2, 3], jack_vec![1, 2, 3]);
+        case(jack_vec![1, 2, 3, 3], jack_vec![1, 2, 3]);
+        case(jack_vec![1, 1, 2, 2, 2, 3, 3], jack_vec![1, 2, 3]);
     }
 
     #[test]
     fn test_dedup_by_key() {
-        fn case(a: ThinVec<i32>, b: ThinVec<i32>) {
+        fn case(a: JackVec<i32>, b: JackVec<i32>) {
             let mut v = a;
             v.dedup_by_key(|i| *i / 10);
             assert_eq!(v, b);
         }
-        case(thin_vec![], thin_vec![]);
-        case(thin_vec![10], thin_vec![10]);
-        case(thin_vec![10, 11], thin_vec![10]);
-        case(thin_vec![10, 20, 30], thin_vec![10, 20, 30]);
-        case(thin_vec![10, 11, 20, 30], thin_vec![10, 20, 30]);
-        case(thin_vec![10, 20, 21, 30], thin_vec![10, 20, 30]);
-        case(thin_vec![10, 20, 30, 31], thin_vec![10, 20, 30]);
-        case(thin_vec![10, 11, 20, 21, 22, 30, 31], thin_vec![10, 20, 30]);
+        case(jack_vec![], jack_vec![]);
+        case(jack_vec![10], jack_vec![10]);
+        case(jack_vec![10, 11], jack_vec![10]);
+        case(jack_vec![10, 20, 30], jack_vec![10, 20, 30]);
+        case(jack_vec![10, 11, 20, 30], jack_vec![10, 20, 30]);
+        case(jack_vec![10, 20, 21, 30], jack_vec![10, 20, 30]);
+        case(jack_vec![10, 20, 30, 31], jack_vec![10, 20, 30]);
+        case(jack_vec![10, 11, 20, 21, 22, 30, 31], jack_vec![10, 20, 30]);
     }
 
     #[test]
     fn test_dedup_by() {
-        let mut vec = thin_vec!["foo", "bar", "Bar", "baz", "bar"];
+        let mut vec = jack_vec!["foo", "bar", "Bar", "baz", "bar"];
         vec.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
 
         assert_eq!(vec, ["foo", "bar", "baz", "bar"]);
 
-        let mut vec = thin_vec![("foo", 1), ("foo", 2), ("bar", 3), ("bar", 4), ("bar", 5)];
+        let mut vec = jack_vec![("foo", 1), ("foo", 2), ("bar", 3), ("bar", 4), ("bar", 5)];
         vec.dedup_by(|a, b| {
             a.0 == b.0 && {
                 b.1 += a.1;
@@ -4072,22 +4072,22 @@ mod std_tests {
 
     #[test]
     fn test_dedup_by_edge_cases() {
-        let mut empty = ThinVec::<()>::new();
+        let mut empty = JackVec::<()>::new();
         empty.dedup_by(|_, _| unreachable!());
 
-        let mut singleton = thin_vec![1];
+        let mut singleton = jack_vec![1];
         singleton.dedup_by(|_, _| unreachable!());
         assert_eq!(singleton, [1]);
 
-        let mut unique = thin_vec![1, 2, 3, 4];
+        let mut unique = jack_vec![1, 2, 3, 4];
         unique.dedup_by(|current, previous| current == previous);
         assert_eq!(unique, [1, 2, 3, 4]);
 
-        let mut duplicate = thin_vec![1, 1, 1, 1];
+        let mut duplicate = jack_vec![1, 1, 1, 1];
         duplicate.dedup_by(|current, previous| current == previous);
         assert_eq!(duplicate, [1]);
 
-        let mut zst = thin_vec![(); 8];
+        let mut zst = jack_vec![(); 8];
         let mut comparisons = 0;
         zst.dedup_by(|_, _| {
             comparisons += 1;
@@ -4098,7 +4098,7 @@ mod std_tests {
 
         // Exercise the post-gap survivor copy for a ZST, whose source and
         // destination have the same numerical address.
-        let mut zst_mixed = thin_vec![(); 8];
+        let mut zst_mixed = jack_vec![(); 8];
         let mut comparisons = 0;
         zst_mixed.dedup_by(|_, _| {
             comparisons += 1;
@@ -4132,7 +4132,7 @@ mod std_tests {
                 id,
                 drops: drops.clone(),
             })
-            .collect::<ThinVec<_>>();
+            .collect::<JackVec<_>>();
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             values.dedup_by(|current, previous| {
@@ -4181,7 +4181,7 @@ mod std_tests {
                 id,
                 drops: drops.clone(),
             })
-            .collect::<ThinVec<_>>();
+            .collect::<JackVec<_>>();
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             values.dedup_by(|current, previous| current.id / 2 == previous.id / 2);
@@ -4199,11 +4199,11 @@ mod std_tests {
 
     #[test]
     fn test_dedup_unique() {
-        let mut v0: ThinVec<Box<_>> = thin_vec![Box::new(1), Box::new(1), Box::new(2), Box::new(3)];
+        let mut v0: JackVec<Box<_>> = jack_vec![Box::new(1), Box::new(1), Box::new(2), Box::new(3)];
         v0.dedup();
-        let mut v1: ThinVec<Box<_>> = thin_vec![Box::new(1), Box::new(2), Box::new(2), Box::new(3)];
+        let mut v1: JackVec<Box<_>> = jack_vec![Box::new(1), Box::new(2), Box::new(2), Box::new(3)];
         v1.dedup();
-        let mut v2: ThinVec<Box<_>> = thin_vec![Box::new(1), Box::new(2), Box::new(3), Box::new(3)];
+        let mut v2: JackVec<Box<_>> = jack_vec![Box::new(1), Box::new(2), Box::new(3), Box::new(3)];
         v2.dedup();
         // If the boxed pointers were leaked or otherwise misused, valgrind
         // and/or rt should raise errors.
@@ -4211,7 +4211,7 @@ mod std_tests {
 
     #[test]
     fn zero_sized_values() {
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         assert_eq!(v.len(), 0);
         v.push(());
         assert_eq!(v.len(), 1);
@@ -4245,28 +4245,28 @@ mod std_tests {
     #[test]
     fn test_partition() {
         assert_eq!(
-            thin_vec![].into_iter().partition(|x: &i32| *x < 3),
-            (thin_vec![], thin_vec![])
+            jack_vec![].into_iter().partition(|x: &i32| *x < 3),
+            (jack_vec![], jack_vec![])
         );
         assert_eq!(
-            thin_vec![1, 2, 3].into_iter().partition(|x| *x < 4),
-            (thin_vec![1, 2, 3], thin_vec![])
+            jack_vec![1, 2, 3].into_iter().partition(|x| *x < 4),
+            (jack_vec![1, 2, 3], jack_vec![])
         );
         assert_eq!(
-            thin_vec![1, 2, 3].into_iter().partition(|x| *x < 2),
-            (thin_vec![1], thin_vec![2, 3])
+            jack_vec![1, 2, 3].into_iter().partition(|x| *x < 2),
+            (jack_vec![1], jack_vec![2, 3])
         );
         assert_eq!(
-            thin_vec![1, 2, 3].into_iter().partition(|x| *x < 0),
-            (thin_vec![], thin_vec![1, 2, 3])
+            jack_vec![1, 2, 3].into_iter().partition(|x| *x < 0),
+            (jack_vec![], jack_vec![1, 2, 3])
         );
     }
 
     #[test]
     fn test_zip_unzip() {
-        let z1 = thin_vec![(1, 4), (2, 5), (3, 6)];
+        let z1 = jack_vec![(1, 4), (2, 5), (3, 6)];
 
-        let (left, right): (ThinVec<_>, ThinVec<_>) = z1.iter().cloned().unzip();
+        let (left, right): (JackVec<_>, JackVec<_>) = z1.iter().cloned().unzip();
 
         assert_eq!((1, 4), (left[0], right[0]));
         assert_eq!((2, 5), (left[1], right[1]));
@@ -4286,7 +4286,7 @@ mod std_tests {
             }
         }
 
-        let mut v = thin_vec![Elem(1), Elem(2), Elem(3), Elem(4), Elem(5)];
+        let mut v = jack_vec![Elem(1), Elem(2), Elem(3), Elem(4), Elem(5)];
         assert_eq!(unsafe { DROPS }, 0);
         v.truncate(3);
         assert_eq!(unsafe { DROPS }, 2);
@@ -4307,69 +4307,69 @@ mod std_tests {
             }
         }
 
-        let mut v = thin_vec![BadElem(1), BadElem(2), BadElem(0xbadbeef), BadElem(4)];
+        let mut v = jack_vec![BadElem(1), BadElem(2), BadElem(0xbadbeef), BadElem(4)];
         v.truncate(0);
     }
 
     #[test]
     fn test_index() {
-        let vec = thin_vec![1, 2, 3];
+        let vec = jack_vec![1, 2, 3];
         assert!(vec[1] == 2);
     }
 
     #[test]
     #[should_panic]
     fn test_index_out_of_bounds() {
-        let vec = thin_vec![1, 2, 3];
+        let vec = jack_vec![1, 2, 3];
         let _ = vec[3];
     }
 
     #[test]
     #[should_panic]
     fn test_slice_out_of_bounds_1() {
-        let x = thin_vec![1, 2, 3, 4, 5];
+        let x = jack_vec![1, 2, 3, 4, 5];
         let _ = &x[!0..];
     }
 
     #[test]
     #[should_panic]
     fn test_slice_out_of_bounds_2() {
-        let x = thin_vec![1, 2, 3, 4, 5];
+        let x = jack_vec![1, 2, 3, 4, 5];
         let _ = &x[..6];
     }
 
     #[test]
     #[should_panic]
     fn test_slice_out_of_bounds_3() {
-        let x = thin_vec![1, 2, 3, 4, 5];
+        let x = jack_vec![1, 2, 3, 4, 5];
         let _ = &x[!0..4];
     }
 
     #[test]
     #[should_panic]
     fn test_slice_out_of_bounds_4() {
-        let x = thin_vec![1, 2, 3, 4, 5];
+        let x = jack_vec![1, 2, 3, 4, 5];
         let _ = &x[1..6];
     }
 
     #[test]
     #[should_panic]
     fn test_slice_out_of_bounds_5() {
-        let x = thin_vec![1, 2, 3, 4, 5];
+        let x = jack_vec![1, 2, 3, 4, 5];
         let _ = &x[3..2];
     }
 
     #[test]
     #[should_panic]
     fn test_swap_remove_empty() {
-        let mut vec = ThinVec::<i32>::new();
+        let mut vec = JackVec::<i32>::new();
         vec.swap_remove(0);
     }
 
     #[test]
     fn test_move_items() {
-        let vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec {
             vec2.push(i);
         }
@@ -4378,8 +4378,8 @@ mod std_tests {
 
     #[test]
     fn test_move_items_reverse() {
-        let vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec.into_iter().rev() {
             vec2.push(i);
         }
@@ -4388,8 +4388,8 @@ mod std_tests {
 
     #[test]
     fn test_move_items_zero_sized() {
-        let vec = thin_vec![(), (), ()];
-        let mut vec2 = thin_vec![];
+        let vec = jack_vec![(), (), ()];
+        let mut vec2 = jack_vec![];
         for i in vec {
             vec2.push(i);
         }
@@ -4398,8 +4398,8 @@ mod std_tests {
 
     #[test]
     fn test_drain_items() {
-        let mut vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..) {
             vec2.push(i);
         }
@@ -4409,8 +4409,8 @@ mod std_tests {
 
     #[test]
     fn test_drain_items_reverse() {
-        let mut vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..).rev() {
             vec2.push(i);
         }
@@ -4420,8 +4420,8 @@ mod std_tests {
 
     #[test]
     fn test_drain_items_zero_sized() {
-        let mut vec = thin_vec![(), (), ()];
-        let mut vec2 = thin_vec![];
+        let mut vec = jack_vec![(), (), ()];
+        let mut vec2 = jack_vec![];
         for i in vec.drain(..) {
             vec2.push(i);
         }
@@ -4432,62 +4432,62 @@ mod std_tests {
     #[test]
     #[should_panic]
     fn test_drain_out_of_bounds() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         v.drain(5..6);
     }
 
     #[test]
     fn test_drain_range() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         for _ in v.drain(4..) {}
         assert_eq!(v, &[1, 2, 3, 4]);
 
-        let mut v: ThinVec<_> = (1..6).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (1..6).map(|x| x.to_string()).collect();
         for _ in v.drain(1..4) {}
         assert_eq!(v, &[1.to_string(), 5.to_string()]);
 
-        let mut v: ThinVec<_> = (1..6).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (1..6).map(|x| x.to_string()).collect();
         for _ in v.drain(1..4).rev() {}
         assert_eq!(v, &[1.to_string(), 5.to_string()]);
 
-        let mut v: ThinVec<_> = thin_vec![(); 5];
+        let mut v: JackVec<_> = jack_vec![(); 5];
         for _ in v.drain(1..4).rev() {}
         assert_eq!(v, &[(), ()]);
     }
 
     #[test]
     fn test_drain_inclusive_range() {
-        let mut v = thin_vec!['a', 'b', 'c', 'd', 'e'];
+        let mut v = jack_vec!['a', 'b', 'c', 'd', 'e'];
         for _ in v.drain(1..=3) {}
         assert_eq!(v, &['a', 'e']);
 
-        let mut v: ThinVec<_> = (0..=5).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (0..=5).map(|x| x.to_string()).collect();
         for _ in v.drain(1..=5) {}
         assert_eq!(v, &["0".to_string()]);
 
-        let mut v: ThinVec<String> = (0..=5).map(|x| x.to_string()).collect();
+        let mut v: JackVec<String> = (0..=5).map(|x| x.to_string()).collect();
         for _ in v.drain(0..=5) {}
-        assert_eq!(v, ThinVec::<String>::new());
+        assert_eq!(v, JackVec::<String>::new());
 
-        let mut v: ThinVec<_> = (0..=5).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (0..=5).map(|x| x.to_string()).collect();
         for _ in v.drain(0..=3) {}
         assert_eq!(v, &["4".to_string(), "5".to_string()]);
 
-        let mut v: ThinVec<_> = (0..=1).map(|x| x.to_string()).collect();
+        let mut v: JackVec<_> = (0..=1).map(|x| x.to_string()).collect();
         for _ in v.drain(..=0) {}
         assert_eq!(v, &["1".to_string()]);
     }
 
     #[test]
     fn test_drain_max_vec_size() {
-        let mut v = ThinVec::<()>::with_capacity(usize::MAX);
+        let mut v = JackVec::<()>::with_capacity(usize::MAX);
         unsafe {
             v.set_len(usize::MAX);
         }
         for _ in v.drain(usize::MAX - 1..) {}
         assert_eq!(v.len(), usize::MAX - 1);
 
-        let mut v = ThinVec::<()>::with_capacity(usize::MAX);
+        let mut v = JackVec::<()>::with_capacity(usize::MAX);
         unsafe {
             v.set_len(usize::MAX);
         }
@@ -4498,13 +4498,13 @@ mod std_tests {
     #[test]
     #[should_panic]
     fn test_drain_inclusive_out_of_bounds() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         v.drain(5..=5);
     }
 
     #[test]
     fn test_splice() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         let a = [10, 11, 12];
         v.splice(2..4, a.iter().cloned());
         assert_eq!(v, &[1, 2, 10, 11, 12, 5]);
@@ -4514,7 +4514,7 @@ mod std_tests {
 
     #[test]
     fn test_splice_reserves_only_required_capacity() {
-        let mut v = ThinVec::with_capacity(5);
+        let mut v = JackVec::with_capacity(5);
         v.extend(0..5);
 
         drop(v.splice(2..4, 10..21));
@@ -4525,12 +4525,12 @@ mod std_tests {
 
     #[test]
     fn test_splice_inclusive_range() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         let a = [10, 11, 12];
-        let t1: ThinVec<_> = v.splice(2..=3, a.iter().cloned()).collect();
+        let t1: JackVec<_> = v.splice(2..=3, a.iter().cloned()).collect();
         assert_eq!(v, &[1, 2, 10, 11, 12, 5]);
         assert_eq!(t1, &[3, 4]);
-        let t2: ThinVec<_> = v.splice(1..=2, Some(20)).collect();
+        let t2: JackVec<_> = v.splice(1..=2, Some(20)).collect();
         assert_eq!(v, &[1, 20, 11, 12, 5]);
         assert_eq!(t2, &[2, 10]);
     }
@@ -4538,7 +4538,7 @@ mod std_tests {
     #[test]
     #[should_panic]
     fn test_splice_out_of_bounds() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         let a = [10, 11, 12];
         v.splice(5..6, a.iter().cloned());
     }
@@ -4546,31 +4546,31 @@ mod std_tests {
     #[test]
     #[should_panic]
     fn test_splice_inclusive_out_of_bounds() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         let a = [10, 11, 12];
         v.splice(5..=5, a.iter().cloned());
     }
 
     #[test]
     fn test_splice_items_zero_sized() {
-        let mut vec = thin_vec![(), (), ()];
-        let vec2 = thin_vec![];
-        let t: ThinVec<_> = vec.splice(1..2, vec2.iter().cloned()).collect();
+        let mut vec = jack_vec![(), (), ()];
+        let vec2 = jack_vec![];
+        let t: JackVec<_> = vec.splice(1..2, vec2.iter().cloned()).collect();
         assert_eq!(vec, &[(), ()]);
         assert_eq!(t, &[()]);
     }
 
     #[test]
     fn test_splice_unbounded() {
-        let mut vec = thin_vec![1, 2, 3, 4, 5];
-        let t: ThinVec<_> = vec.splice(.., None).collect();
+        let mut vec = jack_vec![1, 2, 3, 4, 5];
+        let t: JackVec<_> = vec.splice(.., None).collect();
         assert_eq!(vec, &[]);
         assert_eq!(t, &[1, 2, 3, 4, 5]);
     }
 
     #[test]
     fn test_splice_forget() {
-        let mut v = thin_vec![1, 2, 3, 4, 5];
+        let mut v = jack_vec![1, 2, 3, 4, 5];
         let a = [10, 11, 12];
         ::core::mem::forget(v.splice(2..4, a.iter().cloned()));
         assert_eq!(v, &[1, 2]);
@@ -4578,7 +4578,7 @@ mod std_tests {
 
     #[test]
     fn test_splice_from_empty() {
-        let mut v = thin_vec![];
+        let mut v = jack_vec![];
         let a = [10, 11, 12];
         v.splice(.., a.iter().cloned());
         assert_eq!(v, &[10, 11, 12]);
@@ -4587,7 +4587,7 @@ mod std_tests {
     /* probs won't ever impl this
         #[test]
         fn test_into_boxed_slice() {
-            let xs = thin_vec![1, 2, 3];
+            let xs = jack_vec![1, 2, 3];
             let ys = xs.into_boxed_slice();
             assert_eq!(&*ys, [1, 2, 3]);
         }
@@ -4595,8 +4595,8 @@ mod std_tests {
 
     #[test]
     fn test_append() {
-        let mut vec = thin_vec![1, 2, 3];
-        let mut vec2 = thin_vec![4, 5, 6];
+        let mut vec = jack_vec![1, 2, 3];
+        let mut vec2 = jack_vec![4, 5, 6];
         vec.append(&mut vec2);
         assert_eq!(vec, [1, 2, 3, 4, 5, 6]);
         assert_eq!(vec2, []);
@@ -4616,8 +4616,8 @@ mod std_tests {
 
         let drops = Rc::new(Cell::new(0));
         {
-            let mut destination = thin_vec![CountDrop(drops.clone()), CountDrop(drops.clone())];
-            let mut source = thin_vec![
+            let mut destination = jack_vec![CountDrop(drops.clone()), CountDrop(drops.clone())];
+            let mut source = jack_vec![
                 CountDrop(drops.clone()),
                 CountDrop(drops.clone()),
                 CountDrop(drops.clone()),
@@ -4629,8 +4629,8 @@ mod std_tests {
         }
         assert_eq!(drops.get(), 5);
 
-        let mut destination = thin_vec![(), ()];
-        let mut source = thin_vec![(), (), ()];
+        let mut destination = jack_vec![(), ()];
+        let mut source = jack_vec![(), (), ()];
         destination.append(&mut source);
         assert_eq!(destination.len(), 5);
         assert!(source.is_empty());
@@ -4638,7 +4638,7 @@ mod std_tests {
 
     #[test]
     fn test_split_off() {
-        let mut vec = thin_vec![1, 2, 3, 4, 5, 6];
+        let mut vec = jack_vec![1, 2, 3, 4, 5, 6];
         let vec2 = vec.split_off(4);
         assert_eq!(vec, [1, 2, 3, 4]);
         assert_eq!(vec2, [5, 6]);
@@ -4646,7 +4646,7 @@ mod std_tests {
 
     #[test]
     fn test_into_iter_as_slice() {
-        let vec = thin_vec!['a', 'b', 'c'];
+        let vec = jack_vec!['a', 'b', 'c'];
         let mut into_iter = vec.into_iter();
         assert_eq!(into_iter.as_slice(), &['a', 'b', 'c']);
         let _ = into_iter.next().unwrap();
@@ -4658,7 +4658,7 @@ mod std_tests {
 
     #[test]
     fn test_into_iter_as_mut_slice() {
-        let vec = thin_vec!['a', 'b', 'c'];
+        let vec = jack_vec!['a', 'b', 'c'];
         let mut into_iter = vec.into_iter();
         assert_eq!(into_iter.as_slice(), &['a', 'b', 'c']);
         into_iter.as_mut_slice()[0] = 'x';
@@ -4669,7 +4669,7 @@ mod std_tests {
 
     #[test]
     fn test_into_iter_debug() {
-        let vec = thin_vec!['a', 'b', 'c'];
+        let vec = jack_vec!['a', 'b', 'c'];
         let into_iter = vec.into_iter();
         let debug = format!("{:?}", into_iter);
         assert_eq!(debug, "IntoIter(['a', 'b', 'c'])");
@@ -4677,16 +4677,16 @@ mod std_tests {
 
     #[test]
     fn test_into_iter_count() {
-        assert_eq!(thin_vec![1, 2, 3].into_iter().count(), 3);
+        assert_eq!(jack_vec![1, 2, 3].into_iter().count(), 3);
     }
 
     #[test]
     fn test_into_iter_clone() {
         fn iter_equal<I: Iterator<Item = i32>>(it: I, slice: &[i32]) {
-            let v: ThinVec<i32> = it.collect();
+            let v: JackVec<i32> = it.collect();
             assert_eq!(&v[..], slice);
         }
-        let mut it = thin_vec![1, 2, 3].into_iter();
+        let mut it = jack_vec![1, 2, 3].into_iter();
         iter_equal(it.clone(), &[1, 2, 3]);
         assert_eq!(it.next(), Some(1));
         let mut it = it.rev();
@@ -4708,19 +4708,19 @@ mod std_tests {
         }
     }
 
-    /* TODO: specialize vec.into_iter().collect::<ThinVec<_>>();
+    /* TODO: specialize vec.into_iter().collect::<JackVec<_>>();
         #[test]
         fn from_into_inner() {
-            let vec = thin_vec![1, 2, 3];
+            let vec = jack_vec![1, 2, 3];
             let ptr = vec.as_ptr();
-            let vec = vec.into_iter().collect::<ThinVec<_>>();
+            let vec = vec.into_iter().collect::<JackVec<_>>();
             assert_eq!(vec, [1, 2, 3]);
             assert_eq!(vec.as_ptr(), ptr);
 
             let ptr = &vec[1] as *const _;
             let mut it = vec.into_iter();
             it.next().unwrap();
-            let vec = it.collect::<ThinVec<_>>();
+            let vec = it.collect::<JackVec<_>>();
             assert_eq!(vec, [2, 3]);
             assert!(ptr != vec.as_ptr());
         }
@@ -4730,7 +4730,7 @@ mod std_tests {
     fn overaligned_allocations() {
         #[repr(align(256))]
         struct Foo(usize);
-        let mut v = thin_vec![Foo(273)];
+        let mut v = jack_vec![Foo(273)];
         for i in 0..0x1000 {
             v.reserve_exact(i);
             assert!(v[0].0 == 273);
@@ -4744,7 +4744,7 @@ mod std_tests {
     /* TODO: implement drain_filter?
         #[test]
         fn drain_filter_empty() {
-            let mut vec: ThinVec<i32> = thin_vec![];
+            let mut vec: JackVec<i32> = jack_vec![];
 
             {
                 let mut iter = vec.drain_filter(|_| true);
@@ -4755,12 +4755,12 @@ mod std_tests {
                 assert_eq!(iter.size_hint(), (0, Some(0)));
             }
             assert_eq!(vec.len(), 0);
-            assert_eq!(vec, thin_vec![]);
+            assert_eq!(vec, jack_vec![]);
         }
 
         #[test]
         fn drain_filter_zst() {
-            let mut vec = thin_vec![(), (), (), (), ()];
+            let mut vec = jack_vec![(), (), (), (), ()];
             let initial_len = vec.len();
             let mut count = 0;
             {
@@ -4777,12 +4777,12 @@ mod std_tests {
 
             assert_eq!(count, initial_len);
             assert_eq!(vec.len(), 0);
-            assert_eq!(vec, thin_vec![]);
+            assert_eq!(vec, jack_vec![]);
         }
 
         #[test]
         fn drain_filter_false() {
-            let mut vec = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            let mut vec = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
             let initial_len = vec.len();
             let mut count = 0;
@@ -4799,12 +4799,12 @@ mod std_tests {
 
             assert_eq!(count, 0);
             assert_eq!(vec.len(), initial_len);
-            assert_eq!(vec, thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+            assert_eq!(vec, jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
         }
 
         #[test]
         fn drain_filter_true() {
-            let mut vec = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+            let mut vec = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
             let initial_len = vec.len();
             let mut count = 0;
@@ -4822,14 +4822,14 @@ mod std_tests {
 
             assert_eq!(count, initial_len);
             assert_eq!(vec.len(), 0);
-            assert_eq!(vec, thin_vec![]);
+            assert_eq!(vec, jack_vec![]);
         }
 
         #[test]
         fn drain_filter_complex() {
 
             {   //                [+xxx++++++xxxxx++++x+x++]
-                let mut vec = thin_vec![1,
+                let mut vec = jack_vec![1,
                                    2, 4, 6,
                                    7, 9, 11, 13, 15, 17,
                                    18, 20, 22, 24, 26,
@@ -4839,16 +4839,16 @@ mod std_tests {
                                    36,
                                    37, 39];
 
-                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<ThinVec<_>>();
+                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<JackVec<_>>();
                 assert_eq!(removed.len(), 10);
-                assert_eq!(removed, thin_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
+                assert_eq!(removed, jack_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
 
                 assert_eq!(vec.len(), 14);
-                assert_eq!(vec, thin_vec![1, 7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35, 37, 39]);
+                assert_eq!(vec, jack_vec![1, 7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35, 37, 39]);
             }
 
             {   //                [xxx++++++xxxxx++++x+x++]
-                let mut vec = thin_vec![2, 4, 6,
+                let mut vec = jack_vec![2, 4, 6,
                                    7, 9, 11, 13, 15, 17,
                                    18, 20, 22, 24, 26,
                                    27, 29, 31, 33,
@@ -4857,16 +4857,16 @@ mod std_tests {
                                    36,
                                    37, 39];
 
-                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<ThinVec<_>>();
+                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<JackVec<_>>();
                 assert_eq!(removed.len(), 10);
-                assert_eq!(removed, thin_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
+                assert_eq!(removed, jack_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
 
                 assert_eq!(vec.len(), 13);
-                assert_eq!(vec, thin_vec![7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35, 37, 39]);
+                assert_eq!(vec, jack_vec![7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35, 37, 39]);
             }
 
             {   //                [xxx++++++xxxxx++++x+x]
-                let mut vec = thin_vec![2, 4, 6,
+                let mut vec = jack_vec![2, 4, 6,
                                    7, 9, 11, 13, 15, 17,
                                    18, 20, 22, 24, 26,
                                    27, 29, 31, 33,
@@ -4874,36 +4874,36 @@ mod std_tests {
                                    35,
                                    36];
 
-                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<ThinVec<_>>();
+                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<JackVec<_>>();
                 assert_eq!(removed.len(), 10);
-                assert_eq!(removed, thin_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
+                assert_eq!(removed, jack_vec![2, 4, 6, 18, 20, 22, 24, 26, 34, 36]);
 
                 assert_eq!(vec.len(), 11);
-                assert_eq!(vec, thin_vec![7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35]);
+                assert_eq!(vec, jack_vec![7, 9, 11, 13, 15, 17, 27, 29, 31, 33, 35]);
             }
 
             {   //                [xxxxxxxxxx+++++++++++]
-                let mut vec = thin_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20,
+                let mut vec = jack_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20,
                                    1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
 
-                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<ThinVec<_>>();
+                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<JackVec<_>>();
                 assert_eq!(removed.len(), 10);
-                assert_eq!(removed, thin_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
+                assert_eq!(removed, jack_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
                 assert_eq!(vec.len(), 10);
-                assert_eq!(vec, thin_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
+                assert_eq!(vec, jack_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
             }
 
             {   //                [+++++++++++xxxxxxxxxx]
-                let mut vec = thin_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
+                let mut vec = jack_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19,
                                    2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
 
-                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<ThinVec<_>>();
+                let removed = vec.drain_filter(|x| *x % 2 == 0).collect::<JackVec<_>>();
                 assert_eq!(removed.len(), 10);
-                assert_eq!(removed, thin_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
+                assert_eq!(removed, jack_vec![2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
                 assert_eq!(vec.len(), 10);
-                assert_eq!(vec, thin_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
+                assert_eq!(vec, jack_vec![1, 3, 5, 7, 9, 11, 13, 15, 17, 19]);
             }
         }
     */
@@ -4911,7 +4911,7 @@ mod std_tests {
     fn test_reserve_exact() {
         // This is all the same as test_reserve
 
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         assert_eq!(v.capacity(), 0);
 
         v.reserve_exact(2);
@@ -4954,7 +4954,7 @@ mod std_tests {
 
             {
                 // Note: basic stuff is checked by test_reserve
-                let mut empty_bytes: ThinVec<u8> = ThinVec::new();
+                let mut empty_bytes: JackVec<u8> = JackVec::new();
 
                 // Check isize::MAX doesn't count as an overflow
                 if let Err(CapacityOverflow) = empty_bytes.try_reserve(MAX_CAP) {
@@ -4987,7 +4987,7 @@ mod std_tests {
 
             {
                 // Same basic idea, but with non-zero len
-                let mut ten_bytes: ThinVec<u8> = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                let mut ten_bytes: JackVec<u8> = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
                 if let Err(CapacityOverflow) = ten_bytes.try_reserve(MAX_CAP - 10) {
                     panic!("isize::MAX shouldn't trigger an overflow!");
@@ -5010,7 +5010,7 @@ mod std_tests {
 
             {
                 // Same basic idea, but with interesting type size
-                let mut ten_u32s: ThinVec<u32> = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                let mut ten_u32s: JackVec<u32> = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
                 if let Err(CapacityOverflow) = ten_u32s.try_reserve(MAX_CAP/4 - 10) {
                     panic!("isize::MAX shouldn't trigger an overflow!");
@@ -5046,7 +5046,7 @@ mod std_tests {
             let guards_against_isize = size_of::<usize>() < 8;
 
             {
-                let mut empty_bytes: ThinVec<u8> = ThinVec::new();
+                let mut empty_bytes: JackVec<u8> = JackVec::new();
 
                 if let Err(CapacityOverflow) = empty_bytes.try_reserve_exact(MAX_CAP) {
                     panic!("isize::MAX shouldn't trigger an overflow!");
@@ -5072,7 +5072,7 @@ mod std_tests {
 
 
             {
-                let mut ten_bytes: ThinVec<u8> = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                let mut ten_bytes: JackVec<u8> = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
                 if let Err(CapacityOverflow) = ten_bytes.try_reserve_exact(MAX_CAP - 10) {
                     panic!("isize::MAX shouldn't trigger an overflow!");
@@ -5093,7 +5093,7 @@ mod std_tests {
 
 
             {
-                let mut ten_u32s: ThinVec<u32> = thin_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+                let mut ten_u32s: JackVec<u32> = jack_vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
                 if let Err(CapacityOverflow) = ten_u32s.try_reserve_exact(MAX_CAP/4 - 10) {
                     panic!("isize::MAX shouldn't trigger an overflow!");
@@ -5118,7 +5118,7 @@ mod std_tests {
     fn test_header_data() {
         macro_rules! assert_aligned_head_ptr {
             ($typename:ty) => {{
-                let v: ThinVec<$typename> = ThinVec::with_capacity(1 /* ensure allocation */);
+                let v: JackVec<$typename> = JackVec::with_capacity(1 /* ensure allocation */);
                 let head_ptr: *mut $typename = v.data_raw();
                 assert_eq!(
                     head_ptr as usize % core::mem::align_of::<$typename>(),
@@ -5153,7 +5153,7 @@ mod std_tests {
     #[test]
     #[cfg(feature = "serde")]
     fn test_ser_de_empty() {
-        let vec = ThinVec::<u32>::new();
+        let vec = JackVec::<u32>::new();
 
         assert_tokens(&vec, &[Token::Seq { len: Some(0) }, Token::SeqEnd]);
     }
@@ -5161,7 +5161,7 @@ mod std_tests {
     #[test]
     #[cfg(feature = "serde")]
     fn test_ser_de() {
-        let mut vec = ThinVec::<u32>::new();
+        let mut vec = JackVec::<u32>::new();
         vec.push(20);
         vec.push(55);
         vec.push(123);
@@ -5180,16 +5180,16 @@ mod std_tests {
 
     #[test]
     fn test_set_len() {
-        let mut vec: ThinVec<u32> = thin_vec![];
+        let mut vec: JackVec<u32> = jack_vec![];
         unsafe {
             vec.set_len(0); // at one point this caused a crash
         }
     }
 
     #[test]
-    #[should_panic(expected = "invalid set_len(1) on empty ThinVec")]
+    #[should_panic(expected = "invalid set_len(1) on empty JackVec")]
     fn test_set_len_invalid() {
-        let mut vec: ThinVec<u32> = thin_vec![];
+        let mut vec: JackVec<u32> = jack_vec![];
         unsafe {
             vec.set_len(1);
         }
@@ -5198,31 +5198,31 @@ mod std_tests {
     #[test]
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_overflow_header_too_big() {
-        let vec: ThinVec<u8> = ThinVec::with_capacity(isize::MAX as usize - 2);
+        let vec: JackVec<u8> = JackVec::with_capacity(isize::MAX as usize - 2);
         assert!(vec.capacity() > 0);
     }
     #[test]
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_overflow_cap_too_big() {
-        let vec: ThinVec<u8> = ThinVec::with_capacity(isize::MAX as usize + 1);
+        let vec: JackVec<u8> = JackVec::with_capacity(isize::MAX as usize + 1);
         assert!(vec.capacity() > 0);
     }
     #[test]
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_overflow_size_mul1() {
-        let vec: ThinVec<u16> = ThinVec::with_capacity(isize::MAX as usize + 1);
+        let vec: JackVec<u16> = JackVec::with_capacity(isize::MAX as usize + 1);
         assert!(vec.capacity() > 0);
     }
     #[test]
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_overflow_size_mul2() {
-        let vec: ThinVec<u16> = ThinVec::with_capacity(isize::MAX as usize / 2 + 1);
+        let vec: JackVec<u16> = JackVec::with_capacity(isize::MAX as usize / 2 + 1);
         assert!(vec.capacity() > 0);
     }
     #[test]
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_overflow_cap_really_isnt_isize() {
-        let vec: ThinVec<u8> = ThinVec::with_capacity(isize::MAX as usize);
+        let vec: JackVec<u8> = JackVec::with_capacity(isize::MAX as usize);
         assert!(vec.capacity() > 0);
     }
 
@@ -5239,7 +5239,7 @@ mod std_tests {
     #[test]
     #[should_panic(expected = "panic!")]
     fn test_panic_into_iter() {
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         v.push(PanicBomb("normal1"));
         v.push(PanicBomb("panic"));
         v.push(PanicBomb("normal2"));
@@ -5251,7 +5251,7 @@ mod std_tests {
     #[test]
     #[should_panic(expected = "panic!")]
     fn test_panic_clear() {
-        let mut v = ThinVec::new();
+        let mut v = JackVec::new();
         v.push(PanicBomb("normal1"));
         v.push(PanicBomb("panic"));
         v.push(PanicBomb("normal2"));

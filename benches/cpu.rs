@@ -6,7 +6,7 @@ use criterion::measurement::WallTime;
 use criterion::{
     criterion_group, criterion_main, BatchSize, BenchmarkGroup, BenchmarkId, Criterion, Throughput,
 };
-use thin_vec::ThinVec;
+use jackvec::JackVec;
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
@@ -30,7 +30,7 @@ fn nested_construct(c: &mut Criterion) {
 
     for workload in NestedWorkload::ALL {
         bench_nested_construct::<Vec<u64>>(&mut group, workload);
-        bench_nested_construct::<ThinVec<u64>>(&mut group, workload);
+        bench_nested_construct::<JackVec<u64>>(&mut group, workload);
     }
 
     group.finish();
@@ -52,7 +52,7 @@ fn nested_traverse(c: &mut Criterion) {
 
     for workload in NestedWorkload::ALL {
         bench_nested_traverse::<Vec<u64>>(&mut group, workload);
-        bench_nested_traverse::<ThinVec<u64>>(&mut group, workload);
+        bench_nested_traverse::<JackVec<u64>>(&mut group, workload);
     }
 
     group.finish();
@@ -78,7 +78,7 @@ fn build_growing_and_drop(c: &mut Criterion) {
     for &len in OPERATION_SIZES {
         group.throughput(Throughput::Elements(len as u64));
         bench_build::<Vec<u64>, _>(&mut group, "Vec", len, build_growing::<Vec<u64>>);
-        bench_build::<ThinVec<u64>, _>(&mut group, "ThinVec", len, build_growing::<ThinVec<u64>>);
+        bench_build::<JackVec<u64>, _>(&mut group, "JackVec", len, build_growing::<JackVec<u64>>);
     }
 
     group.finish();
@@ -109,7 +109,7 @@ fn push_preallocated(c: &mut Criterion) {
     for &len in OPERATION_SIZES {
         group.throughput(Throughput::Elements(len as u64));
         bench_push_preallocated::<Vec<u64>>(&mut group, len);
-        bench_push_preallocated::<ThinVec<u64>>(&mut group, len);
+        bench_push_preallocated::<JackVec<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -128,7 +128,7 @@ fn sequential_iteration(c: &mut Criterion) {
     for &len in ITERATION_SIZES {
         group.throughput(Throughput::Elements(len as u64));
         bench_iteration::<Vec<u64>>(&mut group, len);
-        bench_iteration::<ThinVec<u64>>(&mut group, len);
+        bench_iteration::<JackVec<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -158,7 +158,7 @@ fn append_preallocated(c: &mut Criterion) {
     for &len in APPEND_SIZES {
         group.throughput(Throughput::Elements(len as u64));
         bench_append::<Vec<u64>>(&mut group, len);
-        bench_append::<ThinVec<u64>>(&mut group, len);
+        bench_append::<JackVec<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -203,11 +203,11 @@ fn retain_mixed(c: &mut Criterion) {
 
     group.throughput(Throughput::Elements(1_024));
     bench_retain_u64::<Vec<u64>>(&mut group);
-    bench_retain_u64::<ThinVec<u64>>(&mut group);
+    bench_retain_u64::<JackVec<u64>>(&mut group);
 
     group.throughput(Throughput::Elements(256));
     bench_retain_large::<Vec<[u64; 8]>>(&mut group);
-    bench_retain_large::<ThinVec<[u64; 8]>>(&mut group);
+    bench_retain_large::<JackVec<[u64; 8]>>(&mut group);
 
     group.finish();
 }
@@ -257,11 +257,11 @@ fn dedup_adjacent_pairs(c: &mut Criterion) {
 
     group.throughput(Throughput::Elements(1_024));
     bench_dedup_u64::<Vec<u64>>(&mut group);
-    bench_dedup_u64::<ThinVec<u64>>(&mut group);
+    bench_dedup_u64::<JackVec<u64>>(&mut group);
 
     group.throughput(Throughput::Elements(256));
     bench_dedup_large::<Vec<[u64; 8]>>(&mut group);
-    bench_dedup_large::<ThinVec<[u64; 8]>>(&mut group);
+    bench_dedup_large::<JackVec<[u64; 8]>>(&mut group);
 
     group.finish();
 }
@@ -286,7 +286,7 @@ fn extend_reserved(c: &mut Criterion) {
     let mut group = c.benchmark_group("extend_reserved_1024");
     group.throughput(Throughput::Elements(1_024));
     bench_extend_reserved::<Vec<u64>>(&mut group);
-    bench_extend_reserved::<ThinVec<u64>>(&mut group);
+    bench_extend_reserved::<JackVec<u64>>(&mut group);
     group.finish();
 }
 
@@ -310,17 +310,17 @@ fn resize_reserved(c: &mut Criterion) {
     let mut group = c.benchmark_group("resize_reserved_1024");
     group.throughput(Throughput::Elements(1_024));
     bench_resize_reserved::<Vec<u64>>(&mut group);
-    bench_resize_reserved::<ThinVec<u64>>(&mut group);
+    bench_resize_reserved::<JackVec<u64>>(&mut group);
     group.finish();
 }
 
-fn thin_into_vec(c: &mut Criterion) {
-    let mut group = c.benchmark_group("thin_into_vec");
+fn jack_into_vec(c: &mut Criterion) {
+    let mut group = c.benchmark_group("jack_into_vec");
 
     for &len in &[4, 1_024] {
         group.throughput(Throughput::Elements(len as u64));
-        let source = build_reserved::<ThinVec<u64>>(len);
-        group.bench_function(BenchmarkId::new("ThinVec", len), |bencher| {
+        let source = build_reserved::<JackVec<u64>>(len);
+        group.bench_function(BenchmarkId::new("JackVec", len), |bencher| {
             bencher.iter_batched(
                 || source.clone(),
                 |values| Vec::from(black_box(values)),
@@ -332,12 +332,12 @@ fn thin_into_vec(c: &mut Criterion) {
     group.finish();
 }
 
-fn thin_into_box(c: &mut Criterion) {
-    let mut group = c.benchmark_group("thin_into_box");
+fn jack_into_box(c: &mut Criterion) {
+    let mut group = c.benchmark_group("jack_into_box");
     let len = 1_024;
     group.throughput(Throughput::Elements(len as u64));
-    let source = build_reserved::<ThinVec<u64>>(len);
-    group.bench_function("ThinVec", |bencher| {
+    let source = build_reserved::<JackVec<u64>>(len);
+    group.bench_function("JackVec", |bencher| {
         bencher.iter_batched(
             || source.clone(),
             |values| Box::<[u64]>::from(black_box(values)),
@@ -347,28 +347,28 @@ fn thin_into_box(c: &mut Criterion) {
     group.finish();
 }
 
-fn vec_into_thin(c: &mut Criterion) {
-    let mut group = c.benchmark_group("vec_into_thin");
+fn vec_into_jack(c: &mut Criterion) {
+    let mut group = c.benchmark_group("vec_into_jack");
     let len = 1_024;
     group.throughput(Throughput::Elements(len as u64));
     let source = build_reserved::<Vec<u64>>(len);
     group.bench_function("Vec", |bencher| {
         bencher.iter_batched(
             || source.clone(),
-            |values| ThinVec::from(black_box(values)),
+            |values| JackVec::from(black_box(values)),
             BatchSize::SmallInput,
         );
     });
     group.finish();
 }
 
-fn array_into_thin(c: &mut Criterion) {
-    let mut group = c.benchmark_group("array_into_thin");
+fn array_into_jack(c: &mut Criterion) {
+    let mut group = c.benchmark_group("array_into_jack");
     group.throughput(Throughput::Elements(4));
     group.bench_function("array_4", |bencher| {
         bencher.iter_batched(
             || [0_u64, 1, 2, 3],
-            |values| ThinVec::from(black_box(values)),
+            |values| JackVec::from(black_box(values)),
             BatchSize::SmallInput,
         );
     });
@@ -387,9 +387,9 @@ criterion_group!(
     dedup_adjacent_pairs,
     extend_reserved,
     resize_reserved,
-    thin_into_vec,
-    thin_into_box,
-    vec_into_thin,
-    array_into_thin
+    jack_into_vec,
+    jack_into_box,
+    vec_into_jack,
+    array_into_jack
 );
 criterion_main!(benches);

@@ -1,4 +1,4 @@
-use thin_vec::ThinVec;
+use jackvec::JackVec;
 
 pub const NESTED_VECTOR_COUNT: usize = 10_000;
 pub const OPERATION_SIZES: &[usize] = &[1, 4, 1_024];
@@ -79,8 +79,8 @@ impl<T> BenchVector<T> for Vec<T> {
     }
 }
 
-impl<T> BenchVector<T> for ThinVec<T> {
-    const LABEL: &'static str = "ThinVec";
+impl<T> BenchVector<T> for JackVec<T> {
+    const LABEL: &'static str = "JackVec";
 
     fn new() -> Self {
         Self::new()
@@ -91,25 +91,25 @@ impl<T> BenchVector<T> for ThinVec<T> {
     }
 
     fn push(&mut self, value: T) {
-        ThinVec::push(self, value);
+        JackVec::push(self, value);
     }
 
     fn append(&mut self, other: &mut Self) {
-        ThinVec::append(self, other);
+        JackVec::append(self, other);
     }
 
     fn retain_mut<F>(&mut self, predicate: F)
     where
         F: FnMut(&mut T) -> bool,
     {
-        ThinVec::retain_mut(self, predicate);
+        JackVec::retain_mut(self, predicate);
     }
 
     fn dedup_by<F>(&mut self, same_bucket: F)
     where
         F: FnMut(&mut T, &mut T) -> bool,
     {
-        ThinVec::dedup_by(self, same_bucket);
+        JackVec::dedup_by(self, same_bucket);
     }
 
     fn extend<I>(&mut self, iter: I)
@@ -123,11 +123,11 @@ impl<T> BenchVector<T> for ThinVec<T> {
     where
         T: Clone,
     {
-        ThinVec::resize(self, new_len, value);
+        JackVec::resize(self, new_len, value);
     }
 
     fn as_slice(&self) -> &[T] {
-        ThinVec::as_slice(self)
+        JackVec::as_slice(self)
     }
 }
 

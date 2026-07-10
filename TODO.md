@@ -39,7 +39,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `refactor/remove-gecko`
+- Working branch: `docs/jackvec-branding`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -51,6 +51,32 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### JackVec API rename (`docs/jackvec-branding`)
+
+- Status: implementation and safety validation complete; codegen audit pending
+- Naming contract: package and crate path `jackvec`, primary type `JackVec<T>`,
+  construction macro `jack_vec!`.
+- Compatibility: intentionally breaking. Do not retain aliases in the primary
+  crate; a separate compatibility shim can be evaluated if an actual downstream
+  migration requires one.
+- Attribution: preserve explicit credit and links to Mozilla's `thin-vec`, its
+  original authors, and contributors. Do not rewrite historical experiment names
+  or results that were recorded against ThinVec.
+- Scope: rename active source, doctests, tests, benchmarks, allocation labels, and
+  benchmark tooling atomically. Repository-directory and remote URLs remain on the
+  existing `tomsanbear/thin-vec` location until the repository itself is renamed.
+- Acceptance: no stale `ThinVec`, `thin_vec`, or `thin-vec` API references outside
+  intentional attribution/history/current repository URLs; all feature, Rust 1.86,
+  docs, Clippy, Miri, macro-hygiene, allocation-smoke, and CPU-smoke gates pass;
+  rename-only optimized executable code remains performance-equivalent.
+- Validation result: the active source, tests, doctests, benchmarks, allocation
+  output, and benchmark tooling contain only `jackvec`, `JackVec`, and `jack_vec!`.
+  The remaining old-name matches are deliberate Mozilla attribution, historical
+  records, or the current repository URL. All-target, no-default, serde,
+  malloc-size, Rust 1.86, formatting, warning-denied Clippy, warning-denied docs,
+  49 doctests, 99 strict-provenance Tree Borrows Miri tests, five benchmark-runner
+  unit tests, allocation smoke, CPU smoke, and diff hygiene pass.
 
 ### Remove Gecko compatibility (`refactor/remove-gecko`)
 

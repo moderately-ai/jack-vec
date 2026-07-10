@@ -1,6 +1,6 @@
 # Performance benchmarks
 
-The suite compares `ThinVec<u64>` with `Vec<u64>` along the dimensions affected by
+The suite compares `JackVec<u64>` with `Vec<u64>` along the dimensions affected by
 their different representations. It deliberately does not benchmark every method:
 most higher-level operations delegate to slices and would not isolate the tradeoff
 this crate makes.
@@ -29,13 +29,13 @@ The suite measures:
   final destruction; and
 - resizing reserved capacity to 1,024 scalar elements, excluding allocation and
   final destruction; and
-- converting four- and 1,024-element ThinVecs into Vecs, with source preparation
+- converting four- and 1,024-element JackVecs into Vecs, with source preparation
   and destination destruction outside the timed region; and
-- converting a 1,024-element ThinVec into an exact boxed slice under the same
+- converting a 1,024-element JackVec into an exact boxed slice under the same
   ownership boundary; and
-- converting a 1,024-element Vec into a ThinVec to distinguish explicit relocation
+- converting a 1,024-element Vec into a JackVec to distinguish explicit relocation
   from the existing compiler-vectorized collector; and
-- constructing a ThinVec directly from an exactly initialized four-element array;
+- constructing a JackVec directly from an exactly initialized four-element array;
   and
 - sequential iteration after construction.
 
@@ -63,7 +63,7 @@ Criterion's mutable saved baselines:
 python3 tools/bench_ab.py \
   --baseline <exact-commit> \
   --candidate <exact-commit> \
-  --filter push_preallocated/ThinVec/1024 \
+  --filter push_preallocated/JackVec/1024 \
   --exact \
   --rounds 7 \
   --seed 20260710 \
@@ -87,7 +87,7 @@ experiment.
 
 Run benchmarks on an otherwise idle machine with CPU frequency scaling and thermal
 conditions held as consistently as practical. Compare each implementation with its
-own historical result; the `ThinVec`/`Vec` ratio describes a tradeoff and is not by
+own historical result; the `JackVec`/`Vec` ratio describes a tradeoff and is not by
 itself a regression threshold.
 
 ## Allocation metrics
