@@ -20,6 +20,7 @@ The suite measures:
 - complete build-and-drop with normal growth;
 - pushing into capacity allocated outside the timed region, with destruction also
   excluded from timing; and
+- appending into preallocated destination capacity at small and large sizes; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton

@@ -10,7 +10,7 @@ use thin_vec::ThinVec;
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
-    NestedWorkload, ITERATION_SIZES, NESTED_VECTOR_COUNT, OPERATION_SIZES,
+    NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT, OPERATION_SIZES,
 };
 
 fn bench_nested_construct<V: BenchVector<u64>>(
@@ -134,12 +134,43 @@ fn sequential_iteration(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_append<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>, len: usize) {
+    group.bench_function(BenchmarkId::new(V::LABEL, len), |bencher| {
+        bencher.iter_batched_ref(
+            || {
+                let mut destination = V::with_capacity(len * 2);
+                fill_vector(&mut destination, len, 0);
+                let source = build_reserved::<V>(len);
+                (destination, source)
+            },
+            |(destination, source)| {
+                destination.append(source);
+                black_box(destination);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn append_preallocated(c: &mut Criterion) {
+    let mut group = c.benchmark_group("append_preallocated");
+
+    for &len in APPEND_SIZES {
+        group.throughput(Throughput::Elements(len as u64));
+        bench_append::<Vec<u64>>(&mut group, len);
+        bench_append::<ThinVec<u64>>(&mut group, len);
+    }
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
     nested_traverse,
     build_growing_and_drop,
     push_preallocated,
-    sequential_iteration
+    sequential_iteration,
+    append_preallocated
 );
 criterion_main!(benches);

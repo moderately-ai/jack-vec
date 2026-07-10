@@ -3,6 +3,7 @@ use thin_vec::ThinVec;
 pub const NESTED_VECTOR_COUNT: usize = 10_000;
 pub const OPERATION_SIZES: &[usize] = &[1, 4, 1_024];
 pub const ITERATION_SIZES: &[usize] = &[8, 1_024];
+pub const APPEND_SIZES: &[usize] = &[4, 1_024];
 
 pub trait BenchVector<T>: Sized {
     const LABEL: &'static str;
@@ -10,6 +11,7 @@ pub trait BenchVector<T>: Sized {
     fn new() -> Self;
     fn with_capacity(capacity: usize) -> Self;
     fn push(&mut self, value: T);
+    fn append(&mut self, other: &mut Self);
     fn as_slice(&self) -> &[T];
 }
 
@@ -26,6 +28,10 @@ impl<T> BenchVector<T> for Vec<T> {
 
     fn push(&mut self, value: T) {
         Vec::push(self, value);
+    }
+
+    fn append(&mut self, other: &mut Self) {
+        Vec::append(self, other);
     }
 
     fn as_slice(&self) -> &[T] {
@@ -46,6 +52,10 @@ impl<T> BenchVector<T> for ThinVec<T> {
 
     fn push(&mut self, value: T) {
         ThinVec::push(self, value);
+    }
+
+    fn append(&mut self, other: &mut Self) {
+        ThinVec::append(self, other);
     }
 
     fn as_slice(&self) -> &[T] {

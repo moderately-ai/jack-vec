@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/push-fast-path`
+- Working branch: `perf/bulk-append`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -46,6 +46,16 @@ The central hypothesis is:
 - Benchmark OS/allocator: Ubuntu, Linux 5.15, glibc 2.35
 
 ## Active experiment
+
+### Bulk append (`perf/bulk-append`)
+
+- Status: establishing baseline
+- Hypothesis: one reserve and one bulk relocation will outperform the current
+  `extend(other.drain(..))` element loop without changing allocation behavior.
+- Affected measurement: `append_preallocated` at 4 and 1,024 elements.
+- Acceptance: reproducible CPU and code-size improvement with identical final
+  contents, source clearing, allocation behavior, panic safety, and Gecko auto-array
+  ownership.
 
 ### Push fast path (`perf/push-fast-path`)
 
