@@ -147,7 +147,7 @@ The central hypothesis is:
 
 ### Retrospective push revalidation
 
-- Status: pre-registered; not yet run
+- Status: wall-time gate passed; mechanistic/counter gate pending
 - Baseline commit: `f8fa1e8` (corrected benchmark boundary, old push)
 - Candidate commit: `c3b80a1` (outlined growth and known-length publication)
 - Hypothesis: removing repeated header length/capacity traffic from no-growth push
@@ -169,6 +169,20 @@ The central hypothesis is:
 - Expected result: a large improvement consistent with the historical result. A
   materially smaller result is a reason to revisit allocator and benchmark-state
   sensitivity, not to preserve the old claim.
+- Wall-time result: passed all declared variants under cleared-preload/System malloc.
+  One element improved 60.39%, four elements 73.85%, and 1,024 elements 78.68% at
+  the paired medians. Every paired round was strongly favorable and every bootstrap
+  interval was entirely below zero.
+- Primary detail: 1,024 elements improved from a median per-process mean estimate of
+  2,056.9 ns to 438.3 ns; its paired range was [-78.88%, -78.61%] and bootstrap
+  interval [-78.76%, -78.64%]. This is far outside the calibrated A/A envelope.
+- Code-size result: the complete benchmark executable decreased by 48 bytes
+  (3,759,184 to 3,759,136). Retaining future built executables in the artifact set
+  is now mandatory so hot-function disassembly remains auditable after worktree
+  cleanup.
+- Do not mark complete yet: fixed-work counter calibration/comparison, optimized
+  disassembly, deterministic allocation comparison, and correctness evidence remain
+  required by the pre-registration.
 
 ### Post-append implementation audit
 
@@ -744,3 +758,18 @@ general wins.
   for requested, usable, peak-live, retained-capacity, and RSS memory claims.
 - Existing push and append results remain promising, but must be retrospectively
   reproduced under this protocol before an upstream proposal.
+
+### 2026-07-10: calibrate the paired runner and revalidate push timing
+
+- Rejected two A/A calibrations that produced directional differences for identical
+  code; did not relax the pre-registered interval rule because their medians were
+  small.
+- Discovered a global tcmalloc `LD_PRELOAD`, invalidating prior “glibc allocator”
+  labels and demonstrating large allocator-conditioned push timing differences.
+- Removed label-specific executable, working-directory, and artifact-path state from
+  benchmark children. The resulting A/A interval included zero with every paired
+  delta inside roughly 0.9%.
+- Revalidated the push optimization against its exact parent under System malloc:
+  60-79% improvements across all declared sizes with no total code-size regression.
+- Retrospective push acceptance remains pending independent mechanistic, fixed-work
+  counter, allocation, and correctness evidence.

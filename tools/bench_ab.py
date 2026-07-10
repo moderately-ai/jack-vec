@@ -560,6 +560,15 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 "size_bytes": executables[label].stat().st_size,
                 "sha256": sha256_file(executables[label]),
             }
+            retained_executable = build_log / f"{args.bench}-executable"
+            shutil.copy2(executables[label], retained_executable)
+            binary_metadata["artifact_path"] = str(
+                retained_executable.relative_to(output_root)
+            )
+            if sha256_file(retained_executable) != binary_metadata["sha256"]:
+                raise RunnerError(
+                    f"retained {label} executable does not match its build"
+                )
             binary_metadata_by_label[label] = binary_metadata
             (build_log / "binary.json").write_text(
                 json.dumps(binary_metadata, indent=2, sort_keys=True) + "\n"
