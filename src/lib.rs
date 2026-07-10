@@ -864,22 +864,6 @@ impl<T> ThinVec<T> {
         self.reserve(1);
     }
 
-    /// Appends an element to the back like `push`,
-    /// but assumes that sufficient capacity has already been reserved, i.e.
-    /// `len() < capacity()`.
-    ///
-    /// # Safety
-    ///
-    /// - Capacity must be reserved in advance such that `capacity() > len()`.
-    #[inline]
-    unsafe fn push_unchecked(&mut self, val: T) {
-        let old_len = self.len();
-        debug_assert!(old_len < self.capacity());
-        unsafe {
-            self.push_unchecked_at(old_len, val);
-        }
-    }
-
     /// Pushes at a length already loaded and checked by the caller.
     #[inline]
     unsafe fn push_unchecked_at(&mut self, old_len: usize, val: T) {
@@ -2129,13 +2113,35 @@ impl<T> Extend<T> for ThinVec<T> {
         let hint = iter.size_hint().0;
         if hint > 0 {
             self.reserve(hint);
-            for x in iter.by_ref().take(hint) {
-                // SAFETY: `reserve(hint)` ensures the next `hint` calls of `push_unchecked`
-                // have sufficient capacity.
-                unsafe {
-                    self.push_unchecked(x);
+
+            struct SetLenOnDrop<'a, T> {
+                vec: &'a mut ThinVec<T>,
+                initialized_len: usize,
+            }
+
+            impl<T> Drop for SetLenOnDrop<'_, T> {
+                fn drop(&mut self) {
+                    unsafe {
+                        self.vec.set_len_non_singleton(self.initialized_len);
+                    }
                 }
             }
+
+            let data = self.data_raw();
+            let initialized_len = self.len();
+            let mut guard = SetLenOnDrop {
+                vec: self,
+                initialized_len,
+            };
+            for x in iter.by_ref().take(hint) {
+                unsafe {
+                    // `reserve(hint)` and `take(hint)` bound every direct write
+                    // to initialized_len..initialized_len + hint.
+                    ptr::write(data.add(guard.initialized_len), x);
+                }
+                guard.initialized_len += 1;
+            }
+            drop(guard);
         }
 
         // if the hint underestimated the iterator length,
@@ -3743,6 +3749,109 @@ mod std_tests {
         }
 
         assert_eq!(count_x, 1);
+    }
+
+    #[test]
+    fn test_extend_size_hint_bounds() {
+        struct Hint<I> {
+            inner: I,
+            lower: usize,
+        }
+
+        impl<I: Iterator> Iterator for Hint<I> {
+            type Item = I::Item;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                self.inner.next()
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                (self.lower, None)
+            }
+        }
+
+        let mut overestimated = thin_vec![9];
+        overestimated.extend(Hint {
+            inner: 0..2,
+            lower: 4,
+        });
+        assert_eq!(overestimated, [9, 0, 1]);
+
+        let mut underestimated = thin_vec![9];
+        underestimated.extend(Hint {
+            inner: 0..4,
+            lower: 2,
+        });
+        assert_eq!(underestimated, [9, 0, 1, 2, 3]);
+
+        let mut empty = thin_vec![9];
+        empty.extend(core::iter::empty());
+        assert_eq!(empty, [9]);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_extend_iterator_panic_publishes_initialized_prefix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct Counted {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                self.drops[self.id].set(self.drops[self.id].get() + 1);
+            }
+        }
+
+        struct PanicIter {
+            next: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Iterator for PanicIter {
+            type Item = Counted;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                if self.next == 2 {
+                    panic!("iterator panic");
+                }
+                let id = self.next + 1;
+                self.next += 1;
+                Some(Counted {
+                    id,
+                    drops: self.drops.clone(),
+                })
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                (4, Some(4))
+            }
+        }
+
+        let drops = Rc::new((0..3).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = thin_vec![Counted {
+            id: 0,
+            drops: drops.clone(),
+        }];
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.extend(PanicIter {
+                next: 0,
+                drops: drops.clone(),
+            });
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(
+            values.iter().map(|value| value.id).collect::<Vec<_>>(),
+            [0, 1, 2]
+        );
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
     }
 
     /* TODO: implement extend for Iter<&Copy>
