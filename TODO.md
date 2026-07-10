@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/retain-backshift`
+- Working branch: `perf/dedup-backshift`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,37 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Guarded `dedup_by` backshift (`perf/dedup-backshift`)
+
+- Status: pre-registered; benchmark and implementation not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: after the first adjacent duplicate, dropping duplicates in place and
+  copying each later survivor once into the gap will outperform swapping each
+  survivor with a duplicate, especially for large elements. A gap guard will repair
+  the initialized prefix if the comparator or a duplicate's destructor panics.
+- Primary workload: 256 64-byte `[u64; 8]` elements arranged as adjacent pairs,
+  leaving 128 survivors. Setup/allocation and final destruction stay outside the
+  timed region; comparison, duplicate destruction, and movement remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope.
+- Declared secondary workload: 1,024 `u64` elements in adjacent pairs, leaving 512
+  survivors. It must not regress beyond the calibrated 1% envelope. Retain Vec as a
+  link-layout/noise control, but decide on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260716`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: stable first-of-run semantics, comparator argument order and
+  mutation behavior, exact survivor values, owning elements destroyed once,
+  comparator-panic repair, duplicate-destructor-panic repair, empty/singleton/
+  all-unique/all-duplicate/ZST behavior, native and Gecko strict-provenance Miri,
+  and all supported feature/MSRV lanes.
+- Codegen/size gate: confirm one copy per post-gap survivor and no unexplained
+  hot-function or whole-binary growth. Reject or record any tradeoff.
+- Scope: one guarded algorithm, two high-signal benchmark shapes, and focused
+  correctness tests. Do not combine `truncate`, `Extend`, or clone changes.
 
 ### Guarded `retain_mut` backshift (`perf/retain-backshift`)
 
