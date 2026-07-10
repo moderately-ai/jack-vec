@@ -31,6 +31,8 @@ The suite measures:
   final destruction; and
 - converting four- and 1,024-element ThinVecs into Vecs, with source preparation
   and destination destruction outside the timed region; and
+- converting a 1,024-element ThinVec into an exact boxed slice under the same
+  ownership boundary; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton

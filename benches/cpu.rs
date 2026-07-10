@@ -332,6 +332,21 @@ fn thin_into_vec(c: &mut Criterion) {
     group.finish();
 }
 
+fn thin_into_box(c: &mut Criterion) {
+    let mut group = c.benchmark_group("thin_into_box");
+    let len = 1_024;
+    group.throughput(Throughput::Elements(len as u64));
+    let source = build_reserved::<ThinVec<u64>>(len);
+    group.bench_function("ThinVec", |bencher| {
+        bencher.iter_batched(
+            || source.clone(),
+            |values| Box::<[u64]>::from(black_box(values)),
+            BatchSize::SmallInput,
+        );
+    });
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -344,6 +359,7 @@ criterion_group!(
     dedup_adjacent_pairs,
     extend_reserved,
     resize_reserved,
-    thin_into_vec
+    thin_into_vec,
+    thin_into_box
 );
 criterion_main!(benches);

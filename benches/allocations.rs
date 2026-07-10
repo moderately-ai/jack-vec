@@ -185,6 +185,28 @@ fn report_thin_into_vec(len: usize) {
     );
 }
 
+fn report_thin_into_box() {
+    let len = 1_024;
+    let measurement = measure(|| {
+        let output = Box::<[u64]>::from(build_reserved::<ThinVec<u64>>(len));
+        assert_eq!(output.len(), len);
+        output
+    });
+    assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
+    println!(
+        "thin_into_box,{},ThinVec_to_Box,{},{},{},{},{},{},{},{}",
+        len,
+        1,
+        size_of::<Box<[u64]>>(),
+        measurement.live_before_drop,
+        measurement.peak_live,
+        measurement.live_after_drop,
+        measurement.allocations,
+        measurement.reallocations,
+        measurement.deallocations,
+    );
+}
+
 fn main() {
     println!(
         "benchmark,input,implementation,container_count,inline_bytes,live_requested_bytes,\
@@ -214,4 +236,5 @@ fn main() {
     for &len in &[4, 1_024] {
         report_thin_into_vec(len);
     }
+    report_thin_into_box();
 }
