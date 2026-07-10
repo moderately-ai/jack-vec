@@ -2507,6 +2507,7 @@ impl<T> From<Box<[T]>> for ThinVec<T> {
     /// let b: Box<[i32]> = thin_vec![1, 2, 3].into_iter().collect();
     /// assert_eq!(ThinVec::from(b), thin_vec![1, 2, 3]);
     /// ```
+    #[inline(never)]
     fn from(s: Box<[T]>) -> Self {
         // `Box<[T]>` -> `Vec<T>` preserves the allocation, then the direct
         // Vec-to-ThinVec conversion performs the required layout change in bulk.
