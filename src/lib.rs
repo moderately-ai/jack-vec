@@ -2579,8 +2579,21 @@ impl<T> From<ThinVec<T>> for Box<[T]> {
     /// use thin_vec::{ThinVec, thin_vec};
     /// assert_eq!(Box::from(thin_vec![1, 2, 3]), thin_vec![1, 2, 3].into_iter().collect());
     /// ```
-    fn from(v: ThinVec<T>) -> Self {
-        v.into_iter().collect()
+    fn from(mut v: ThinVec<T>) -> Self {
+        let len = v.len();
+        if len == 0 {
+            return Box::default();
+        }
+
+        let mut boxed = Box::<[T]>::new_uninit_slice(len);
+        unsafe {
+            // The destination is exact-length uninitialized storage for T.
+            ptr::copy_nonoverlapping(v.data_raw(), boxed.as_mut_ptr().cast::<T>(), len);
+
+            // Ownership moves to the boxed slice. Nothing below can panic.
+            v.set_len_non_singleton(0);
+            boxed.assume_init()
+        }
     }
 }
 
@@ -3794,6 +3807,58 @@ mod std_tests {
 
             let aligned = Vec::from(thin_vec![Aligned(1), Aligned(2)]);
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
+            assert_eq!(aligned.as_ptr().align_offset(64), 0);
+        }
+    }
+
+    #[test]
+    fn test_into_box_bulk_relocation() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        assert!(Box::<[u64]>::from(ThinVec::new()).is_empty());
+        assert!(Box::<[u64]>::from(ThinVec::with_capacity(8)).is_empty());
+
+        let mut source = ThinVec::with_capacity(16);
+        source.extend([10, 20, 30]);
+        let values = Box::<[u64]>::from(source);
+        assert_eq!(&*values, [10, 20, 30]);
+
+        struct CountDrop(Rc<Cell<usize>>);
+        impl Drop for CountDrop {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        let source = thin_vec![
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+        ];
+        let values = Box::<[CountDrop]>::from(source);
+        assert_eq!(drops.get(), 0);
+        drop(values);
+        assert_eq!(drops.get(), 3);
+
+        #[derive(Debug, PartialEq)]
+        struct Zst;
+        impl Drop for Zst {
+            fn drop(&mut self) {}
+        }
+
+        let zsts = Box::<[Zst]>::from(thin_vec![Zst, Zst, Zst]);
+        assert_eq!(&*zsts, [Zst, Zst, Zst]);
+
+        #[cfg(not(feature = "gecko-ffi"))]
+        {
+            #[repr(align(64))]
+            #[derive(Debug, PartialEq)]
+            struct Aligned(u8);
+
+            let aligned = Box::<[Aligned]>::from(thin_vec![Aligned(1), Aligned(2)]);
+            assert_eq!(&*aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
     }
