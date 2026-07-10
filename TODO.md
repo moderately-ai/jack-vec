@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `benchmarks/ab-runner`
+- Working branch: `perf/splice-reserve`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,29 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Active experiment
+
+### Splice reserve accounting (`perf/splice-reserve`)
+
+- Status: pre-registered; implementation not started
+- Baseline commit: `bafdc44`
+- Hypothesis: `Drain::move_tail` double-counts the initialized prefix because it
+  passes `end + tail + additional` to `ThinVec::reserve`, whose argument is already
+  interpreted relative to current `vec.len() == end`.
+- Proposed correction: reserve `tail + additional`; the reserve method then checks
+  exactly `end + tail + additional`, the required post-move initialized layout.
+- Primary metric: resulting capacity for a five-element vector splicing two elements
+  into twelve. Final length and minimum required capacity are 15. The old native path
+  is predicted to allocate capacity 19; the corrected native and Gecko paths are
+  predicted to allocate 15 for `u64`.
+- Acceptance: exact final contents and length, capacity 15, no additional benchmark,
+  unchanged behavior when replacement is shorter/equal, checked overflow retained,
+  and all relevant ownership, ZST, native, no_std, Gecko, MSRV, Clippy, and focused
+  strict-provenance Miri gates pass.
+- Falsification: if the test does not fail at capacity 19 before implementation, or
+  if allocator/growth policy rather than prefix double-counting explains the result,
+  stop and revise the hypothesis instead of applying the arithmetic change.
+- Scope: one regression test and the smallest `move_tail` arithmetic correction. No
+  Criterion benchmark or unrelated splice rewrite.
 
 ### Paired A/B runner and same-binary calibration (`benchmarks/ab-runner`)
 
