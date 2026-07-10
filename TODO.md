@@ -1,9 +1,12 @@
-# ThinVec performance roadmap
+# JackVec performance roadmap
 
 This document is the active project ledger for performance work on the
-`tomsanbear/thin-vec` fork. Update it whenever an experiment starts, finishes,
-changes priority, or produces a reusable finding. Record rejected ideas and the
-evidence behind them so they are not repeatedly rediscovered.
+`tomsanbear/thin-vec` fork, now being prepared under the JackVec project name.
+JackVec is a direct descendant of Mozilla's ThinVec; historical ThinVec names in
+this ledger are retained so results and commit records remain accurate. Update
+the ledger whenever an experiment starts, finishes, changes priority, or produces
+a reusable finding. Record rejected ideas and the evidence behind them so they
+are not repeatedly rediscovered.
 
 ## Objective
 

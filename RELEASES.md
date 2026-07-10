@@ -1,4 +1,6 @@
 # Unreleased
+* Begin preparing the JackVec project identity while retaining explicit attribution
+  to Mozilla's ThinVec and leaving the published Rust API unchanged.
 * Raise the minimum supported Rust version to 1.86.
 * Add CPU and allocation benchmarks comparing ThinVec with Vec.
 
