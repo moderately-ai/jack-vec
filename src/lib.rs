@@ -1986,13 +1986,37 @@ impl<T: Clone> ThinVec<T> {
         if new_len > old_len {
             let additional = new_len - old_len;
             self.reserve(additional);
+
+            struct SetLenOnDrop<'a, T> {
+                vec: &'a mut ThinVec<T>,
+                initialized_len: usize,
+            }
+
+            impl<T> Drop for SetLenOnDrop<'_, T> {
+                fn drop(&mut self) {
+                    unsafe {
+                        self.vec.set_len_non_singleton(self.initialized_len);
+                    }
+                }
+            }
+
+            let data = self.data_raw();
+            let mut guard = SetLenOnDrop {
+                vec: self,
+                initialized_len: old_len,
+            };
             for _ in 1..additional {
-                self.push(value.clone());
+                unsafe {
+                    ptr::write(data.add(guard.initialized_len), value.clone());
+                }
+                guard.initialized_len += 1;
             }
-            // We can write the last element directly without cloning needlessly
-            if additional > 0 {
-                self.push(value);
+            unsafe {
+                // Move the last value directly rather than cloning it.
+                ptr::write(data.add(guard.initialized_len), value);
             }
+            guard.initialized_len += 1;
+            drop(guard);
         } else if new_len < old_len {
             self.truncate(new_len);
         }
@@ -3870,6 +3894,102 @@ mod std_tests {
         );
         drop(values);
         assert!(drops.iter().all(|count| count.get() == 1));
+    }
+
+    #[test]
+    fn test_resize() {
+        let mut values = thin_vec![1, 2];
+        values.resize(5, 9);
+        assert_eq!(values, [1, 2, 9, 9, 9]);
+        values.resize(5, 7);
+        assert_eq!(values, [1, 2, 9, 9, 9]);
+        values.resize(2, 0);
+        assert_eq!(values, [1, 2]);
+
+        let mut zst = ThinVec::new();
+        zst.resize(8, ());
+        assert_eq!(zst.len(), 8);
+        zst.resize(1, ());
+        assert_eq!(zst.len(), 1);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_resize_clone_panic_publishes_initialized_suffix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        #[derive(Clone, Copy)]
+        enum Kind {
+            Existing,
+            Value,
+            Clone,
+        }
+
+        struct PanicClone {
+            kind: Kind,
+            clone_attempts: Rc<Cell<usize>>,
+            existing_drops: Rc<Cell<usize>>,
+            value_drops: Rc<Cell<usize>>,
+            clone_drops: Rc<Cell<usize>>,
+        }
+
+        impl Clone for PanicClone {
+            fn clone(&self) -> Self {
+                let attempt = self.clone_attempts.get() + 1;
+                self.clone_attempts.set(attempt);
+                if attempt == 3 {
+                    panic!("clone panic");
+                }
+                Self {
+                    kind: Kind::Clone,
+                    clone_attempts: self.clone_attempts.clone(),
+                    existing_drops: self.existing_drops.clone(),
+                    value_drops: self.value_drops.clone(),
+                    clone_drops: self.clone_drops.clone(),
+                }
+            }
+        }
+
+        impl Drop for PanicClone {
+            fn drop(&mut self) {
+                let count = match self.kind {
+                    Kind::Existing => &self.existing_drops,
+                    Kind::Value => &self.value_drops,
+                    Kind::Clone => &self.clone_drops,
+                };
+                count.set(count.get() + 1);
+            }
+        }
+
+        let clone_attempts = Rc::new(Cell::new(0));
+        let existing_drops = Rc::new(Cell::new(0));
+        let value_drops = Rc::new(Cell::new(0));
+        let clone_drops = Rc::new(Cell::new(0));
+        let make = |kind| PanicClone {
+            kind,
+            clone_attempts: clone_attempts.clone(),
+            existing_drops: existing_drops.clone(),
+            value_drops: value_drops.clone(),
+            clone_drops: clone_drops.clone(),
+        };
+        let mut values = thin_vec![make(Kind::Existing)];
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.resize(5, make(Kind::Value));
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(clone_attempts.get(), 3);
+        assert_eq!(values.len(), 3);
+        assert_eq!(existing_drops.get(), 0);
+        assert_eq!(value_drops.get(), 1);
+        assert_eq!(clone_drops.get(), 0);
+        drop(values);
+        assert_eq!(existing_drops.get(), 1);
+        assert_eq!(value_drops.get(), 1);
+        assert_eq!(clone_drops.get(), 2);
     }
 
     /* TODO: implement extend for Iter<&Copy>
