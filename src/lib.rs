@@ -2489,7 +2489,17 @@ impl<T, const N: usize> From<[T; N]> for ThinVec<T> {
     /// assert_eq!(ThinVec::from([1, 2, 3]), thin_vec![1, 2, 3]);
     /// ```
     fn from(s: [T; N]) -> ThinVec<T> {
-        core::iter::IntoIterator::into_iter(s).collect()
+        if N == 0 {
+            return ThinVec::new();
+        }
+
+        let mut vec = ThinVec::with_capacity(N);
+        let s = mem::ManuallyDrop::new(s);
+        unsafe {
+            ptr::copy_nonoverlapping(s.as_ptr(), vec.data_raw(), N);
+            vec.set_len_non_singleton(N);
+        }
+        vec
     }
 }
 
@@ -3924,6 +3934,51 @@ mod std_tests {
             struct Aligned(u8);
 
             let aligned = ThinVec::from(vec![Aligned(1), Aligned(2)]);
+            assert_eq!(aligned, [Aligned(1), Aligned(2)]);
+            assert_eq!(aligned.as_ptr().align_offset(64), 0);
+        }
+    }
+
+    #[test]
+    fn test_from_array_bulk_relocation() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        assert!(ThinVec::<u64>::from([]).is_empty());
+        assert_eq!(ThinVec::from([10]), [10]);
+        let values = ThinVec::from([10, 20, 30, 40]);
+        assert_eq!(values, [10, 20, 30, 40]);
+        assert_eq!(values.capacity(), 4);
+
+        struct CountDrop(Rc<Cell<usize>>);
+        impl Drop for CountDrop {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        let values = ThinVec::from([
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+        ]);
+        assert_eq!(drops.get(), 0);
+        drop(values);
+        assert_eq!(drops.get(), 3);
+
+        #[derive(Debug, PartialEq)]
+        struct Zst;
+        let zsts = ThinVec::from([Zst, Zst, Zst]);
+        assert_eq!(zsts, [Zst, Zst, Zst]);
+
+        #[cfg(not(feature = "gecko-ffi"))]
+        {
+            #[repr(align(64))]
+            #[derive(Debug, PartialEq)]
+            struct Aligned(u8);
+
+            let aligned = ThinVec::from([Aligned(1), Aligned(2)]);
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
