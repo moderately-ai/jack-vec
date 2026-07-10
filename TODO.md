@@ -87,7 +87,7 @@ The central hypothesis is:
 
 ### Controlled same-binary recalibration
 
-- Status: pre-registered; not yet run
+- Status: rejected
 - Change from the rejected calibration: stage the selected build at one canonical
   executable pathname/inode before every invocation and explicitly clear inherited
   preload variables from build and benchmark children. Record both inherited and
@@ -104,6 +104,36 @@ The central hypothesis is:
   resamples.
 - Fixed stopping rule: exactly seven paired rounds with no post-hoc removal or
   extension. Expected result: no effect; failure blocks optimization revalidation.
+- Result: rejected. Despite identical executable hash, device, inode, and pathname,
+  the candidate label measured 0.537% faster at the median; paired deltas ranged
+  from -0.932% to +0.085%, and the bootstrap interval again excluded zero at
+  [-0.803%, -0.345%].
+- Allocator sensitivity discovered: clearing inherited tcmalloc changed the absolute
+  estimate from roughly 440 ns to 1,130 ns. Even though allocation is outside the
+  intended timed push body, batching/setup state materially changes the observed
+  benchmark. Historical allocator-unlabelled numbers require revalidation.
+- Remaining confounder hypothesis: child-visible runtime and Criterion paths still
+  encoded `baseline` versus `candidate`, including unequal path lengths. This may
+  alter process/heap layout before a sub-percent microbenchmark; it is not yet an
+  established explanation.
+
+### Label-neutral child-process calibration
+
+- Status: pre-registered; not yet run
+- Change from the second rejected calibration: use one runtime working directory
+  for both labels and equal-length round/position Criterion paths. The child process
+  receives no baseline/candidate label; mapping occurs only in parent-written
+  metadata after execution.
+- Calibration hypothesis: removing all known child-visible stable label encoding
+  will eliminate the directional A/A result for identical commit `c868598` on
+  `push_preallocated/ThinVec/1024`.
+- Primary metric and success rule: unchanged—absolute median paired delta at most
+  1%, deterministic bootstrap interval includes zero, byte-identical builds, and
+  all seven declared rounds retained.
+- Pre-registered parameters: seed `20260712`; all other commits, filter, CPU,
+  allocator clearing, Criterion parameters, and fixed seven-round stopping rule are
+  unchanged. Expected result: no effect; failure blocks A/B optimization claims and
+  triggers a redesign of the timing method rather than another post-hoc rerun.
 
 ### Post-append implementation audit
 
@@ -364,6 +394,8 @@ preserve their evidence here.
   under the experimental protocol before proposing either change upstream.
 - [ ] Treat the smallest push results as provisional superiority claims until
   disassembly and independent paired rounds rule out sub-nanosecond artifacts.
+- [ ] Re-establish allocator-labelled baselines with preload explicitly controlled;
+  the builder host injects tcmalloc globally, so prior “glibc” labels are invalid.
 
 Keep new benchmarks scarce. A benchmark must distinguish a concrete design choice
 or protect an established property. Remove redundant sizes and methods.

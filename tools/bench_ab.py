@@ -149,7 +149,7 @@ def build_benchmark(
 
 def run_benchmark(
     executable: Path,
-    worktree: Path,
+    runtime_dir: Path,
     criterion_home: Path,
     run_dir: Path,
     args: argparse.Namespace,
@@ -188,7 +188,7 @@ def run_benchmark(
     ):
         result = subprocess.run(
             command,
-            cwd=worktree,
+            cwd=runtime_dir,
             env=env,
             text=True,
             stdout=stdout,
@@ -203,7 +203,9 @@ def run_benchmark(
         "executable_device": executable_stat.st_dev,
         "executable_inode": executable_stat.st_ino,
         "executable_sha256": sha256_file(executable),
+        "criterion_home": str(criterion_home),
         "returncode": result.returncode,
+        "runtime_directory": str(runtime_dir),
         "source_label": source_label,
     }
     (run_dir / "run.json").write_text(
@@ -215,26 +217,36 @@ def run_benchmark(
 
 def collect_estimates(output_root: Path, rounds: int) -> list[dict[str, Any]]:
     measurements: list[dict[str, Any]] = []
-    for round_number in range(1, rounds + 1):
-        for label in ("baseline", "candidate"):
-            criterion_home = (
-                output_root / "runs" / f"{round_number:03d}-{label}" / "criterion"
+    observed_runs: set[tuple[int, str]] = set()
+    for run_dir in sorted((output_root / "runs").glob("[0-9][0-9][0-9]-[12]")):
+        order = json.loads((run_dir / "order.json").read_text())
+        round_number = int(order["round"])
+        label = order["label"]
+        observed_runs.add((round_number, label))
+        criterion_home = run_dir / "criterion"
+        for estimates_path in sorted(criterion_home.glob("**/new/estimates.json")):
+            benchmark = estimates_path.relative_to(criterion_home).parts[:-2]
+            estimates = json.loads(estimates_path.read_text())
+            measurements.append(
+                {
+                    "round": round_number,
+                    "label": label,
+                    "benchmark": "/".join(benchmark),
+                    "mean_ns": estimates["mean"]["point_estimate"],
+                    "median_ns": estimates["median"]["point_estimate"],
+                    "slope_ns": estimates.get("slope", {}).get("point_estimate", ""),
+                }
             )
-            for estimates_path in sorted(criterion_home.glob("**/new/estimates.json")):
-                benchmark = estimates_path.relative_to(criterion_home).parts[:-2]
-                estimates = json.loads(estimates_path.read_text())
-                measurements.append(
-                    {
-                        "round": round_number,
-                        "label": label,
-                        "benchmark": "/".join(benchmark),
-                        "mean_ns": estimates["mean"]["point_estimate"],
-                        "median_ns": estimates["median"]["point_estimate"],
-                        "slope_ns": estimates.get("slope", {}).get(
-                            "point_estimate", ""
-                        ),
-                    }
-                )
+    expected_runs = {
+        (round_number, label)
+        for round_number in range(1, rounds + 1)
+        for label in ("baseline", "candidate")
+    }
+    if observed_runs != expected_runs:
+        raise RunnerError(
+            f"run metadata mismatch: missing={sorted(expected_runs - observed_runs)}, "
+            f"unexpected={sorted(observed_runs - expected_runs)}"
+        )
     return measurements
 
 
@@ -562,9 +574,14 @@ def main(arguments: Sequence[str] | None = None) -> int:
             )
 
         staged_executable = temporary_root / f"staged-{args.bench}"
+        runtime_dir = temporary_root / "runtime"
+        runtime_dir.mkdir()
         for round_number, labels in enumerate(order, start=1):
             for position, label in enumerate(labels, start=1):
-                run_dir = output_root / "runs" / f"{round_number:03d}-{label}"
+                # Child-visible paths encode round and position, never the label.
+                # Both position suffixes have equal length, and label assignment
+                # alternates across rounds.
+                run_dir = output_root / "runs" / f"{round_number:03d}-{position}"
                 run_dir.mkdir()
                 (run_dir / "order.json").write_text(
                     json.dumps(
@@ -591,7 +608,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     )
                 run_benchmark(
                     staged_executable,
-                    worktrees[label],
+                    runtime_dir,
                     run_dir / "criterion",
                     run_dir,
                     args,

@@ -61,18 +61,16 @@ class BenchAbTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for round_number in (1, 2):
-                for label in ("baseline", "candidate"):
+                for position, label in enumerate(("baseline", "candidate"), start=1):
+                    run_dir = root / "runs" / f"{round_number:03d}-{position}"
                     estimate_dir = (
-                        root
-                        / "runs"
-                        / f"{round_number:03d}-{label}"
-                        / "criterion"
-                        / "group"
-                        / "ThinVec"
-                        / "4"
-                        / "new"
+                        run_dir / "criterion" / "group" / "ThinVec" / "4" / "new"
                     )
                     estimate_dir.mkdir(parents=True)
+                    (run_dir / "order.json").write_text(
+                        '{"round":%d,"position":%d,"label":"%s"}'
+                        % (round_number, position, label)
+                    )
                     (estimate_dir / "estimates.json").write_text(
                         '{"mean":{"point_estimate":1.0},'
                         '"median":{"point_estimate":2.0},'
