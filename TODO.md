@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/dedup-backshift`
+- Working branch: `perf/extend-guard`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,37 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Guarded reserved `Extend` (`perf/extend-guard`)
+
+- Status: pre-registered; benchmark and implementation not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: while consuming the iterator's reserved lower-bound portion, keeping
+  initialized length locally and publishing it once through a panic guard will
+  remove a header length load/store per element without weakening safety. The
+  lower bound limits the number of direct writes; it is never trusted as an exact
+  length or as an unsafe iterator contract.
+- Primary workload: extend an empty `u64` collection with capacity for 1,024 from
+  `0..1_024`. Allocation/setup and final destruction stay outside the timed region;
+  iterator creation, iteration, writes, and length publication remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope. Report Vec as a link-layout/noise control, but decide
+  on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260717`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: existing nonempty destination, empty iterator, exact lower
+  bound, overestimated and underestimated lower bounds, iterator panic after partial
+  initialization, owning elements destroyed once, and ZST behavior. Require native
+  and Gecko strict-provenance Miri and all supported feature/MSRV lanes.
+- Codegen/size gate: confirm the reserved loop carries length in a register and
+  publishes it once on the non-panicking path, with no unexplained hot-function or
+  whole-binary growth. Reject or record any tradeoff.
+- Scope: one guarded lower-bound loop and one high-signal benchmark size. Keep the
+  existing checked `push` fallback for iterator items beyond the reserved portion;
+  do not combine `resize`, `extend_from_slice`, clone, or truncate changes.
 
 ### Guarded `dedup_by` backshift (`perf/dedup-backshift`)
 
