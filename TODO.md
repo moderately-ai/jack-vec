@@ -200,6 +200,30 @@ The central hypothesis is:
   driver or classify the existing wall-time/assembly/allocation evidence as the
   practical stopping point before upstream submission.
 
+### Retrospective append revalidation
+
+- Status: pre-registered; not yet run
+- Baseline commit: `55ca926` (append benchmark present, iterator-driven append)
+- Candidate commit: `e6fbaaf` (single reserve plus bulk relocation)
+- Hypothesis: replacing drain/extend with one non-overlapping bulk copy materially
+  reduces the cost of moving 1,024 preallocated `u64` elements without worsening
+  the small four-element case.
+- Primary metric: paired wall-time delta for
+  `append_preallocated/ThinVec/1024` under explicitly cleared preload/System malloc.
+- Primary threshold: at least 30% faster at the median, bootstrap interval entirely
+  below zero, and improvement far outside the calibrated 1% A/A envelope.
+- Declared secondary variant: `append_preallocated/ThinVec/4`; report every round
+  and reject a regression beyond the calibrated 1% envelope.
+- Fixed parameters: filter `append_preallocated/ThinVec`, seven paired rounds, seed
+  `20260714`, CPU 0, sample size 100, 3-second warm-up, 5-second measurement,
+  100,000 resamples, preload cleared, and label-neutral child paths. Do not extend
+  or remove rounds.
+- Secondary evidence after a timing pass: executable size and focused optimized
+  disassembly. Existing ownership/ZST and strict-provenance tests remain the
+  correctness gate; do not add another permanent benchmark or profiling framework.
+- Expected result: a large 1,024-element improvement and a smaller positive
+  four-element result, consistent with the original experiment.
+
 ### Post-append implementation audit
 
 - Status: research complete; no implementation started
