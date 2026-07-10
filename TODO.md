@@ -43,7 +43,10 @@ The central hypothesis is:
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
 - Benchmark toolchain: Rust 1.86
 - Benchmark CPU: Ryzen 9 7950X3D, pinned to CPU 0 on the 96 MiB L3 CCD
-- Benchmark OS/allocator: Ubuntu, Linux 5.15, glibc 2.35
+- Benchmark OS: Ubuntu, Linux 5.15, glibc 2.35
+- Allocator warning: the login environment preloads tcmalloc globally. Every CPU
+  result must explicitly state whether preload was inherited or cleared; “glibc
+  System” means the runner recorded an empty effective preload environment.
 
 ## Active experiment
 
@@ -119,7 +122,7 @@ The central hypothesis is:
 
 ### Label-neutral child-process calibration
 
-- Status: pre-registered; not yet run
+- Status: accepted as the initial wall-time noise calibration
 - Change from the second rejected calibration: use one runtime working directory
   for both labels and equal-length round/position Criterion paths. The child process
   receives no baseline/candidate label; mapping occurs only in parent-written
@@ -134,6 +137,38 @@ The central hypothesis is:
   allocator clearing, Criterion parameters, and fixed seven-round stopping rule are
   unchanged. Expected result: no effect; failure blocks A/B optimization claims and
   triggers a redesign of the timing method rather than another post-hoc rerun.
+- Result: passed. The median paired A/A delta was +0.779%, the paired range was
+  [-0.735%, +0.889%], and the deterministic bootstrap interval included zero at
+  [-0.591%, +0.860%]. All 14 measurements completed with identical binary hash,
+  device, inode, executable path, runtime directory, and equal-length artifact paths.
+- Interpretation: for this host, allocator, and 1,024-element push workload, effects
+  below 1% are inside the observed process-level envelope and are inconclusive.
+  This is an initial workload-specific calibration, not a universal noise constant.
+
+### Retrospective push revalidation
+
+- Status: pre-registered; not yet run
+- Baseline commit: `f8fa1e8` (corrected benchmark boundary, old push)
+- Candidate commit: `c3b80a1` (outlined growth and known-length publication)
+- Hypothesis: removing repeated header length/capacity traffic from no-growth push
+  materially reduces the time to initialize 1,024 preallocated `u64` elements.
+- Primary metric: paired wall-time delta for
+  `push_preallocated/ThinVec/1024` under explicitly cleared preload/System malloc.
+- Primary acceptance threshold: at least 25% faster at the median, bootstrap interval
+  entirely below zero, and improvement far outside the calibrated 1% A/A envelope.
+- Declared secondary variants: ThinVec lengths 1 and 4 from the same
+  `push_preallocated/ThinVec` filter. Report both; neither may regress beyond the 1%
+  calibrated envelope. Do not select a favorable size after measurement.
+- Fixed parameters: seven paired rounds, seed `20260713`, CPU 0, sample size 100,
+  3-second warm-up, 5-second measurement, 100,000 resamples, preload cleared, and
+  label-neutral child paths. Do not extend or remove rounds.
+- Secondary evidence required after wall time: executable/code-size comparison,
+  optimized disassembly supporting the proposed load/store mechanism, fixed-work
+  instructions and cycles, unchanged allocation metrics, and existing correctness
+  gates. Wall time alone cannot complete retrospective acceptance.
+- Expected result: a large improvement consistent with the historical result. A
+  materially smaller result is a reason to revisit allocator and benchmark-state
+  sensitivity, not to preserve the old claim.
 
 ### Post-append implementation audit
 
@@ -220,7 +255,11 @@ For 10,000 nested `u64` containers:
 Requested bytes are not allocator usable size or RSS. The allocation runner also
 asserts that every workload returns to zero live requested bytes after drop.
 
-### Remote CPU baseline
+### Historical remote CPU baseline
+
+These measurements inherited the builder host's tcmalloc preload. Their internal A/B
+comparisons remain hypotheses worth reproducing, but they are not glibc-System
+results and are not final evidence under the current protocol.
 
 Ten thousand nested vectors:
 
@@ -386,10 +425,11 @@ preserve their evidence here.
   benchmark artifacts automatically.
 - [ ] Correct baseline documentation so `main` is measured from a separate checkout
   before the feature branch is compared against it.
-- [ ] Add a reproducible A/B runner that builds explicit commits in separate
+- [x] Add a reproducible A/B runner that builds explicit commits in separate
   worktrees, alternates their order, and retains raw per-round artifacts.
-- [ ] Measure same-binary repeatability and establish practical noise floors for
-  the pinned Linux timing and fixed-work counter lanes.
+- [x] Measure same-binary timing repeatability for the pinned Linux 1,024-element
+  push lane after eliminating stable child-visible labels.
+- [ ] Establish same-binary noise for the fixed-work counter lane.
 - [ ] Retrospectively revalidate push and append against their exact parent commits
   under the experimental protocol before proposing either change upstream.
 - [ ] Treat the smallest push results as provisional superiority claims until
