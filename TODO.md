@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Direct `ThinVec<T>` to `Vec<T>` relocation (`perf/thin-into-vec-bulk`)
 
-- Status: baseline harness complete; implementation not started
+- Status: accepted
 - Baseline commit: `414df4a`
+- Candidate commit: `0adc7b1`
 - Hypothesis: the current `From<ThinVec<T>> for Vec<T>` delegates to generic
   `IntoIterator::collect`, which optimized x86-64 and AArch64 code still implements
   as a per-element move loop with capacity checks, reserve fallback, and unwind
@@ -90,6 +91,34 @@ The central hypothesis is:
 - Scope: change only `From<ThinVec<T>> for Vec<T>`, its focused tests, and two
   temporary benchmark sizes. Do not combine `Vec`/boxed-slice into ThinVec,
   ThinVec-to-boxed-slice, clone specialization, growth, or Gecko policy changes.
+- Result: accepted. The 1,024-element conversion improved 80.64% at the paired
+  median, from 674.85 ns to 130.65 ns, with every round favorable and a bootstrap
+  interval of [-80.82%, -80.54%]. Four elements improved 9.29%, with an interval
+  of [-9.97%, -9.01%], so the secondary no-regression gate also passes.
+- Mechanism result: exact disassembly shows the 648-byte baseline collector moving
+  one value per iteration while updating iterator position, checking destination
+  capacity, retaining a reserve fallback, and carrying unwind cleanup. The
+  278-byte candidate performs one destination allocation, one `memcpy`, one source
+  length reset, one destination length publication, and one matching source-header
+  deallocation. This is the pre-registered mechanism, and setup/output destruction
+  remain on the same sides of the timing boundary in both exact builds.
+- Memory result: unchanged. Full source-build-plus-conversion lifecycle uses two
+  allocations, zero reallocations, and two deallocations. Requested peak is 80
+  bytes at four elements and 16,400 bytes at 1,024; returned Vec requested bytes
+  are 32 and 8,192 respectively, with exact capacity. The candidate neither omits
+  the necessary second layout nor retains the source allocation.
+- Size result: focused conversion code shrank 370 bytes (648 to 278). Whole-ELF
+  text shrank 580 bytes, data was unchanged, and the executable file shrank 104
+  bytes.
+- Correctness result: singleton and allocated empty inputs, spare capacity, owning
+  exact-once drops, ZSTs, native over-alignment, contents, and destination capacity
+  are covered. Native, no-default-feature, Gecko, Rust 1.86, formatting, supported
+  Clippy, and focused native/Gecko strict-provenance Miri lanes pass. Gecko Clippy
+  reports only the three previously existing legacy warnings.
+- Decision: retain the direct relocation and its two-size CPU/allocation coverage.
+  The same ownership-transfer primitive is promising for ThinVec-to-boxed-slice,
+  but that direction remains a separate experiment because exact-capacity Box
+  construction and codegen differ.
 
 ### Nonempty clone outlining policy (`perf/clone-inlining`)
 
@@ -1320,3 +1349,22 @@ general wins.
 - Added one capacity regression test rather than a low-signal timing benchmark.
 - Native, no-default-feature, Gecko library, and focused strict-provenance Miri gates
   pass.
+
+### 2026-07-10: reject generalized clone inlining
+
+- Small clone-and-drop improved 12.92%, but the declared 1,024-element secondary
+  regressed 4.17% in every paired round, so the policy was rejected.
+- Disassembly showed a small-only vectorization benefit and an inlined large copy
+  loop straddling a 32-byte fetch boundary. A forced-alignment diagnostic collapsed
+  the large regression to 0.01%, supporting the negative result's cause.
+- Restored `cold`/`inline(never)` and removed the temporary benchmark.
+
+### 2026-07-10: accept direct ThinVec-to-Vec relocation
+
+- Replaced generic iterator collection with one allocation, one bulk relocation,
+  explicit ownership publication, and source-layout deallocation.
+- Improved conversion by 9.29% at four elements and 80.64% at 1,024, with every
+  paired round favorable.
+- Preserved requested bytes, allocation/deallocation counts, exact returned
+  capacity, peak-live memory, and exact-once destruction.
+- Focused code shrank 370 bytes and whole-ELF text shrank 580 bytes.

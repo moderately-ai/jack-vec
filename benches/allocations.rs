@@ -172,10 +172,8 @@ fn report_thin_into_vec(len: usize) {
     });
     assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
     println!(
-        "{},{},{},{},{},{},{},{},{},{},{}",
-        "thin_into_vec",
+        "thin_into_vec,{},ThinVec_to_Vec,{},{},{},{},{},{},{},{}",
         len,
-        "ThinVec_to_Vec",
         1,
         size_of::<Vec<u64>>(),
         measurement.live_before_drop,
