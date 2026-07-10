@@ -51,15 +51,23 @@ python3 tools/bench_ab.py \
   --exact \
   --rounds 7 \
   --seed 20260710 \
+  --clear-preload \
   --cpu 0
 ```
 
 The runner requires identical `Cargo.toml` and `benches/` trees, generates one
 shared lockfile, builds detached worktrees before measurement, alternates A/B order,
-and retains the raw Criterion data plus paired summaries under
+stages every selected binary at the same executable path, and retains the raw
+Criterion data plus paired summaries under
 `benchmark-results/`. Omit `--cpu` on non-Linux systems. Shorter timings and fewer
 rounds are suitable only for testing the runner, not for accepting performance
 changes.
+
+`--clear-preload` explicitly removes inherited `LD_PRELOAD` and
+`DYLD_INSERT_LIBRARIES` values from build and benchmark children while retaining
+both the inherited and effective environments in the manifest. Use it for the
+System-allocator baseline; omit it only for a deliberately preloaded allocator
+experiment.
 
 Run benchmarks on an otherwise idle machine with CPU frequency scaling and thermal
 conditions held as consistently as practical. Compare each implementation with its

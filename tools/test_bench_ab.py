@@ -21,6 +21,19 @@ class BenchAbTests(unittest.TestCase):
     def test_percentile_interpolates(self):
         self.assertEqual(bench_ab.percentile([0.0, 10.0], 0.25), 2.5)
 
+    def test_environment_subset_omits_credentials(self):
+        subset = bench_ab.environment_subset(
+            {
+                "LD_PRELOAD": "/allocator.so",
+                "CARGO_PROFILE_BENCH_LTO": "true",
+                "CARGO_REGISTRIES_PRIVATE_TOKEN": "secret",
+            }
+        )
+        self.assertEqual(
+            subset,
+            {"LD_PRELOAD": "/allocator.so", "CARGO_PROFILE_BENCH_LTO": "true"},
+        )
+
     def test_summary_uses_paired_ratios(self):
         rows = []
         for round_number, baseline, candidate in ((1, 100.0, 90.0), (2, 200.0, 220.0)):

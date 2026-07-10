@@ -49,7 +49,7 @@ The central hypothesis is:
 
 ### Paired A/B runner and same-binary calibration (`benchmarks/ab-runner`)
 
-- Status: runner implemented; remote calibration not yet run
+- Status: first remote calibration rejected
 - Infrastructure hypothesis: exact-commit detached worktrees, a shared lockfile,
   identical benchmark sources, build-before-measurement, alternating process order,
   and retained raw artifacts remove the mutable-baseline and time-based counter
@@ -72,6 +72,38 @@ The central hypothesis is:
   governor, raw Criterion samples, build logs, and zero missing/failed runs.
 - Expected result: no effect. Any apparent directional win is evidence of measurement
   bias or instability because both labels contain identical code.
+- Result: rejected despite the small absolute median. The two binaries were
+  byte-identical, but the candidate label measured 0.119% faster at the median;
+  paired deltas ranged from -0.522% to +0.365%, and the deterministic bootstrap
+  interval was entirely negative at [-0.334%, -0.068%]. It therefore failed the
+  pre-registered requirement that the interval include zero.
+- Confounder discovered: the remote login environment globally injects
+  `/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4` through `LD_PRELOAD`. Prior
+  results from this host must not be described as glibc-System-allocator results
+  until they are rerun with preload explicitly cleared.
+- Possible label mechanism under test: separately located executable files may
+  carry stable loader, inode, or page-cache effects even when their bytes match.
+  This is a hypothesis, not an explanation established by the failed run.
+
+### Controlled same-binary recalibration
+
+- Status: pre-registered; not yet run
+- Change from the rejected calibration: stage the selected build at one canonical
+  executable pathname/inode before every invocation and explicitly clear inherited
+  preload variables from build and benchmark children. Record both inherited and
+  effective environments.
+- Calibration hypothesis: with those two label-specific/environmental confounders
+  controlled, identical commit `c868598` will show no directional difference for
+  `push_preallocated/ThinVec/1024`.
+- Primary metric and success rule: unchanged—absolute median paired delta at most
+  1%, deterministic bootstrap interval includes zero, byte-identical builds, and
+  all seven declared rounds retained.
+- Pre-registered command parameters: baseline and candidate `c868598`, exact filter
+  `push_preallocated/ThinVec/1024`, seed `20260711`, CPU 0, preload cleared,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, and 100,000
+  resamples.
+- Fixed stopping rule: exactly seven paired rounds with no post-hoc removal or
+  extension. Expected result: no effect; failure blocks optimization revalidation.
 
 ### Post-append implementation audit
 

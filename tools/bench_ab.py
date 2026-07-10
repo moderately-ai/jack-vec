@@ -107,8 +107,9 @@ def build_benchmark(
     bench: str,
     virtual_source_root: str,
     log_dir: Path,
+    base_env: dict[str, str],
 ) -> Path:
-    env = os.environ.copy()
+    env = base_env.copy()
     env["CARGO_TARGET_DIR"] = str(target_dir)
     remap = f"--remap-path-prefix={worktree}={virtual_source_root}"
     env["RUSTFLAGS"] = " ".join(filter(None, (env.get("RUSTFLAGS", ""), remap)))
@@ -152,6 +153,8 @@ def run_benchmark(
     criterion_home: Path,
     run_dir: Path,
     args: argparse.Namespace,
+    base_env: dict[str, str],
+    source_label: str,
 ) -> None:
     criterion_home.mkdir(parents=True)
     # Cargo normally supplies the hidden --bench compatibility flag. Without it,
@@ -175,7 +178,7 @@ def run_benchmark(
     if args.cpu is not None:
         command = ["taskset", "-c", str(args.cpu), *command]
 
-    env = os.environ.copy()
+    env = base_env.copy()
     env["CRITERION_HOME"] = str(criterion_home)
     started = dt.datetime.now(dt.timezone.utc)
     monotonic_start = time.monotonic()
@@ -192,11 +195,16 @@ def run_benchmark(
             stderr=stderr,
             check=False,
         )
+    executable_stat = executable.stat()
     metadata = {
         "command": command,
         "started_utc": started.isoformat(),
         "duration_seconds": time.monotonic() - monotonic_start,
+        "executable_device": executable_stat.st_dev,
+        "executable_inode": executable_stat.st_ino,
+        "executable_sha256": sha256_file(executable),
         "returncode": result.returncode,
+        "source_label": source_label,
     }
     (run_dir / "run.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n"
@@ -322,6 +330,30 @@ def write_status(path: Path, status: str, **details: Any) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
+def environment_subset(environment: dict[str, str]) -> dict[str, str]:
+    keys = (
+        "RUSTFLAGS",
+        "RUSTDOCFLAGS",
+        "CARGO_BUILD_TARGET",
+        "CARGO_ENCODED_RUSTFLAGS",
+        "CC",
+        "CXX",
+        "CFLAGS",
+        "CXXFLAGS",
+        "LDFLAGS",
+        "LD_PRELOAD",
+        "DYLD_INSERT_LIBRARIES",
+        "MALLOC_CONF",
+    )
+    selected = {key: environment[key] for key in keys if key in environment}
+    selected.update(
+        (key, value)
+        for key, value in sorted(environment.items())
+        if key.startswith("CARGO_PROFILE_")
+    )
+    return selected
+
+
 def validate_args(args: argparse.Namespace) -> None:
     if args.rounds < 1:
         raise RunnerError("--rounds must be positive")
@@ -361,6 +393,11 @@ def parse_args(arguments: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--nresamples", type=int, default=100_000)
     parser.add_argument(
         "--cpu", type=int, help="Linux CPU on which taskset pins each run"
+    )
+    parser.add_argument(
+        "--clear-preload",
+        action="store_true",
+        help="remove LD_PRELOAD and DYLD_INSERT_LIBRARIES from build/run children",
     )
     parser.add_argument(
         "--output",
@@ -403,8 +440,14 @@ def main(arguments: Sequence[str] | None = None) -> int:
     (output_root / "builds").mkdir()
 
     order = balanced_order(args.rounds, args.seed)
+    effective_env = os.environ.copy()
+    cleared_preloads = {}
+    if args.clear_preload:
+        for key in ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES"):
+            if key in effective_env:
+                cleared_preloads[key] = effective_env.pop(key)
     metadata = {
-        "schema_version": 1,
+        "schema_version": 2,
         "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "repository": str(repo),
         "baseline_ref": args.baseline,
@@ -426,6 +469,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
             "nresamples": args.nresamples,
         },
         "cpu": args.cpu,
+        "clear_preload": args.clear_preload,
         "toolchain": args.toolchain,
         "host": {
             "platform": platform.platform(),
@@ -434,29 +478,9 @@ def main(arguments: Sequence[str] | None = None) -> int:
             "lscpu": command_output(["lscpu"], repo),
             "rustc": command_output(["rustc", f"+{args.toolchain}", "-vV"], repo),
             "cargo": command_output(["cargo", f"+{args.toolchain}", "-V"], repo),
-            "environment": {
-                key: os.environ[key]
-                for key in (
-                    "RUSTFLAGS",
-                    "RUSTDOCFLAGS",
-                    "CARGO_BUILD_TARGET",
-                    "CARGO_ENCODED_RUSTFLAGS",
-                    "CC",
-                    "CXX",
-                    "CFLAGS",
-                    "CXXFLAGS",
-                    "LDFLAGS",
-                    "LD_PRELOAD",
-                    "DYLD_INSERT_LIBRARIES",
-                    "MALLOC_CONF",
-                )
-                if key in os.environ
-            }
-            | {
-                key: value
-                for key, value in sorted(os.environ.items())
-                if key.startswith("CARGO_PROFILE_")
-            },
+            "inherited_environment": environment_subset(dict(os.environ)),
+            "effective_environment": environment_subset(effective_env),
+            "cleared_preloads": cleared_preloads,
         },
     }
     if platform.system() == "Linux":
@@ -495,7 +519,9 @@ def main(arguments: Sequence[str] | None = None) -> int:
             added_worktrees.append(worktrees[label])
 
         lock_command = cargo_command(args.toolchain, "generate-lockfile")
-        lock_result = run_checked(lock_command, cwd=worktrees["baseline"])
+        lock_result = run_checked(
+            lock_command, cwd=worktrees["baseline"], env=effective_env
+        )
         (output_root / "builds" / "lock.stdout.log").write_text(lock_result.stdout)
         (output_root / "builds" / "lock.stderr.log").write_text(lock_result.stderr)
         shutil.copy2(
@@ -515,6 +541,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 args.bench,
                 "/thin-vec",
                 build_log,
+                effective_env,
             )
             binary_metadata = {
                 "path": str(executables[label]),
@@ -534,6 +561,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
                 "same-commit A/A builds produced different benchmark executables"
             )
 
+        staged_executable = temporary_root / f"staged-{args.bench}"
         for round_number, labels in enumerate(order, start=1):
             for position, label in enumerate(labels, start=1):
                 run_dir = output_root / "runs" / f"{round_number:03d}-{label}"
@@ -550,12 +578,25 @@ def main(arguments: Sequence[str] | None = None) -> int:
                     f"round {round_number}/{args.rounds}, position {position}: {label}",
                     flush=True,
                 )
+                # Execute both implementations from the same pathname and inode.
+                # Otherwise loader path, file placement, or page-cache identity can
+                # become a stable label-specific effect.
+                shutil.copy2(executables[label], staged_executable)
+                if (
+                    sha256_file(staged_executable)
+                    != binary_metadata_by_label[label]["sha256"]
+                ):
+                    raise RunnerError(
+                        f"staged {label} executable does not match its build"
+                    )
                 run_benchmark(
-                    executables[label],
+                    staged_executable,
                     worktrees[label],
                     run_dir / "criterion",
                     run_dir,
                     args,
+                    effective_env,
+                    label,
                 )
 
         measurements = collect_estimates(output_root, args.rounds)
