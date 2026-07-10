@@ -12,6 +12,9 @@ pub trait BenchVector<T>: Sized {
     fn with_capacity(capacity: usize) -> Self;
     fn push(&mut self, value: T);
     fn append(&mut self, other: &mut Self);
+    fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut T) -> bool;
     fn as_slice(&self) -> &[T];
 }
 
@@ -32,6 +35,13 @@ impl<T> BenchVector<T> for Vec<T> {
 
     fn append(&mut self, other: &mut Self) {
         Vec::append(self, other);
+    }
+
+    fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        Vec::retain_mut(self, predicate);
     }
 
     fn as_slice(&self) -> &[T] {
@@ -56,6 +66,13 @@ impl<T> BenchVector<T> for ThinVec<T> {
 
     fn append(&mut self, other: &mut Self) {
         ThinVec::append(self, other);
+    }
+
+    fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        ThinVec::retain_mut(self, predicate);
     }
 
     fn as_slice(&self) -> &[T] {

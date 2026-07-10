@@ -164,6 +164,54 @@ fn append_preallocated(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_retain_u64<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    group.bench_function(BenchmarkId::new("u64", V::LABEL), |bencher| {
+        bencher.iter_batched_ref(
+            || build_reserved::<V>(1_024),
+            |values| {
+                values.retain_mut(|value| black_box(*value) % 2 == 0);
+                debug_assert_eq!(values.as_slice().len(), 512);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn bench_retain_large<V: BenchVector<[u64; 8]>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    group.bench_function(BenchmarkId::new("64_byte", V::LABEL), |bencher| {
+        bencher.iter_batched_ref(
+            || {
+                let mut values = V::with_capacity(256);
+                for index in 0..256 {
+                    values.push([index; 8]);
+                }
+                values
+            },
+            |values| {
+                values.retain_mut(|value| black_box(value[0]) % 2 == 0);
+                debug_assert_eq!(values.as_slice().len(), 128);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn retain_mixed(c: &mut Criterion) {
+    let mut group = c.benchmark_group("retain_mixed");
+
+    group.throughput(Throughput::Elements(1_024));
+    bench_retain_u64::<Vec<u64>>(&mut group);
+    bench_retain_u64::<ThinVec<u64>>(&mut group);
+
+    group.throughput(Throughput::Elements(256));
+    bench_retain_large::<Vec<[u64; 8]>>(&mut group);
+    bench_retain_large::<ThinVec<[u64; 8]>>(&mut group);
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -171,6 +219,7 @@ criterion_group!(
     build_growing_and_drop,
     push_preallocated,
     sequential_iteration,
-    append_preallocated
+    append_preallocated,
+    retain_mixed
 );
 criterion_main!(benches);
