@@ -163,6 +163,30 @@ where
     );
 }
 
+fn report_thin_into_vec(len: usize) {
+    let measurement = measure(|| {
+        let output = Vec::from(build_reserved::<ThinVec<u64>>(len));
+        assert_eq!(output.len(), len);
+        assert_eq!(output.capacity(), len);
+        output
+    });
+    assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
+    println!(
+        "{},{},{},{},{},{},{},{},{},{},{}",
+        "thin_into_vec",
+        len,
+        "ThinVec_to_Vec",
+        1,
+        size_of::<Vec<u64>>(),
+        measurement.live_before_drop,
+        measurement.peak_live,
+        measurement.live_after_drop,
+        measurement.allocations,
+        measurement.reallocations,
+        measurement.deallocations,
+    );
+}
+
 fn main() {
     println!(
         "benchmark,input,implementation,container_count,inline_bytes,live_requested_bytes,\
@@ -187,5 +211,9 @@ fn main() {
         report_vector::<ThinVec<u64>, _>("push_reserved", len, || {
             build_reserved::<ThinVec<u64>>(len)
         });
+    }
+
+    for &len in &[4, 1_024] {
+        report_thin_into_vec(len);
     }
 }
