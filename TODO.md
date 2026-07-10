@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/bulk-append`
+- Working branch: `benchmarks/ab-runner`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -46,6 +46,32 @@ The central hypothesis is:
 - Benchmark OS/allocator: Ubuntu, Linux 5.15, glibc 2.35
 
 ## Active experiment
+
+### Paired A/B runner and same-binary calibration (`benchmarks/ab-runner`)
+
+- Status: runner implemented; remote calibration not yet run
+- Infrastructure hypothesis: exact-commit detached worktrees, a shared lockfile,
+  identical benchmark sources, build-before-measurement, alternating process order,
+  and retained raw artifacts remove the mutable-baseline and time-based counter
+  errors already identified.
+- Calibration hypothesis: independently built copies of commit `c868598` will
+  produce byte-identical benchmark executables after source-path remapping and show
+  no directional difference for `push_preallocated/ThinVec/1024` on the pinned host.
+- Primary calibration metric: absolute median paired A/A wall-time delta across
+  seven process rounds.
+- Pre-registered command parameters: baseline and candidate `c868598`, exact filter
+  `push_preallocated/ThinVec/1024`, seed `20260710`, CPU 0, Criterion sample size
+  100, 3-second warm-up, 5-second measurement, and 100,000 resamples.
+- Fixed stopping rule: exactly seven paired rounds. Do not extend or selectively
+  remove rounds after inspecting their values.
+- Calibration success: binaries are byte-identical, absolute median paired delta is
+  at most 1%, the deterministic bootstrap interval includes zero, and every declared
+  round is retained and reported. A failure qualifies the host/runner for further
+  diagnosis, not an implementation performance conclusion.
+- Secondary checks: per-round delta spread, run order, toolchain and host metadata,
+  governor, raw Criterion samples, build logs, and zero missing/failed runs.
+- Expected result: no effect. Any apparent directional win is evidence of measurement
+  bias or instability because both labels contain identical code.
 
 ### Post-append implementation audit
 

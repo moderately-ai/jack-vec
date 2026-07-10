@@ -1,2 +1,5 @@
-target
-Cargo.lock
+/benchmark-results/
+/Cargo.lock
+/target/
+__pycache__/
+*.py[cod]

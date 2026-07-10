@@ -40,6 +40,27 @@ cargo bench --bench cpu -- --save-baseline main
 cargo bench --bench cpu -- --baseline main
 ```
 
+For implementation decisions, use the repository's paired A/B runner rather than
+Criterion's mutable saved baselines:
+
+```sh
+python3 tools/bench_ab.py \
+  --baseline <exact-commit> \
+  --candidate <exact-commit> \
+  --filter push_preallocated/ThinVec/1024 \
+  --exact \
+  --rounds 7 \
+  --seed 20260710 \
+  --cpu 0
+```
+
+The runner requires identical `Cargo.toml` and `benches/` trees, generates one
+shared lockfile, builds detached worktrees before measurement, alternates A/B order,
+and retains the raw Criterion data plus paired summaries under
+`benchmark-results/`. Omit `--cpu` on non-Linux systems. Shorter timings and fewer
+rounds are suitable only for testing the runner, not for accepting performance
+changes.
+
 Run benchmarks on an otherwise idle machine with CPU frequency scaling and thermal
 conditions held as consistently as practical. Compare each implementation with its
 own historical result; the `ThinVec`/`Vec` ratio describes a tradeoff and is not by
