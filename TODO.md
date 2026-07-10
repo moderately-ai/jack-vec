@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Direct array construction (`perf/from-array-bulk`)
 
-- Status: baseline harness complete; implementation not started
+- Status: accepted
 - Baseline commit: `1875f0a`
+- Candidate commit: `37bf4f9`
 - Hypothesis: `From<[T; N]>` knows the exact initialized element count at compile
   time, but currently enters array iteration and generic collection. Allocating an
   exact ThinVec once and relocating the array in one ownership transfer should
@@ -75,6 +76,26 @@ The central hypothesis is:
   by omitted destruction or materially larger generic monomorphization.
 - Scope: change only `From<[T; N]>`, focused tests, and one temporary four-element
   benchmark. Do not add `one`/`two`/`from_fn` APIs or combine builder/Gecko work.
+- Result: accepted. Four-element array construction improved 19.21%, from 14.02 ns
+  to 11.28 ns, with every paired round favorable and a bootstrap interval of
+  [-19.79%, -18.98%]. This clears the 10% threshold and calibrated noise envelope.
+- Mechanism result: the baseline already coalesces the four values into two 128-bit
+  loads/stores, but enters `ThinVec::reserve` from the singleton and retains generic
+  iterator/reserve fallback state before publishing length. The candidate uses
+  compile-time `N` to request the 48-byte layout directly, writes capacity, performs
+  exactly two vector loads/stores, and publishes length once. No runtime iterator
+  contract is trusted.
+- Memory result: unchanged at one exact 48-byte requested allocation, zero
+  reallocations, capacity four, and one deallocation. Array setup and output
+  destruction remain outside the timed boundary in both builds.
+- Size result: the focused Criterion wrapper shrank 25 bytes (1,763 to 1,738).
+  Actual whole `.text` shrank 5,520 bytes and total `size` text shrank 6,200 bytes;
+  the file shrank 12,136 bytes. Treat the large whole-binary reduction as favorable
+  but LTO-sensitive and claim only the focused 25-byte change as local evidence.
+- Correctness result: empty, singleton, four-element, owning exact-once drop, ZST,
+  exact capacity, and native over-alignment cases pass. Native, no-default-feature,
+  Gecko, supported Clippy, and focused native/Gecko strict-provenance Miri pass.
+- Decision: retain direct array relocation and its one four-element benchmark.
 
 ### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
 
@@ -1247,9 +1268,8 @@ before combining it with another optimization.
 - [x] Keep a local initialized length while consuming the reserved lower-bound
   portion of `Extend`, publishing header length through a panic guard instead of
   loading and storing it for every element.
-- [ ] Give exact/trusted internal construction paths a guarded direct-write loop;
-  safe `ExactSizeIterator` remains only a reservation hint, never an unsafe trust
-  boundary.
+- [x] Give the compile-time exact array conversion a direct relocation path; keep
+  safe `ExactSizeIterator` as a reservation hint, never an unsafe trust boundary.
 - [x] Make `resize` use its already-reserved unchecked construction path instead
   of repeating the public push capacity branch for every new element.
 - [x] Inspect `extend_from_slice` before specializing: after guarded `Extend`, the
@@ -1602,3 +1622,11 @@ general wins.
   benchmark orchestration and nested-workload outlining.
 - Reverted the implementation and removed its temporary test/benchmark rather than
   trading generalized, compiler-sensitive code growth for a situational conversion.
+
+### 2026-07-10: accept direct array construction
+
+- Used compile-time array length and initialization to bypass generic iterator and
+  reserve machinery without trusting runtime size hints.
+- Improved four-element construction 19.21% with one unchanged exact allocation and
+  exact-once ownership transfer.
+- The focused wrapper shrank 25 bytes; retained one small exact-construction lane.

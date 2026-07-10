@@ -35,6 +35,8 @@ The suite measures:
   ownership boundary; and
 - converting a 1,024-element Vec into a ThinVec to distinguish explicit relocation
   from the existing compiler-vectorized collector; and
+- constructing a ThinVec directly from an exactly initialized four-element array;
+  and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
