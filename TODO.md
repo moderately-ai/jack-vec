@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Guarded `retain_mut` backshift (`perf/retain-backshift`)
 
-- Status: pre-registered; benchmark and implementation not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; correctness tests and implementation not started
+- Baseline commit: `fdb889d`
 - Hypothesis: after the first rejection, moving each retained element once into the
   earliest hole will outperform `swap`, which moves both retained and rejected
   values, especially for large elements. A length-zero backshift guard will preserve
