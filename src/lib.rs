@@ -3012,8 +3012,9 @@ impl<T> Drain<'_, T> {
     /// Makes room for inserting more elements before the tail.
     unsafe fn move_tail(&mut self, additional: usize) {
         let vec = unsafe { self.vec.as_mut() };
-        let len = self.end + self.tail;
-        vec.reserve(len.checked_add(additional).unwrap_cap_overflow());
+        debug_assert_eq!(vec.len(), self.end);
+        let additional_capacity = self.tail.checked_add(additional).unwrap_cap_overflow();
+        vec.reserve(additional_capacity);
 
         let new_tail_start = self.end + additional;
         unsafe {
@@ -4125,6 +4126,17 @@ mod std_tests {
         assert_eq!(v, &[1, 2, 10, 11, 12, 5]);
         v.splice(1..3, Some(20));
         assert_eq!(v, &[1, 20, 11, 12, 5]);
+    }
+
+    #[test]
+    fn test_splice_reserves_only_required_capacity() {
+        let mut v = ThinVec::with_capacity(5);
+        v.extend(0..5);
+
+        drop(v.splice(2..4, 10..21));
+
+        assert_eq!(v, &[0, 1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 4]);
+        assert_eq!(v.capacity(), 14);
     }
 
     #[test]
