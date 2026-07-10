@@ -314,30 +314,6 @@ fn resize_reserved(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_clone_and_drop<V>(group: &mut BenchmarkGroup<'_, WallTime>, len: usize)
-where
-    V: BenchVector<u64> + Clone,
-{
-    let values = build_reserved::<V>(len);
-    group.bench_function(BenchmarkId::new(V::LABEL, len), |bencher| {
-        bencher.iter(|| {
-            black_box(values.clone());
-        });
-    });
-}
-
-fn clone_and_drop(c: &mut Criterion) {
-    let mut group = c.benchmark_group("clone_and_drop");
-
-    for &len in &[4, 1_024] {
-        group.throughput(Throughput::Elements(len as u64));
-        bench_clone_and_drop::<Vec<u64>>(&mut group, len);
-        bench_clone_and_drop::<ThinVec<u64>>(&mut group, len);
-    }
-
-    group.finish();
-}
-
 criterion_group!(
     benches,
     nested_construct,
@@ -349,7 +325,6 @@ criterion_group!(
     retain_mixed,
     dedup_adjacent_pairs,
     extend_reserved,
-    resize_reserved,
-    clone_and_drop
+    resize_reserved
 );
 criterion_main!(benches);

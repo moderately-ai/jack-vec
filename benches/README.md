@@ -29,8 +29,6 @@ The suite measures:
   final destruction; and
 - resizing reserved capacity to 1,024 scalar elements, excluding allocation and
   final destruction; and
-- cloning and destroying four- and 1,024-element scalar vectors from a source built
-  outside the timed region; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton

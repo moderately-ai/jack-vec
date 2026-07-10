@@ -2387,6 +2387,8 @@ where
 {
     #[inline]
     fn clone(&self) -> ThinVec<T> {
+        #[cold]
+        #[inline(never)]
         fn clone_non_singleton<T: Clone>(this: &ThinVec<T>) -> ThinVec<T> {
             let len = this.len();
             if len == 0 {

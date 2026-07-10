@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Nonempty clone outlining policy (`perf/clone-inlining`)
 
-- Status: benchmark complete; candidate not started
+- Status: rejected; candidate and permanent benchmark removed
 - Baseline commit: `a523aa3`
+- Candidate commit: `0698f97`
 - Hypothesis: marking every nonempty clone path `cold` and `inline(never)` imposes an
   unnecessary call boundary on ordinary small clones. Allowing normal inlining may
   improve four-element clone-and-drop, but can increase downstream code size.
@@ -80,6 +81,38 @@ The central hypothesis is:
 - Scope: change only clone outlining/inlining attributes and add two benchmark
   sizes. Do not change the partial-initialization algorithm, conversions, allocation
   growth, or element cloning semantics.
+- Result: rejected despite clearing the primary small-clone gate. Four-element
+  ThinVec clone-and-drop improved 12.92% at the paired median, with a bootstrap
+  interval of [-15.72%, -12.30%], but the declared 1,024-element secondary regressed
+  4.17%, with every paired round unfavorable and an interval of [+3.57%, +4.50%].
+  The secondary regression exceeds the calibrated 1% envelope and therefore vetoes
+  the candidate. Vec controls were neutral: -0.01% at four elements and -0.18% at
+  1,024, with both intervals spanning zero.
+- Codegen explanation: the outlined baseline clone loop is 32-byte aligned and its
+  31-byte vectorized copy loop fits in one fetch block. Inlining duplicates that
+  loop inside the Criterion iteration body at a 16-byte offset, so the same 31-byte
+  loop straddles a 32-byte fetch boundary. At 1,024 elements both versions execute
+  256 iterations of the same two-load/two-store vector body; the saved call/return
+  is amortized while the less favorable hot-loop placement repeats. At four
+  elements, inlining separately lowers LLVM's vectorization threshold: the
+  candidate performs two 128-bit loads and stores, whereas the outlined baseline
+  uses four scalar iterations. This accounts for the real small win and opposing
+  large regression without appealing to allocator noise or omitted work.
+- Alignment falsification: a separate three-round diagnostic rebuilt both exact
+  commits with LLVM's preferred innermost-loop alignment forced to 32 bytes. The
+  candidate loop moved from address offset 16 to a 32-byte boundary and the
+  1,024-element delta collapsed from +4.17% to +0.01% (range -2.37% to +0.17%).
+  This run is intentionally too short and globally alignment-perturbed for an
+  acceptance claim, but it falsifies a semantic-work or allocation explanation and
+  supports fetch placement as the cause of the original repeatable regression.
+- Size result: whole-ELF text shrank 16 bytes and the file shrank 152 bytes, so total
+  binary growth is not the regression mechanism. The measured Criterion iteration
+  monomorph grows from 256 to 478 bytes after absorbing the 185-byte clone helper;
+  its combined local footprint is 37 bytes larger than the outlined pair.
+- Decision: preserve `cold`/`inline(never)` for the generalized clone path and
+  remove the temporary benchmark. A future small-clone specialization would be a
+  distinct situational experiment and must retain an outlined large path rather
+  than repeating this global inlining policy.
 
 ### Bulk tail destruction in `truncate` (`perf/truncate-bulk-drop`)
 
@@ -954,10 +987,14 @@ before combining it with another optimization.
 - [x] Treat the current clone panic leak as a quality/correctness issue: cloned
   elements written before a later `T::clone` panic are not represented by `len`
   and therefore are not dropped.
-- [ ] Reevaluate `cold`/`inline(never)` on the nonempty clone path.
-- [ ] Benchmark empty, small, and moderately large nonempty clones.
-- [ ] Inspect whether `Vec`/`ThinVec`/boxed-slice conversions already become bulk
-  copies before rewriting them.
+- [x] Reevaluate `cold`/`inline(never)` on the nonempty clone path; normal inlining
+  wins at four elements but loses at 1,024, so retain the outlined policy.
+- [x] Benchmark small and moderately large nonempty clones, then remove the rejected
+  policy benchmark rather than permanently expanding the suite.
+- [x] Inspect whether `Vec`/`ThinVec`/boxed-slice conversions already become bulk
+  copies before rewriting them. `Vec`/boxed-slice into ThinVec vectorizes its bulk
+  move, but ThinVec into Vec uses generic per-element collection and ThinVec into
+  boxed slice inherits it before a possible exact-capacity shrink.
 
 ### Gecko correctness and performance
 
