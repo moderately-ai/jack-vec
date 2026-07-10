@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/resize-guard`
+- Working branch: `perf/truncate-bulk-drop`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,40 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Bulk tail destruction in `truncate` (`perf/truncate-bulk-drop`)
+
+- Status: pre-registered; benchmark and implementation not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: publishing final length once and dropping the removed suffix as one
+  slice will eliminate a header length load/store per destroyed element and allow
+  normal slice drop glue to manage unwinding.
+- Semantic caveat: current ThinVec truncation destroys from the old end backward;
+  Rust 1.86 Vec destroys the removed suffix forward after setting final length.
+  Destruction order is observable even though ThinVec does not document a guarantee.
+  Any candidate must explicitly adopt and test Vec's forward order; do not describe
+  this as mechanically behavior-preserving.
+- Primary workload: truncate 1,024 preconstructed cheap owning/drop values to zero.
+  Allocation and construction stay outside the timed region; destructor calls and
+  length publication remain inside. Final vector destruction is empty.
+- Primary threshold: at least 10% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope. Report Vec as a link-layout/noise control, but decide
+  on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260719`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: no-op when requested length is equal/greater, partial and full
+  truncation, forward destruction order, ZSTs with Drop, and a destructor panic in
+  the removed suffix. Final length must already be published; every other removed
+  and retained owning element must be destroyed exactly once. Require native and
+  Gecko strict-provenance Miri and all feature/MSRV lanes.
+- Codegen/size gate: confirm one header publication and slice drop rather than a
+  header-updating loop, with no unexplained hot-function or whole-binary growth.
+  Reject or record any tradeoff.
+- Scope: one truncate implementation and one high-signal benchmark shape. Do not
+  combine `clear`, clone inlining, extension, or Gecko growth changes.
 
 ### Guarded reserved `resize` growth (`perf/resize-guard`)
 
