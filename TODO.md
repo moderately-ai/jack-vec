@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/vec-into-thin-bulk`
+- Working branch: `perf/box-into-thin-delegate`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,29 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
+
+- Status: pre-registered; implementation not started
+- Hypothesis: `Box<[T]>` to `Vec<T>` transfers the same allocation without moving
+  elements. Delegating immediately to the accepted direct Vec-to-ThinVec conversion
+  should remove the current generic iterator collector and reproduce its bulk path
+  without additional unsafe code or allocation.
+- Primary workload: convert a preconstructed 1,024-element `Box<[u64]>` into
+  `ThinVec<u64>`, with source clone/setup and output destruction outside timing.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, interval entirely below zero, and outside the 1% envelope. Seven
+  rounds, seed `20260725`, CPU 0, sample size 100, 3-second warm-up, 5-second
+  measurement, and 100,000 resamples.
+- Memory/correctness gate: preserve one source and one destination allocation, zero
+  reallocations, exact output capacity, 16,400-byte requested peak at 1,024 `u64`s,
+  empty/owning/ZST/over-aligned behavior, and exact once-only drops. Run all feature,
+  MSRV, Clippy, and focused native/Gecko Miri lanes.
+- Codegen/size gate: optimized code must reuse the direct Vec relocation after the
+  allocation-free Box-to-Vec representation change. Inspect focused and whole size.
+- Scope: one delegation change and one temporary high-signal CPU benchmark. Remove
+  the benchmark after acceptance because the retained Vec-to-ThinVec lane protects
+  the same mechanism; retain it only if Box introduces distinct generated behavior.
 
 ### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
 
