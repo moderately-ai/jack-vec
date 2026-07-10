@@ -33,6 +33,8 @@ The suite measures:
   and destination destruction outside the timed region; and
 - converting a 1,024-element ThinVec into an exact boxed slice under the same
   ownership boundary; and
+- converting a 1,024-element Vec into a ThinVec to distinguish explicit relocation
+  from the existing compiler-vectorized collector; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
