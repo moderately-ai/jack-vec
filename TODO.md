@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Direct `ThinVec<T>` to `Box<[T]>` relocation (`perf/thin-into-box-bulk`)
 
-- Status: baseline harness complete; implementation not started
+- Status: accepted
 - Baseline commit: `41870bc`
+- Candidate commit: `94dfb3b`
 - Hypothesis: the current conversion collects `ThinVec::IntoIter` into a boxed
   slice through generic iterator machinery. Constructing one exact-length
   uninitialized boxed slice, relocating the initialized ThinVec region once,
@@ -85,6 +86,31 @@ The central hypothesis is:
 - Scope: change only `From<ThinVec<T>> for Box<[T]>`, focused tests, and one
   temporary benchmark shape. Do not combine inbound conversions, clone, growth,
   or Gecko policy changes.
+- Result: accepted. The 1,024-element conversion improved 78.36% at the paired
+  median, from 684.45 ns to 148.02 ns. Every paired round was favorable and the
+  bootstrap interval was [-78.46%, -78.22%], clearing both the 15% threshold and
+  calibrated noise envelope.
+- Mechanism result: optimized code performs one exact 8,192-byte allocation, one
+  `memcpy`, one source length reset, and one matching source-header deallocation,
+  returning the pointer/length fat pointer directly. The old benchmark path retains
+  generic iterator collection state and per-element movement/capacity control. The
+  benchmark's `iter_batched` source setup and output destruction are unchanged and
+  outside timing in both exact builds.
+- Memory result: unchanged. Full construction plus conversion requests two
+  allocations, zero reallocations, and two deallocations; output requested size is
+  8,192 bytes and peak live requested bytes are 16,400. No intermediate allocation
+  or retained source exists in the candidate.
+- Size result: the direct boxed conversion monomorph is 253 bytes and its Criterion
+  batched wrapper shrank 84 bytes. Whole-ELF text shrank 1,276 bytes, data shrank 24
+  bytes, and the executable file shrank 4,464 bytes. Because global generic
+  deduplication contributes to the larger whole-binary delta, claim only the wrapper
+  reduction as focused evidence.
+- Correctness result: singleton and allocated empty sources, spare capacity,
+  contents, owning exact-once drops, ZSTs, and native over-alignment are covered.
+  Native, no-default-feature, Gecko, Rust 1.86, formatting, supported Clippy, and
+  focused native/Gecko strict-provenance Miri lanes pass. Gecko Clippy retains only
+  the three existing legacy warnings.
+- Decision: retain direct exact-box relocation and its single high-signal benchmark.
 
 ### Direct `ThinVec<T>` to `Vec<T>` relocation (`perf/thin-into-vec-bulk`)
 
@@ -1404,3 +1430,12 @@ general wins.
 - Preserved requested bytes, allocation/deallocation counts, exact returned
   capacity, peak-live memory, and exact-once destruction.
 - Focused code shrank 370 bytes and whole-ELF text shrank 580 bytes.
+
+### 2026-07-10: accept direct ThinVec-to-boxed-slice relocation
+
+- Replaced boxed-slice iterator collection with one exact allocation, one bulk
+  relocation, initialization publication, and source-layout deallocation.
+- Improved the 1,024-element conversion 78.36% with unchanged requested memory,
+  peak live bytes, and allocator-call counts.
+- Whole-ELF text shrank 1,276 bytes; retained one high-signal benchmark rather than
+  repeating the Vec conversion's small-size matrix.
