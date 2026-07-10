@@ -212,6 +212,60 @@ fn retain_mixed(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_dedup_u64<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    group.bench_function(BenchmarkId::new("u64", V::LABEL), |bencher| {
+        bencher.iter_batched_ref(
+            || {
+                let mut values = V::with_capacity(1_024);
+                for index in 0..1_024 {
+                    values.push(index / 2);
+                }
+                values
+            },
+            |values| {
+                values.dedup_by(|current, previous| black_box(*current) == *previous);
+                debug_assert_eq!(values.as_slice().len(), 512);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn bench_dedup_large<V: BenchVector<[u64; 8]>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    group.bench_function(BenchmarkId::new("64_byte", V::LABEL), |bencher| {
+        bencher.iter_batched_ref(
+            || {
+                let mut values = V::with_capacity(256);
+                for index in 0..256 {
+                    values.push([index / 2; 8]);
+                }
+                values
+            },
+            |values| {
+                values.dedup_by(|current, previous| black_box(current[0]) == previous[0]);
+                debug_assert_eq!(values.as_slice().len(), 128);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn dedup_adjacent_pairs(c: &mut Criterion) {
+    let mut group = c.benchmark_group("dedup_adjacent_pairs");
+
+    group.throughput(Throughput::Elements(1_024));
+    bench_dedup_u64::<Vec<u64>>(&mut group);
+    bench_dedup_u64::<ThinVec<u64>>(&mut group);
+
+    group.throughput(Throughput::Elements(256));
+    bench_dedup_large::<Vec<[u64; 8]>>(&mut group);
+    bench_dedup_large::<ThinVec<[u64; 8]>>(&mut group);
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -220,6 +274,7 @@ criterion_group!(
     push_preallocated,
     sequential_iteration,
     append_preallocated,
-    retain_mixed
+    retain_mixed,
+    dedup_adjacent_pairs
 );
 criterion_main!(benches);

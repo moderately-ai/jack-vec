@@ -15,6 +15,9 @@ pub trait BenchVector<T>: Sized {
     fn retain_mut<F>(&mut self, predicate: F)
     where
         F: FnMut(&mut T) -> bool;
+    fn dedup_by<F>(&mut self, same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool;
     fn as_slice(&self) -> &[T];
 }
 
@@ -42,6 +45,13 @@ impl<T> BenchVector<T> for Vec<T> {
         F: FnMut(&mut T) -> bool,
     {
         Vec::retain_mut(self, predicate);
+    }
+
+    fn dedup_by<F>(&mut self, same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool,
+    {
+        Vec::dedup_by(self, same_bucket);
     }
 
     fn as_slice(&self) -> &[T] {
@@ -73,6 +83,13 @@ impl<T> BenchVector<T> for ThinVec<T> {
         F: FnMut(&mut T) -> bool,
     {
         ThinVec::retain_mut(self, predicate);
+    }
+
+    fn dedup_by<F>(&mut self, same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool,
+    {
+        ThinVec::dedup_by(self, same_bucket);
     }
 
     fn as_slice(&self) -> &[T] {

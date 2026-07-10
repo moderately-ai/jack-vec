@@ -23,6 +23,8 @@ The suite measures:
 - appending into preallocated destination capacity at small and large sizes; and
 - retaining alternating elements from scalar and 64-byte-element vectors, with
   setup and final destruction excluded from timing; and
+- deduplicating adjacent pairs in scalar and 64-byte-element vectors, with setup
+  and final survivor destruction excluded from timing; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
