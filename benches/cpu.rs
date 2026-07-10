@@ -290,6 +290,30 @@ fn extend_reserved(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_resize_reserved<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    const LEN: usize = 1_024;
+
+    group.bench_function(V::LABEL, |bencher| {
+        bencher.iter_batched_ref(
+            || V::with_capacity(LEN),
+            |values| {
+                values.resize(black_box(LEN), black_box(7));
+                debug_assert_eq!(values.as_slice().len(), LEN);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn resize_reserved(c: &mut Criterion) {
+    let mut group = c.benchmark_group("resize_reserved_1024");
+    group.throughput(Throughput::Elements(1_024));
+    bench_resize_reserved::<Vec<u64>>(&mut group);
+    bench_resize_reserved::<ThinVec<u64>>(&mut group);
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -300,6 +324,7 @@ criterion_group!(
     append_preallocated,
     retain_mixed,
     dedup_adjacent_pairs,
-    extend_reserved
+    extend_reserved,
+    resize_reserved
 );
 criterion_main!(benches);

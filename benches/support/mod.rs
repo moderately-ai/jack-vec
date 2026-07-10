@@ -21,6 +21,9 @@ pub trait BenchVector<T>: Sized {
     fn extend<I>(&mut self, iter: I)
     where
         I: IntoIterator<Item = T>;
+    fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone;
     fn as_slice(&self) -> &[T];
 }
 
@@ -62,6 +65,13 @@ impl<T> BenchVector<T> for Vec<T> {
         I: IntoIterator<Item = T>,
     {
         Extend::extend(self, iter);
+    }
+
+    fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        Vec::resize(self, new_len, value);
     }
 
     fn as_slice(&self) -> &[T] {
@@ -107,6 +117,13 @@ impl<T> BenchVector<T> for ThinVec<T> {
         I: IntoIterator<Item = T>,
     {
         Extend::extend(self, iter);
+    }
+
+    fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        ThinVec::resize(self, new_len, value);
     }
 
     fn as_slice(&self) -> &[T] {

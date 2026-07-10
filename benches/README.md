@@ -27,6 +27,8 @@ The suite measures:
   and final survivor destruction excluded from timing; and
 - extending reserved capacity with 1,024 scalar elements, excluding allocation and
   final destruction; and
+- resizing reserved capacity to 1,024 scalar elements, excluding allocation and
+  final destruction; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
