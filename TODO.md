@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
 
-- Status: baseline harness complete; implementation not started
+- Status: first candidate rejected on size; outlined follow-up pre-registered
 - Baseline commit: `71cf4d8`
+- First candidate commit: `3de8ff7`
 - Hypothesis: `Box<[T]>` to `Vec<T>` transfers the same allocation without moving
   elements. Delegating immediately to the accepted direct Vec-to-ThinVec conversion
   should remove the current generic iterator collector and reproduce its bulk path
@@ -73,6 +74,23 @@ The central hypothesis is:
 - Scope: one delegation change and one temporary high-signal CPU benchmark. Remove
   the benchmark after acceptance because the retained Vec-to-ThinVec lane protects
   the same mechanism; retain it only if Box introduces distinct generated behavior.
+- First timing result: the delegation improved 31.04%, from 235.93 ns to 162.48 ns,
+  with every round favorable and an interval of [-32.36%, -30.32%]. Allocation and
+  semantic gates pass, so the mechanism is real.
+- First size result: rejected. Actual ELF `.text` grew 1,856 bytes, `.rodata` 192,
+  unwind/exception sections 128, and data-relocation storage 24; total `size` text
+  grew 2,152 bytes even though the file shrank 216 bytes. The baseline has one
+  434-byte outlined Box conversion. Delegation removes that symbol but inlines the
+  accepted Vec relocation into multiple contexts: the timed wrapper grows 143 bytes
+  and `cpu::main` grows 1,516. This is generalized duplication, not allocator noise
+  or section-label confusion, and it vetoes the first candidate.
+- Follow-up hypothesis: add only `#[inline(never)]` to the Box conversion method so
+  Box-to-Vec remains allocation-free and the accepted relocation stays shared behind
+  one call boundary. Compare exact baseline `71cf4d8` with the follow-up using seven
+  rounds, seed `20260726`, and the same CPU/sample/warm-up/measurement/resample and
+  cleared-preload settings. It must remain at least 15% faster with an interval
+  below zero and actual ELF `.text` no larger than baseline. Otherwise revert the
+  full delegation and remove its test/benchmark.
 
 ### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
 
