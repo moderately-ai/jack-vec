@@ -173,6 +173,116 @@ Corrected preallocated push-only measurements exclude allocation and destruction
   realloc behavior, and cache topology differ. Compare each platform against its
   own historical baseline.
 
+## Experimental protocol
+
+Performance work is vulnerable to confirmation bias, benchmark-boundary mistakes,
+and accidental changes in compiler output. An attractive result is a reason to
+investigate more carefully, not a reason to lower the evidence bar.
+
+### Pre-register each experiment
+
+Before changing implementation code, record:
+
+- the exact hypothesis and proposed mechanism;
+- one primary metric and the smallest workload that can falsify the hypothesis;
+- secondary metrics needed to detect displaced cost: allocation, destruction,
+  code size, retained capacity, or downstream traversal;
+- the exact baseline commit, experiment commit, toolchain, target features,
+  allocator, benchmark command, and environment;
+- expected success, no-effect, and regression outcomes;
+- an acceptance threshold chosen from the measured noise floor and practical
+  importance, not after seeing the result;
+- minimum and maximum independent round counts plus a stopping rule, fixed before
+  measurement so a run cannot stop merely when the desired answer appears;
+- every input size and variant that will be reported, including unfavorable ones.
+
+Change one mechanism per branch. Do not combine individually unmeasured changes,
+and do not tune the benchmark after inspecting a favorable implementation result.
+
+### Establish a trustworthy A/B comparison
+
+- Build the exact parent commit and experiment commit in separate clean worktrees.
+- Keep measurement-only changes in a shared harness commit or external driver and
+  apply them identically to both implementation worktrees.
+- Use the same locked dependencies, rustc, target, profile, `RUSTFLAGS`, allocator,
+  LTO/codegen-unit settings, CPU affinity, and benchmark source for both sides.
+- Never use the experiment branch's historical prose as the baseline measurement.
+- Alternate or randomize A/B execution order across at least seven independent
+  process-level rounds, continuing to the pre-registered maximum if stability
+  criteria are not met. Criterion samples inside one process are not independent
+  experimental repetitions.
+- Pin the Linux run to the same physical CPU, record governor and frequency state,
+  reject runs with migrations or material background activity, and allow equivalent
+  warm-up before each measurement.
+- Retain raw per-round artifacts. Report the paired deltas, median, spread, and
+  confidence interval; do not report only the best run or only Criterion's final
+  point estimate.
+- Calibrate the environment's same-binary repeatability before interpreting a
+  small effect. A result inside that noise floor is inconclusive, not a win.
+
+### Audit the benchmark boundary
+
+- State whether setup, allocation, growth, element initialization, destruction,
+  and deallocation are inside or outside the timed region and why.
+- Validate contents and ownership outside the timed region. Make both inputs and
+  observable outputs opaque enough to prevent constant folding or dead-code
+  elimination.
+- Ensure A and B perform the same semantic work. Capacity, iterator behavior,
+  clone/drop cost, allocation state, and final contents must not differ unless that
+  difference is the declared subject of the experiment.
+- Measure an isolated operation and its full lifecycle separately when moving cost
+  across the timing boundary is possible.
+- Inspect optimized assembly or disassembly for sub-nanosecond results, surprising
+  speedups, and changes intended to affect loads, branches, or inlining.
+- Prefer a temporary focused harness while investigating. Keep a benchmark in the
+  permanent suite only if it protects a distinct decision or regression.
+
+### Triangulate rather than trust one metric
+
+- Wall time is the outcome metric; deterministic fixed-work instructions, cycles,
+  branches, and cache events are explanatory evidence.
+- Hardware-counter comparisons must execute the same fixed operation count or be
+  normalized by a verified count. Time-based Criterion profile totals are invalid
+  for direct A/B counter comparison because throughput changes iteration count.
+- If wall time improves while instructions, memory traffic, or the proposed
+  mechanism do not, treat the result as unexplained and investigate before accepting.
+- Track total and hot-function code size. A local speedup caused by aggressive
+  inlining may regress instruction cache and downstream binaries.
+- For memory claims, distinguish requested bytes, allocator usable bytes, allocation
+  and reallocation counts, peak live bytes, retained capacity, and RSS. Never use
+  one as a synonym for another.
+- Keep global-allocation instrumentation out of CPU timing runs; its bookkeeping can
+  perturb allocator and synchronization behavior.
+- Record whether reallocation stayed in place or moved. Allocator luck can otherwise
+  masquerade as a container improvement.
+- Confirm generalized claims on a second code-generation/platform context or label
+  them platform-specific. Keep macOS and Linux numerical baselines separate.
+
+### Try to disprove correctness and performance claims
+
+- Exercise empty, singleton, growth-boundary, large, ZST, over-aligned, owning-drop,
+  and panicking clone/drop/predicate cases as relevant.
+- Test iterators with exact, underestimated, overestimated, and adversarial size
+  hints. Safe iterator metadata is never an unsafe initialization guarantee.
+- Run native, `no_std`, Gecko, MSRV, Clippy, documentation, and strict-provenance
+  Miri lanes appropriate to the changed code.
+- Check final length, capacity, allocation layout, source ownership, exactly-once
+  destruction, and unwind state explicitly; output equality alone is insufficient.
+- Run the sqlparsers end-to-end workload before calling a microbenchmark win useful
+  for the motivating AST use case. Check construction, traversal/rendering,
+  allocations, retained memory, and pinned node sizes.
+- Seek counterexamples and regressions first. Record null and negative results in
+  the decision log with the same fidelity as accepted work.
+
+### Decision rule
+
+Accept a change only when the pre-registered primary metric clears its threshold in
+repeatable paired runs, the mechanism is supported by independent evidence, and no
+required correctness, memory, code-size, lifecycle, or downstream gate regresses.
+An unexplained result, a mixed result hidden by averaging, or a result obtained only
+after selecting favorable sizes is inconclusive. Revert inconclusive experiments;
+preserve their evidence here.
+
 ## P0: measurement integrity
 
 - [x] Add Criterion CPU benchmarks comparing `Vec` and `ThinVec`.
@@ -188,6 +298,14 @@ Corrected preallocated push-only measurements exclude allocation and destruction
   benchmark artifacts automatically.
 - [ ] Correct baseline documentation so `main` is measured from a separate checkout
   before the feature branch is compared against it.
+- [ ] Add a reproducible A/B runner that builds explicit commits in separate
+  worktrees, alternates their order, and retains raw per-round artifacts.
+- [ ] Measure same-binary repeatability and establish practical noise floors for
+  the pinned Linux timing and fixed-work counter lanes.
+- [ ] Retrospectively revalidate push and append against their exact parent commits
+  under the experimental protocol before proposing either change upstream.
+- [ ] Treat the smallest push results as provisional superiority claims until
+  disassembly and independent paired rounds rule out sub-nanosecond artifacts.
 
 Keep new benchmarks scarce. A benchmark must distinguish a concrete design choice
 or protect an established property. Remove redundant sizes and methods.
@@ -387,12 +505,17 @@ not replace clean wall-clock measurements.
 
 ## Acceptance criteria
 
-An optimization is retained only when it satisfies the relevant subset below:
+The experimental protocol above is mandatory. An optimization is retained only
+when it satisfies the relevant subset below:
 
 - Reproducible wall-time improvement on a clean, pinned host.
+- Pre-registered primary metric clears a noise-informed practical threshold in
+  independent, alternating paired A/B rounds.
 - Reduced or unchanged instructions on deterministic Linux measurements.
+- Optimized code supports the proposed mechanism; surprising results are explained.
 - No unexplained code-size or hot-function growth.
 - Reduced or unchanged requested and usable memory for its target workload.
+- No hidden displacement between isolated-operation and full-lifecycle cost.
 - No traversal regression for final collections.
 - One-word owner and Option niche preserved.
 - All allocation layouts reconstruct exactly.
@@ -400,6 +523,7 @@ An optimization is retained only when it satisfies the relevant subset below:
 - Miri passes strict-provenance and panic/drop torture cases for unsafe changes.
 - Gecko behavior remains exact when the Gecko representation is involved.
 - sqlparsers final AST size pins and semantic APIs remain valid for AST-focused work.
+- Raw artifacts and null/negative results are retained and summarized.
 
 Situational changes must name their target distribution and must not be described as
 general wins.
@@ -477,3 +601,16 @@ general wins.
   broad optimization work.
 - Rejected raw time-based profiler counter totals as cross-implementation evidence;
   fixed work is required for counter comparison.
+
+### 2026-07-10: adopt skeptical experimental protocol
+
+- Require pre-registered hypotheses, metrics, thresholds, variants, and failure
+  outcomes before implementation work begins.
+- Require clean exact-commit worktrees and alternating independent A/B rounds rather
+  than trusting one Criterion process or a mutable branch baseline.
+- Added benchmark-boundary, compiler-elision, code-size, allocator, lifecycle, and
+  downstream checks intended to reveal displaced or accidentally omitted work.
+- Require fixed-work normalization for hardware counters and separate definitions
+  for requested, usable, peak-live, retained-capacity, and RSS memory claims.
+- Existing push and append results remain promising, but must be retrospectively
+  reproduced under this protocol before an upstream proposal.
