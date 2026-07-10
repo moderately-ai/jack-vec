@@ -52,7 +52,7 @@ The central hypothesis is:
 
 ### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
 
-- Status: first candidate rejected on size; outlined follow-up pre-registered
+- Status: rejected; implementation/test/temporary benchmark removed
 - Baseline commit: `71cf4d8`
 - First candidate commit: `3de8ff7`
 - Hypothesis: `Box<[T]>` to `Vec<T>` transfers the same allocation without moving
@@ -91,6 +91,22 @@ The central hypothesis is:
   cleared-preload settings. It must remain at least 15% faster with an interval
   below zero and actual ELF `.text` no larger than baseline. Otherwise revert the
   full delegation and remove its test/benchmark.
+- Follow-up commit: `a6f24cd`
+- Follow-up result: timing remained favorable at -31.96%, from 236.46 ns to 161.38
+  ns, with interval [-32.23%, -28.93%]. Local outlining succeeded: the conversion
+  helper shrank from 434 to 133 bytes and the timed wrapper exactly matched the
+  baseline's 1,606 bytes. Allocation and correctness gates remained satisfied.
+- Follow-up size result: rejected. Actual `.text` still grew 1,728 bytes, `.rodata`
+  192, unwind/exception sections 192, and data-relocation storage 24; the file grew
+  24 bytes. `cpu::main` remained 1,516 bytes larger and contained 314 calls versus
+  288. Unrelated nested-workload setup was emitted six times rather than four, with
+  16 extra indirect GOT calls. The attribute therefore removed local duplication
+  but could not prevent the implementation change from perturbing LLVM/LTO's global
+  inline/outline decisions.
+- Decision: the explicit whole-text gate fails twice. Restore generic boxed-slice
+  collection and remove the follow-up test and temporary benchmark. Preserve both
+  fast timing results as evidence that delegation is a CPU win, but do not accept a
+  downstream-generic code-size regression whose placement is compiler-sensitive.
 
 ### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
 
@@ -1549,3 +1565,13 @@ general wins.
 - Preserved the exact allocation lifecycle, requested bytes, peak live bytes,
   destination capacity, and ownership semantics.
 - The focused wrapper shrank 453 bytes and whole-ELF text shrank 1,804 bytes.
+
+### 2026-07-10: reject boxed-input delegation on code size
+
+- Allocation-free delegation to the accepted Vec relocation improved CPU time by
+  31%, but actual whole `.text` grew 1,856 bytes through global inlining changes.
+- Explicitly outlining the Box conversion preserved a 32% win and shrank its local
+  helper, yet whole `.text` still grew 1,728 bytes because LLVM changed unrelated
+  benchmark orchestration and nested-workload outlining.
+- Reverted the implementation and removed its temporary test/benchmark rather than
+  trading generalized, compiler-sensitive code growth for a situational conversion.
