@@ -3937,6 +3937,71 @@ mod std_tests {
         assert!(w.as_ptr() != z.as_ptr())
     }
 
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_clone_panic_drops_initialized_prefix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct PanicClone {
+            id: usize,
+            is_clone: bool,
+            original_drops: Rc<Vec<Cell<usize>>>,
+            clone_drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Clone for PanicClone {
+            fn clone(&self) -> Self {
+                if self.id == 2 {
+                    panic!("clone panic");
+                }
+                Self {
+                    id: self.id,
+                    is_clone: true,
+                    original_drops: self.original_drops.clone(),
+                    clone_drops: self.clone_drops.clone(),
+                }
+            }
+        }
+
+        impl Drop for PanicClone {
+            fn drop(&mut self) {
+                let drops = if self.is_clone {
+                    &self.clone_drops
+                } else {
+                    &self.original_drops
+                };
+                drops[self.id].set(drops[self.id].get() + 1);
+            }
+        }
+
+        let original_drops = Rc::new((0..4).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let clone_drops = Rc::new((0..4).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let source = (0..4)
+            .map(|id| PanicClone {
+                id,
+                is_clone: false,
+                original_drops: original_drops.clone(),
+                clone_drops: clone_drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| source.clone()));
+
+        assert!(result.is_err());
+        assert!(original_drops.iter().all(|count| count.get() == 0));
+        assert_eq!(
+            clone_drops
+                .iter()
+                .map(|count| count.get())
+                .collect::<Vec<_>>(),
+            [1, 1, 0, 0]
+        );
+        drop(source);
+        assert!(original_drops.iter().all(|count| count.get() == 1));
+    }
+
     #[test]
     fn test_clone_from() {
         let mut v = thin_vec![];
