@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
 
-- Status: pre-registered; implementation not started
+- Status: baseline harness complete; implementation not started
+- Baseline commit: `b39ecf0`
 - Hypothesis: current generic `Vec::IntoIter` collection already vectorizes its
   element movement, so only a direct experiment can distinguish equivalent bulk
   code from avoidable iterator/fallback overhead. One ThinVec allocation, one
