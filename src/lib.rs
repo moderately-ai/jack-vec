@@ -3406,6 +3406,22 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "gecko-ffi")]
+    fn gecko_growth_threshold_uses_total_requested_bytes() {
+        const MIB: usize = 1024 * 1024;
+        const HEADER: usize = core::mem::size_of::<super::Header>();
+
+        let mut at_threshold = ThinVec::<u8>::new();
+        at_threshold.reserve(8 * MIB - HEADER);
+        assert_eq!(at_threshold.capacity(), 8 * MIB - HEADER);
+        drop(at_threshold);
+
+        let mut above_threshold = ThinVec::<u8>::new();
+        above_threshold.reserve(8 * MIB - HEADER + 1);
+        assert_eq!(above_threshold.capacity(), 9 * MIB - HEADER);
+    }
+
+    #[test]
     fn test_drain_items() {
         let mut vec = thin_vec![1, 2, 3];
         let mut vec2 = thin_vec![];
