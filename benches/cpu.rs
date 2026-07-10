@@ -266,6 +266,30 @@ fn dedup_adjacent_pairs(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_extend_reserved<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    const LEN: usize = 1_024;
+
+    group.bench_function(V::LABEL, |bencher| {
+        bencher.iter_batched_ref(
+            || V::with_capacity(LEN),
+            |values| {
+                values.extend(0..black_box(LEN as u64));
+                debug_assert_eq!(values.as_slice().len(), LEN);
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn extend_reserved(c: &mut Criterion) {
+    let mut group = c.benchmark_group("extend_reserved_1024");
+    group.throughput(Throughput::Elements(1_024));
+    bench_extend_reserved::<Vec<u64>>(&mut group);
+    bench_extend_reserved::<ThinVec<u64>>(&mut group);
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -275,6 +299,7 @@ criterion_group!(
     sequential_iteration,
     append_preallocated,
     retain_mixed,
-    dedup_adjacent_pairs
+    dedup_adjacent_pairs,
+    extend_reserved
 );
 criterion_main!(benches);

@@ -25,6 +25,8 @@ The suite measures:
   setup and final destruction excluded from timing; and
 - deduplicating adjacent pairs in scalar and 64-byte-element vectors, with setup
   and final survivor destruction excluded from timing; and
+- extending reserved capacity with 1,024 scalar elements, excluding allocation and
+  final destruction; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
