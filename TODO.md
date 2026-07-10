@@ -77,7 +77,7 @@ The central hypothesis is:
   warning-denied docs plus 49 doctests, strict-provenance Tree Borrows Miri, and
   diff hygiene all pass. The remaining Gecko mentions in this ledger are preserved
   historical experiment evidence, not supported code or configuration.
-- Native audit result: accepted as neutral-to-slightly-positive. Across 7 paired
+- Initial Linux audit result: accepted as non-regressing. Across 7 paired
   rounds, `push_preallocated/ThinVec/1024` moved from 1,181.45 ns to 1,179.29 ns,
   a -0.38% paired median delta (100,000-resample bootstrap interval -0.66% to
   -0.02%; observed range -0.74% to +0.67%). The optimized CPU benchmark executable
@@ -85,7 +85,31 @@ The central hypothesis is:
   harness-difference guard was explicitly overridden after auditing that benches
   were identical and the manifest change only removed the unused `gecko-ffi`
   feature; both controlled-path digests are retained in the artifact manifest.
+- Cross-platform causality audit: revise the CPU interpretation to **neutral**.
+  The complete optimized machine-code section is byte-for-byte identical between
+  baseline and candidate on both targets: macOS arm64 `__TEXT,__text` SHA-256
+  `20bbff2d...d6ca2` (2,020,304 bytes) and Linux x86-64 `.text` SHA-256
+  `f5467c69...37e0`. The whole macOS files differ only outside executable text,
+  including their independently generated Mach-O `LC_UUID`; Linux's 8-byte file
+  size difference is likewise outside `.text`. There is therefore no instruction
+  change capable of causing a native CPU delta in this workload.
+- macOS falsification: two baseline/candidate runs reported +4.85% and +1.55%
+  candidate medians, but with respective paired ranges of -0.95%..+8.51% and
+  -22.69%..+9.85%. An A/A proxy using commits differing only in `TODO.md` then
+  reported a false -2.68% delta with a -13.50%..+12.95% range. The Apple M4 Max
+  exposes 10 performance and 4 efficiency cores, macOS provides no equivalent to
+  the Linux runner's exact CPU affinity, and measurements showed strong temporal
+  speed drift independent of label. Aggregate load and memory/thermal pressure
+  were healthy, so heterogeneous-core/frequency/scheduling placement—not source
+  performance—is the supported explanation.
+- Statistical correction: the Linux -0.38% interval must not be called a real gain.
+  Its bootstrap resamples the seven observed pairs and cannot model label-independent
+  temporal/system effects; identical `.text` is stronger causal evidence. Retain
+  the experiment as proof of no regression, not proof of speedup.
 - Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/remove-gecko-native-audit-20260710`
+- macOS artifacts: `benchmark-results/remove-gecko-native-audit-macos-20260710`,
+  `benchmark-results/remove-gecko-native-audit-macos-repeat-20260710`, and
+  `benchmark-results/remove-gecko-macos-aa-proxy-20260710`.
 - Decision: retain the removal. It deletes 664 lines and the second allocator/ABI
   model without regressing the measured native hot path or materially changing
   optimized executable size.
