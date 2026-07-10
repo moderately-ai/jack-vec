@@ -1,8 +1,8 @@
 use thin_vec::ThinVec;
 
 pub const NESTED_VECTOR_COUNT: usize = 10_000;
-pub const OPERATION_SIZES: &[usize] = &[1, 8, 64, 1_024];
-pub const ITERATION_SIZES: &[usize] = &[8, 64, 1_024];
+pub const OPERATION_SIZES: &[usize] = &[1, 4, 1_024];
+pub const ITERATION_SIZES: &[usize] = &[8, 1_024];
 
 pub trait BenchVector<T>: Sized {
     const LABEL: &'static str;

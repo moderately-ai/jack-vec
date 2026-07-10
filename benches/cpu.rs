@@ -72,8 +72,8 @@ fn bench_build<V, F>(
     });
 }
 
-fn push_growing(c: &mut Criterion) {
-    let mut group = c.benchmark_group("push_growing");
+fn build_growing_and_drop(c: &mut Criterion) {
+    let mut group = c.benchmark_group("build_growing_and_drop");
 
     for &len in OPERATION_SIZES {
         group.throughput(Throughput::Elements(len as u64));
@@ -89,11 +89,14 @@ fn bench_push_preallocated<V: BenchVector<u64>>(
     len: usize,
 ) {
     group.bench_function(BenchmarkId::new(V::LABEL, len), |bencher| {
-        bencher.iter_batched(
+        // The allocation belongs to setup and destruction happens after the
+        // measurement, leaving only element initialization and push overhead
+        // in the timed routine.
+        bencher.iter_batched_ref(
             || V::with_capacity(len),
-            |mut values| {
-                fill_vector(&mut values, black_box(len), 0);
-                black_box(&values);
+            |values| {
+                fill_vector(values, black_box(len), 0);
+                black_box(values);
             },
             BatchSize::SmallInput,
         );
@@ -135,7 +138,7 @@ criterion_group!(
     benches,
     nested_construct,
     nested_traverse,
-    push_growing,
+    build_growing_and_drop,
     push_preallocated,
     sequential_iteration
 );

@@ -17,8 +17,15 @@ The suite measures:
 
 - construction and destruction of many empty, sparse, and uniformly small vectors;
 - traversal of those nested-vector workloads;
-- pushing with normal growth and into capacity allocated outside the timed region; and
+- complete build-and-drop with normal growth;
+- pushing into capacity allocated outside the timed region, with destruction also
+  excluded from timing; and
 - sequential iteration after construction.
+
+The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton
+lists, the common small-list/initial-growth boundary, and a stress case that exposes
+accumulated hot-loop overhead. Sequential iteration uses only 8 and 1,024 elements
+to cover short and vectorized scans without redundant intermediate points.
 
 The sparse workload is deterministic: 80% of inner vectors are empty, 15% contain
 one element, and 5% contain four. The nested workloads use 10,000 vectors, which is

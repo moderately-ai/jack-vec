@@ -179,8 +179,8 @@ fn main() {
     }
 
     for &len in OPERATION_SIZES {
-        report_vector::<Vec<u64>, _>("push_growing", len, || build_growing::<Vec<u64>>(len));
-        report_vector::<ThinVec<u64>, _>("push_growing", len, || {
+        report_vector::<Vec<u64>, _>("build_growing", len, || build_growing::<Vec<u64>>(len));
+        report_vector::<ThinVec<u64>, _>("build_growing", len, || {
             build_growing::<ThinVec<u64>>(len)
         });
         report_vector::<Vec<u64>, _>("push_reserved", len, || build_reserved::<Vec<u64>>(len));
