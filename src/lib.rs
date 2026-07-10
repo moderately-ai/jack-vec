@@ -1353,22 +1353,86 @@ impl<T> ThinVec<T> {
     where
         F: FnMut(&mut T) -> bool,
     {
-        let len = self.len();
-        let mut del = 0;
-        {
-            let v = &mut self[..];
+        let original_len = self.len();
+        if original_len == 0 {
+            return;
+        }
 
-            for i in 0..len {
-                if !f(&mut v[i]) {
-                    del += 1;
-                } else if del > 0 {
-                    v.swap(i - del, i);
+        unsafe {
+            // Prevent double-drop if a predicate or destructor panics after a
+            // hole has been created. The guard restores the initialized prefix.
+            self.set_len_non_singleton(0);
+        }
+
+        struct BackshiftOnDrop<'a, T> {
+            vec: &'a mut ThinVec<T>,
+            processed_len: usize,
+            deleted_count: usize,
+            original_len: usize,
+        }
+
+        impl<T> Drop for BackshiftOnDrop<'_, T> {
+            fn drop(&mut self) {
+                unsafe {
+                    if self.deleted_count > 0 {
+                        let data = self.vec.data_raw();
+                        ptr::copy(
+                            data.add(self.processed_len),
+                            data.add(self.processed_len - self.deleted_count),
+                            self.original_len - self.processed_len,
+                        );
+                    }
+                    self.vec
+                        .set_len_non_singleton(self.original_len - self.deleted_count);
                 }
             }
         }
-        if del > 0 {
-            self.truncate(len - del);
+
+        fn process_loop<F, T, const DELETED: bool>(
+            original_len: usize,
+            f: &mut F,
+            guard: &mut BackshiftOnDrop<'_, T>,
+        ) where
+            F: FnMut(&mut T) -> bool,
+        {
+            while guard.processed_len != original_len {
+                let current = unsafe { &mut *guard.vec.data_raw().add(guard.processed_len) };
+                if !f(current) {
+                    // Advance before dropping so the guard will not touch this
+                    // element again if its destructor panics.
+                    guard.processed_len += 1;
+                    guard.deleted_count += 1;
+                    unsafe {
+                        ptr::drop_in_place(current);
+                    }
+                    if DELETED {
+                        continue;
+                    }
+                    break;
+                }
+
+                if DELETED {
+                    unsafe {
+                        let hole = guard
+                            .vec
+                            .data_raw()
+                            .add(guard.processed_len - guard.deleted_count);
+                        ptr::copy_nonoverlapping(current, hole, 1);
+                    }
+                }
+                guard.processed_len += 1;
+            }
         }
+
+        let mut guard = BackshiftOnDrop {
+            vec: self,
+            processed_len: 0,
+            deleted_count: 0,
+            original_len,
+        };
+        process_loop::<F, T, false>(original_len, &mut f, &mut guard);
+        process_loop::<F, T, true>(original_len, &mut f, &mut guard);
+        drop(guard);
     }
 
     /// Removes consecutive elements in the vector that resolve to the same key.
@@ -3758,6 +3822,114 @@ mod std_tests {
             i != 4
         });
         assert_eq!(vec, [1, 2, 3]);
+    }
+
+    #[test]
+    fn test_retain_mut_edge_cases() {
+        let mut empty = ThinVec::<()>::new();
+        empty.retain_mut(|_| unreachable!());
+
+        let mut zst = thin_vec![(); 8];
+        let mut index = 0;
+        zst.retain_mut(|_| {
+            let keep = index % 2 == 0;
+            index += 1;
+            keep
+        });
+        assert_eq!(zst.len(), 4);
+
+        let mut values = thin_vec![1, 2, 3, 4];
+        values.retain_mut(|_| true);
+        assert_eq!(values, [1, 2, 3, 4]);
+        values.retain_mut(|_| false);
+        assert!(values.is_empty());
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_retain_mut_predicate_panic_repairs_hole() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct Counted {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                self.drops[self.id].set(self.drops[self.id].get() + 1);
+            }
+        }
+
+        let drops = Rc::new((0..6).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = (0..6)
+            .map(|id| Counted {
+                id,
+                drops: drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.retain_mut(|value| match value.id {
+                1 => false,
+                3 => panic!("predicate panic"),
+                _ => true,
+            });
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(
+            values.iter().map(|value| value.id).collect::<Vec<_>>(),
+            [0, 2, 3, 4, 5]
+        );
+        assert_eq!(drops[1].get(), 1);
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_retain_mut_rejected_drop_panic_repairs_hole() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct PanicDrop {
+            id: usize,
+            drops: Rc<Vec<Cell<usize>>>,
+        }
+
+        impl Drop for PanicDrop {
+            fn drop(&mut self) {
+                let old_count = self.drops[self.id].replace(self.drops[self.id].get() + 1);
+                if self.id == 1 && old_count == 0 {
+                    panic!("drop panic");
+                }
+            }
+        }
+
+        let drops = Rc::new((0..5).map(|_| Cell::new(0)).collect::<Vec<_>>());
+        let mut values = (0..5)
+            .map(|id| PanicDrop {
+                id,
+                drops: drops.clone(),
+            })
+            .collect::<ThinVec<_>>();
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            values.retain_mut(|value| value.id != 1);
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(
+            values.iter().map(|value| value.id).collect::<Vec<_>>(),
+            [0, 2, 3, 4]
+        );
+        assert_eq!(drops[1].get(), 1);
+        drop(values);
+        assert!(drops.iter().all(|count| count.get() == 1));
     }
 
     #[test]
