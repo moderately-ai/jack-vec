@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Bulk tail destruction in `truncate` (`perf/truncate-bulk-drop`)
 
-- Status: pre-registered; benchmark and implementation not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; implementation not started
+- Baseline commit: `142cfe2`
 - Hypothesis: publishing final length once and dropping the removed suffix as one
   slice will eliminate a header length load/store per destroyed element and allow
   normal slice drop glue to manage unwinding.
