@@ -421,6 +421,14 @@ def parse_args(arguments: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="retain temporary worktrees for debugging",
     )
+    parser.add_argument(
+        "--allow-harness-difference",
+        action="store_true",
+        help=(
+            "allow Cargo.toml or benches to differ; record both digests in the "
+            "manifest (use only after auditing the difference)"
+        ),
+    )
     args = parser.parse_args(arguments)
     validate_args(args)
     return args
@@ -437,10 +445,11 @@ def main(arguments: Sequence[str] | None = None) -> int:
     controlled_paths = ("Cargo.toml", "benches")
     baseline_digest = git_path_digest(repo, baseline_sha, controlled_paths)
     candidate_digest = git_path_digest(repo, candidate_sha, controlled_paths)
-    if baseline_digest != candidate_digest:
+    harness_differs = baseline_digest != candidate_digest
+    if harness_differs and not args.allow_harness_difference:
         raise RunnerError(
             "Cargo.toml or benches differ between commits; use a shared harness commit or "
-            "external driver before comparing implementations"
+            "external driver, or explicitly audit and allow the difference"
         )
 
     timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -467,7 +476,10 @@ def main(arguments: Sequence[str] | None = None) -> int:
         "candidate_ref": args.candidate,
         "candidate_commit": candidate_sha,
         "controlled_paths": list(controlled_paths),
-        "controlled_paths_sha256": baseline_digest,
+        "controlled_paths_match": not harness_differs,
+        "baseline_controlled_paths_sha256": baseline_digest,
+        "candidate_controlled_paths_sha256": candidate_digest,
+        "allow_harness_difference": args.allow_harness_difference,
         "benchmark": args.bench,
         "filter": args.filter,
         "exact": args.exact,
