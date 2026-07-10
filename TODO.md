@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Nonempty clone outlining policy (`perf/clone-inlining`)
 
-- Status: pre-registered; benchmark and candidate not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; candidate not started
+- Baseline commit: `a523aa3`
 - Hypothesis: marking every nonempty clone path `cold` and `inline(never)` imposes an
   unnecessary call boundary on ordinary small clones. Allowing normal inlining may
   improve four-element clone-and-drop, but can increase downstream code size.
