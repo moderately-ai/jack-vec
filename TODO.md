@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Guarded reserved `Extend` (`perf/extend-guard`)
 
-- Status: pre-registered; benchmark and implementation not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; implementation not started
+- Baseline commit: `f69629b`
 - Hypothesis: while consuming the iterator's reserved lower-bound portion, keeping
   initialized length locally and publishing it once through a panic guard will
   remove a header length load/store per element without weakening safety. The
