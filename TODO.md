@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/thin-into-box-bulk`
+- Working branch: `perf/vec-into-thin-bulk`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,39 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
+
+- Status: pre-registered; implementation not started
+- Hypothesis: current generic `Vec::IntoIter` collection already vectorizes its
+  element movement, so only a direct experiment can distinguish equivalent bulk
+  code from avoidable iterator/fallback overhead. One ThinVec allocation, one
+  explicit bulk relocation, ownership publication, and source deallocation may let
+  optimized libc movement outperform the compiler-generated loop.
+- Primary workload: consume a preconstructed 1,024-element `Vec<u64>` into a
+  `ThinVec<u64>`. Source cloning/setup and output destruction stay outside timing;
+  destination allocation, relocation, source deallocation, and header publication
+  remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% envelope. Use one size because code inspection already established
+  current bulk vectorization and this experiment asks only whether it remains a
+  material hot-path cost.
+- Fixed measurement parameters: seven paired rounds, seed `20260724`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths.
+- Memory/allocation gate: full construction plus conversion must preserve two
+  allocations, zero reallocations, two deallocations, requested output bytes, peak
+  live requested bytes, output capacity, and source release.
+- Correctness gates: singleton and allocated empty inputs, spare source capacity,
+  owning exact-once drops, ZSTs, and native over-alignment. Require all feature/MSRV
+  lanes and focused native/Gecko strict-provenance Miri.
+- Codegen/size gate: compare the existing vectorized collector with explicit bulk
+  relocation and measure focused plus whole-ELF size. If timing is null or negative,
+  identify whether equivalent copy code, allocator dominance, or a worse library
+  call boundary explains it before reverting.
+- Scope: change only `From<Vec<T>> for ThinVec<T>`, focused tests, and one temporary
+  benchmark. Do not combine boxed input, clone, growth, or Gecko policy changes.
 
 ### Direct `ThinVec<T>` to `Box<[T]>` relocation (`perf/thin-into-box-bulk`)
 
