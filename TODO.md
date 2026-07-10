@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Guarded `dedup_by` backshift (`perf/dedup-backshift`)
 
-- Status: benchmark complete; implementation not started
+- Status: accepted
 - Baseline commit: `84ebc41`
+- Candidate commit: `ea5969f` (test-only ZST follow-up: `22fa8cf`)
 - Hypothesis: after the first adjacent duplicate, dropping duplicates in place and
   copying each later survivor once into the gap will outperform swapping each
   survivor with a duplicate, especially for large elements. A gap guard will repair
@@ -80,6 +81,29 @@ The central hypothesis is:
   hot-function or whole-binary growth. Reject or record any tradeoff.
 - Scope: one guarded algorithm, two high-signal benchmark shapes, and focused
   correctness tests. Do not combine `truncate`, `Extend`, or clone changes.
+- Result: accepted. Against exact parent `84ebc41`, the 64-byte primary workload
+  improved 25.49% at the paired median, with a bootstrap interval of
+  [-25.55%, -25.42%]. The `u64` secondary improved 17.27%, with an interval of
+  [-17.49%, -16.70%]. Both effects clear their gates and the calibrated 1%
+  envelope.
+- Control caveat: unchanged `Vec<u64>` measured 5.73% faster, while unchanged
+  `Vec<[u64; 8]>` measured 3.73% slower; both intervals excluded zero. All five
+  emitted `Vec::dedup_by` symbol sizes match between the two binaries. The
+  opposite-direction type-specific shifts are consistent with the link-layout
+  sensitivity seen in the retain experiment and cannot explain both ThinVec
+  workloads improving. Preserve the raw controls and do not present them as a
+  clean same-binary null result.
+- Codegen/size result: the candidate emits 129-byte (`u64`) and 198-byte (64-byte
+  element) ThinVec dedup monomorphizations. The 64-byte survivor path performs four
+  16-byte loads and stores directly into the gap, without writing the displaced
+  duplicate back to the source. Whole-ELF text shrank 1,012 bytes, data shrank 24
+  bytes, and the file shrank 1,016 bytes.
+- Correctness result: all native, no-default-feature, and Gecko test lanes pass;
+  formatting passes; supported Clippy lanes add no warnings; focused native and
+  Gecko strict-provenance Miri passes. Comparator and duplicate-destructor unwinds
+  repair the gap and drop every owning element exactly once. Comparator argument
+  order/mutation and empty, singleton, unique, duplicate, and mixed-copy ZST cases
+  are covered.
 
 ### Guarded `retain_mut` backshift (`perf/retain-backshift`)
 
@@ -680,7 +704,7 @@ before combining it with another optimization.
 - [x] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
 - [x] Benchmark retain only if implementing it: mixed rejection and large `T` are
   the high-signal cases.
-- [ ] Replace swap-based `dedup_by` with a guarded first-hole/backshift algorithm;
+- [x] Replace swap-based `dedup_by` with a guarded first-hole/backshift algorithm;
   avoid moving duplicate values into the retained prefix merely to drop them later.
 - [ ] Set final length once and bulk-drop the tail in `truncate`; `clear` already
   drops the full slice behind a length-reset guard.
