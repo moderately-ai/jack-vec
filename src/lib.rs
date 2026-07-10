@@ -2544,8 +2544,24 @@ impl<T> From<ThinVec<T>> for Vec<T> {
     /// let b: ThinVec<i32> = thin_vec![1, 2, 3];
     /// assert_eq!(Vec::from(b), vec![1, 2, 3]);
     /// ```
-    fn from(s: ThinVec<T>) -> Self {
-        s.into_iter().collect()
+    fn from(mut s: ThinVec<T>) -> Self {
+        let len = s.len();
+        if len == 0 {
+            return Vec::new();
+        }
+
+        let mut vec = Vec::with_capacity(len);
+        unsafe {
+            // ThinVec and Vec necessarily use different allocation layouts, but
+            // their initialized element regions are both contiguous.
+            ptr::copy_nonoverlapping(s.data_raw(), vec.as_mut_ptr(), len);
+
+            // Transfer ownership of the relocated elements before either owner
+            // can run Drop. No operation below this point can panic.
+            s.set_len_non_singleton(0);
+            vec.set_len(len);
+        }
+        vec
     }
 }
 
@@ -3722,6 +3738,64 @@ mod std_tests {
 
         assert_eq!(count_x, 1);
         assert_eq!(count_y, 1);
+    }
+
+    #[test]
+    fn test_into_vec_bulk_relocation() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        let empty = Vec::from(ThinVec::<u64>::new());
+        assert!(empty.is_empty());
+        assert_eq!(empty.capacity(), 0);
+
+        let allocated_empty = Vec::from(ThinVec::<u64>::with_capacity(8));
+        assert!(allocated_empty.is_empty());
+        assert_eq!(allocated_empty.capacity(), 0);
+
+        let mut source = ThinVec::with_capacity(16);
+        source.extend([10, 20, 30]);
+        let values = Vec::from(source);
+        assert_eq!(values, [10, 20, 30]);
+        assert_eq!(values.capacity(), values.len());
+
+        struct CountDrop(Rc<Cell<usize>>);
+        impl Drop for CountDrop {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        let source = thin_vec![
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+        ];
+        let values = Vec::from(source);
+        assert_eq!(drops.get(), 0);
+        drop(values);
+        assert_eq!(drops.get(), 3);
+
+        #[derive(Debug, PartialEq)]
+        struct Zst;
+        impl Drop for Zst {
+            fn drop(&mut self) {}
+        }
+
+        let zsts = Vec::from(thin_vec![Zst, Zst, Zst]);
+        assert_eq!(zsts, [Zst, Zst, Zst]);
+
+        #[cfg(not(feature = "gecko-ffi"))]
+        {
+            #[repr(align(64))]
+            #[derive(Debug, PartialEq)]
+            struct Aligned(u8);
+
+            let aligned = Vec::from(thin_vec![Aligned(1), Aligned(2)]);
+            assert_eq!(aligned, [Aligned(1), Aligned(2)]);
+            assert_eq!(aligned.as_ptr().align_offset(64), 0);
+        }
     }
 
     #[test]
