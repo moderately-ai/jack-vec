@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/truncate-bulk-drop`
+- Working branch: `perf/clone-inlining`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,37 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Nonempty clone outlining policy (`perf/clone-inlining`)
+
+- Status: pre-registered; benchmark and candidate not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: marking every nonempty clone path `cold` and `inline(never)` imposes an
+  unnecessary call boundary on ordinary small clones. Allowing normal inlining may
+  improve four-element clone-and-drop, but can increase downstream code size.
+- Primary workload: clone and destroy a preconstructed four-element `u64`
+  collection. Source construction stays outside timing; allocation, element copy,
+  length publication, and clone destruction/deallocation remain inside.
+- Primary threshold: at least 10% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope.
+- Declared secondary workload: the same full lifecycle for 1,024 `u64` elements. It
+  must not regress beyond the calibrated 1% envelope. Report matching Vec controls,
+  but decide on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260720`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: unchanged empty singleton cloning, disjoint nonempty storage,
+  exact contents/capacity behavior, ZST and owning values, and the existing
+  partial-initialization clone-panic test. Require native and Gecko
+  strict-provenance Miri and all feature/MSRV lanes.
+- Codegen/size gate: inspect focused small and large monomorphizations plus whole
+  ELF. Reject a small timing win if normal inlining materially duplicates clone,
+  allocation, or unwind machinery; record any accepted tradeoff explicitly.
+- Scope: change only clone outlining/inlining attributes and add two benchmark
+  sizes. Do not change the partial-initialization algorithm, conversions, allocation
+  growth, or element cloning semantics.
 
 ### Bulk tail destruction in `truncate` (`perf/truncate-bulk-drop`)
 
