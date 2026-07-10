@@ -52,8 +52,10 @@ The central hypothesis is:
 
 ### Clone partial-initialization guard (`fix/clone-panic-guard`)
 
-- Status: pre-registered; falsification test and implementation not started
+- Status: accepted
 - Baseline commit: `68f68be`
+- Falsification test commit: `8cf7b55`
+- Candidate commit: `e71f84f`
 - Defect hypothesis: nonempty `ThinVec::clone` writes cloned elements into a new
   allocation while its published length remains zero. If a later `T::clone`
   panics, unwinding deallocates the buffer without dropping the earlier successful
@@ -71,6 +73,17 @@ The central hypothesis is:
 - Scope: one partial-initialization guard and one owning panic test. Do not alter
   `cold`/`inline(never)`, add a clone benchmark, or combine conversion/Extend work.
   Performance policy for nonempty clone remains a later isolated experiment.
+- Falsification result: confirmed exactly. On parent behavior, the first two
+  successfully created clones both had drop count zero after the third clone
+  panicked, while every source-element drop count remained zero. The test failed
+  with observed clone counts `[0, 0, 0, 0]` versus required `[1, 1, 0, 0]`.
+- Correction result: the guard publishes the initialized clone prefix during
+  normal return or unwinding. The test now observes `[1, 1, 0, 0]`; source elements
+  remain intact through the failed clone and each drops exactly once afterward.
+- Validation: all native, no-default-feature, and Gecko test lanes pass; formatting
+  passes; supported Clippy lanes add no warnings; focused native and Gecko
+  strict-provenance Miri passes. No performance claim is made and the existing
+  nonempty clone outlining attributes remain unchanged.
 
 ### Guarded reserved `Extend` (`perf/extend-guard`)
 
@@ -797,8 +810,8 @@ before combining it with another optimization.
 
 ### Clone and conversions
 
-- [ ] Add a partial-initialization guard to nonempty cloning.
-- [ ] Treat the current clone panic leak as a quality/correctness issue: cloned
+- [x] Add a partial-initialization guard to nonempty cloning.
+- [x] Treat the current clone panic leak as a quality/correctness issue: cloned
   elements written before a later `T::clone` panic are not represented by `len`
   and therefore are not dropped.
 - [ ] Reevaluate `cold`/`inline(never)` on the nonempty clone path.
