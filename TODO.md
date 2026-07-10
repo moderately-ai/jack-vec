@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/from-array-bulk`
+- Working branch: `fix/gecko-growth-threshold`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,28 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Gecko total-byte slow-growth threshold (`fix/gecko-growth-threshold`)
+
+- Status: pre-registered; falsification test not started
+- Hypothesis: Gecko reserve computes `min_cap_bytes` including header bytes, but
+  selects slow growth with `min_cap > 8 MiB`, accidentally treating an element
+  count as bytes. nsTArray's threshold is total requested allocation bytes. Requests
+  just above 8 MiB therefore take power-of-two growth and jump to 16 MiB instead of
+  slow-growth megabyte rounding to 9 MiB.
+- Falsification boundary: for Gecko `ThinVec<u8>`, reserve capacity `8 MiB - 8`
+  (header-inclusive request exactly 8 MiB) must produce capacity `8 MiB - 8`;
+  requesting one more element must currently produce `16 MiB - 8`. The correction
+  must instead produce `9 MiB - 8` for the second request while leaving the exact
+  boundary unchanged.
+- Acceptance: compare `min_cap_bytes` to the threshold, add only boundary capacity
+  tests, preserve checked overflow/ZST behavior, and run Gecko/native/no-default,
+  Rust 1.86, formatting, Clippy, and focused strict-provenance Miri. No CPU benchmark:
+  this is a deterministic capacity/peak-memory and nsTArray-policy correction.
+- Memory effect: the crossing test must reduce requested allocation from 16 MiB to
+  9 MiB (a 7 MiB/43.75% reduction) with the same requested initialized capacity.
+- Scope: do not alter first-allocation exactness, megabyte rounding, growth factor,
+  native policy, AutoThinVec behavior, or the Gecko ABI/layout.
 
 ### Direct array construction (`perf/from-array-bulk`)
 
