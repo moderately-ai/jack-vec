@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/splice-reserve`
+- Working branch: `perf/retain-backshift`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -50,9 +50,36 @@ The central hypothesis is:
 
 ## Experiment record
 
-No experiment is currently active. The next recommended isolated experiment is the
-guarded `retain_mut` hole/backshift rewrite described under P1. Pre-register its
-benchmark boundary, panic behavior, and acceptance threshold before implementation.
+### Guarded `retain_mut` backshift (`perf/retain-backshift`)
+
+- Status: pre-registered; benchmark and implementation not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: after the first rejection, moving each retained element once into the
+  earliest hole will outperform `swap`, which moves both retained and rejected
+  values, especially for large elements. A length-zero backshift guard will preserve
+  a valid contiguous vector if the predicate or a rejected element's destructor
+  panics.
+- Primary workload: 256 64-byte `[u64; 8]` elements with alternating rejection.
+  Setup/allocation and destruction of retained elements stay outside the timed
+  region; predicate, rejected-element destruction, and movement remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope.
+- Declared secondary workload: 1,024 `u64` elements with alternating rejection. It
+  must not regress beyond the calibrated 1% envelope. Report both Vec and ThinVec in
+  the permanent comparison, but use exact-parent ThinVec A/B for the decision.
+- Fixed measurement parameters: seven paired rounds, seed `20260715`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: stable order, exact retained values, owning elements destroyed
+  once, predicate-panic repair, rejected-destructor-panic repair, empty/all-kept/
+  all-rejected/ZST behavior, native and Gecko strict-provenance Miri, and all
+  supported feature/MSRV lanes.
+- Codegen/size gate: confirm one copy per retained post-hole element and no
+  unexplained hot-function or whole-binary growth. Reject or record any tradeoff.
+- Scope: one guarded algorithm, two high-signal benchmark shapes, and focused
+  correctness tests. Do not combine `dedup_by` or `truncate` changes.
 
 ### Splice reserve accounting (`perf/splice-reserve`)
 
