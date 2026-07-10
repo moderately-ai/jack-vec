@@ -3,7 +3,7 @@ name = "thin-vec"
 version = "0.2.18"
 authors = ["Aria Beingessner <a.beingessner@gmail.com>"]
 edition = "2018"
-rust-version = "1.53"
+rust-version = "1.86"
 description = "A Vec that takes up less space on the stack."
 readme = "README.md"
 homepage = "https://github.com/mozilla/thin-vec"
@@ -26,7 +26,16 @@ serde = { version = "1.0", optional = true }
 malloc_size_of = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]
+criterion = "=0.8.2"
 serde_test = "1.0"
+
+[[bench]]
+name = "cpu"
+harness = false
+
+[[bench]]
+name = "allocations"
+harness = false
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(no_global_oom_handling)'] }

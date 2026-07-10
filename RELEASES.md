@@ -1,3 +1,7 @@
+# Unreleased
+* Raise the minimum supported Rust version to 1.86.
+* Add CPU and allocation benchmarks comparing ThinVec with Vec.
+
 # Versions 0.2.17 and 0.2.18 (2026-04-29)
 * Fix compiling some feature combinations in no_std mode
 

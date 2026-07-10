@@ -7,3 +7,6 @@ less space.
 
 Currently this crate mostly exists to facilitate Gecko (Firefox) FFI, but it
 works perfectly fine as a native Rust library as well.
+
+See [`benches/README.md`](benches/README.md) for CPU and allocation benchmarks
+that compare `ThinVec` with `Vec`.
