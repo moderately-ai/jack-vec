@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Boxed-slice delegation to direct inbound relocation (`perf/box-into-thin-delegate`)
 
-- Status: pre-registered; implementation not started
+- Status: baseline harness complete; implementation not started
+- Baseline commit: `71cf4d8`
 - Hypothesis: `Box<[T]>` to `Vec<T>` transfers the same allocation without moving
   elements. Delegating immediately to the accepted direct Vec-to-ThinVec conversion
   should remove the current generic iterator collector and reproduce its bulk path
