@@ -2367,19 +2367,37 @@ where
         #[inline(never)]
         fn clone_non_singleton<T: Clone>(this: &ThinVec<T>) -> ThinVec<T> {
             let len = this.len();
+            if len == 0 {
+                return ThinVec::new();
+            }
+
             let mut new_vec = ThinVec::<T>::with_capacity(len);
-            let mut data_raw = new_vec.data_raw();
-            for x in this.iter() {
-                unsafe {
-                    ptr::write(data_raw, x.clone());
-                    data_raw = data_raw.add(1);
+            let data = new_vec.data_raw();
+
+            struct SetLenOnDrop<'a, T> {
+                vec: &'a mut ThinVec<T>,
+                initialized_len: usize,
+            }
+
+            impl<T> Drop for SetLenOnDrop<'_, T> {
+                fn drop(&mut self) {
+                    unsafe {
+                        self.vec.set_len_non_singleton(self.initialized_len);
+                    }
                 }
             }
-            unsafe {
-                // `this` is not the singleton, but `new_vec` will be if
-                // `this` is empty.
-                new_vec.set_len(len); // could be the singleton
+
+            let mut guard = SetLenOnDrop {
+                vec: &mut new_vec,
+                initialized_len: 0,
+            };
+            for x in this.iter() {
+                unsafe {
+                    ptr::write(data.add(guard.initialized_len), x.clone());
+                }
+                guard.initialized_len += 1;
             }
+            drop(guard);
             new_vec
         }
 
