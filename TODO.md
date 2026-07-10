@@ -52,7 +52,7 @@ The central hypothesis is:
 
 ### Splice reserve accounting (`perf/splice-reserve`)
 
-- Status: pre-registered; implementation not started
+- Status: accepted
 - Baseline commit: `bafdc44`
 - Hypothesis: `Drain::move_tail` double-counts the initialized prefix because it
   passes `end + tail + additional` to `ThinVec::reserve`, whose argument is already
@@ -83,6 +83,19 @@ The central hypothesis is:
   corrected accounting predicts capacity 14, while prefix double-counting predicts
   a 256-byte allocation and capacity 30. Use this boundary for the shared regression
   test and report both native and Gecko results.
+- Boundary result: confirmed in a separate parent worktree. The old implementation
+  produced capacity 18 natively and 30 with Gecko; both corrected lanes produce
+  capacity 14 with identical final length and contents.
+- Implementation: assert the `vec.len() == end` invariant in debug builds, compute
+  checked additional capacity as `tail + additional`, and let `reserve` add the
+  current initialized prefix exactly once. Existing checked overflow behavior is
+  preserved.
+- Validation: full native and no-default-feature tests pass; all Gecko library tests
+  pass; focused strict-provenance Miri passes natively and with Gecko. Supported
+  stable Clippy lanes complete with only existing unrelated warnings. Gecko doctests
+  remain non-linkable without the external `sEmptyTArrayHeader` fixture, as before.
+- Decision: retain. This is a deterministic capacity/memory correction with no new
+  timing benchmark and no semantic or ownership change.
 
 ### Paired A/B runner and same-binary calibration (`benchmarks/ab-runner`)
 
@@ -564,9 +577,9 @@ before combining it with another optimization.
 
 - [x] Replace `append(other.drain(..))` with reserve plus bulk relocation.
 - [x] Add one focused append benchmark with small and large source lengths.
-- [ ] Correct `Drain::move_tail` reserve accounting so splice reserves only the
+- [x] Correct `Drain::move_tail` reserve accounting so splice reserves only the
   capacity required for the preserved prefix, moved tail, and replacement.
-- [ ] Add a focused splice capacity regression test that demonstrates the current
+- [x] Add a focused splice capacity regression test that demonstrates the current
   prefix double-count without expanding the benchmark suite.
 - [ ] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
 - [ ] Benchmark retain only if implementing it: mixed rejection and large `T` are
@@ -864,3 +877,14 @@ general wins.
   60-79% improvements across all declared sizes with no total code-size regression.
 - Retrospective push acceptance remains pending independent mechanistic, fixed-work
   counter, allocation, and correctness evidence.
+
+### 2026-07-10: correct splice reserve accounting
+
+- Demonstrated prefix double-counting against the exact parent: capacity 18 rather
+  than 14 natively and 30 rather than 14 in Gecko at the selected size-class boundary.
+- Changed `Drain::move_tail` to reserve only the moved tail plus new replacement
+  elements; `reserve` accounts for the initialized prefix itself.
+- Preserved contents, length, checked overflow, ownership, and iterator semantics.
+- Added one capacity regression test rather than a low-signal timing benchmark.
+- Native, no-default-feature, Gecko library, and focused strict-provenance Miri gates
+  pass.
