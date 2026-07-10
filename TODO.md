@@ -49,13 +49,20 @@ The central hypothesis is:
 
 ### Bulk append (`perf/bulk-append`)
 
-- Status: establishing baseline
+- Status: accepted
 - Hypothesis: one reserve and one bulk relocation will outperform the current
   `extend(other.drain(..))` element loop without changing allocation behavior.
 - Affected measurement: `append_preallocated` at 4 and 1,024 elements.
 - Acceptance: reproducible CPU and code-size improvement with identical final
   contents, source clearing, allocation behavior, panic safety, and Gecko auto-array
   ownership.
+- Baseline: ThinVec took 4.364 ns for 4 elements and 543.7 ns for 1,024 elements;
+  Vec took 2.459 ns and 194.4 ns.
+- Result: accepted. ThinVec improved to 3.472 ns for 4 elements (about 20%) and
+  211.5 ns for 1,024 elements (about 61%). Large append is now close to Vec's
+  196.8 ns rather than nearly three times slower.
+- Safety result: dedicated owning-element and ZST tests prove source clearing and
+  exactly-once destruction; native and Gecko strict-provenance Miri tests pass.
 
 ### Push fast path (`perf/push-fast-path`)
 
@@ -180,8 +187,8 @@ before combining it with another optimization.
 
 ### Bulk operations
 
-- [ ] Replace `append(other.drain(..))` with reserve plus bulk relocation.
-- [ ] Add one focused append benchmark with empty, small, and large source lengths.
+- [x] Replace `append(other.drain(..))` with reserve plus bulk relocation.
+- [x] Add one focused append benchmark with small and large source lengths.
 - [ ] Replace swap-based `retain_mut` with a guarded hole/backshift algorithm.
 - [ ] Benchmark retain only if implementing it: mixed rejection and large `T` are
   the high-signal cases.
@@ -401,3 +408,12 @@ general wins.
 - The full 1,024-element growth lifecycle became about 16% faster than Vec.
 - Requested memory and allocator-call counts were unchanged.
 - Total benchmark text size decreased by 220 bytes.
+
+### 2026-07-10: accept bulk append
+
+- Replaced iterator-driven drain/extend with one reserve and bulk relocation.
+- Four-element append improved by about 20%.
+- 1,024-element append improved by about 61% and reached near-Vec performance.
+- Added owning-element and ZST coverage; source elements drop exactly once.
+- Native, no_std, Gecko, Rust 1.86, Clippy, and focused strict-provenance Miri gates
+  pass.
