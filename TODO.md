@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/extend-guard`
+- Working branch: `fix/clone-panic-guard`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,28 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Clone partial-initialization guard (`fix/clone-panic-guard`)
+
+- Status: pre-registered; falsification test and implementation not started
+- Baseline commit: `68f68be`
+- Defect hypothesis: nonempty `ThinVec::clone` writes cloned elements into a new
+  allocation while its published length remains zero. If a later `T::clone`
+  panics, unwinding deallocates the buffer without dropping the earlier successful
+  clones.
+- Falsification: a four-element owning source whose third clone panics must show
+  that the first two successful clones are not dropped on exact parent `68f68be`.
+  The source elements must remain intact and each must still be dropped exactly
+  once when the source is destroyed.
+- Correction: track initialized length in a guard that publishes it during normal
+  return or unwinding, so ordinary ThinVec destruction drops the initialized clone
+  prefix and deallocates with the matching layout.
+- Acceptance: the falsification test fails for the predicted clone-drop counts on
+  the exact parent and passes after the guard; all native, no-default-feature,
+  Gecko, Clippy, formatting, and focused strict-provenance Miri lanes pass.
+- Scope: one partial-initialization guard and one owning panic test. Do not alter
+  `cold`/`inline(never)`, add a clone benchmark, or combine conversion/Extend work.
+  Performance policy for nonempty clone remains a later isolated experiment.
 
 ### Guarded reserved `Extend` (`perf/extend-guard`)
 
