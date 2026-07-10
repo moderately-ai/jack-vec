@@ -49,7 +49,7 @@ The central hypothesis is:
 
 ### Push fast path (`perf/push-fast-path`)
 
-- Status: implementing
+- Status: accepted
 - Hypothesis: publishing the known length directly and outlining growth will reduce
   redundant header traffic, register pressure, and hot-path code size.
 - Affected measurements: `push_preallocated` and `build_growing_and_drop` only.
@@ -57,6 +57,18 @@ The central hypothesis is:
   4 elements, and 4.36x at 1,024 elements on the pinned Linux host.
 - Acceptance: reproducible improvement without memory, traversal, correctness, or
   code-size regression; otherwise revert the experiment.
+- Result: accepted. Preallocated ThinVec push improved from 2.448 ns to 0.986 ns
+  at 1 element, 8.645 ns to 2.163 ns at 4 elements, and 2.113 us to 0.476 us at
+  1,024 elements. The 1- and 4-element cases beat Vec; 1,024 elements reached
+  near-parity.
+- Full lifecycle result: building, growing, and dropping 1,024 elements takes
+  0.562 us for ThinVec versus 0.668 us for Vec on the pinned Linux host.
+- Memory result: requested bytes, allocation counts, reallocation counts, and zero
+  live bytes after drop are unchanged.
+- Code-size result: the benchmark executable's text section decreased by 220 bytes
+  (2,979,384 to 2,979,164 bytes).
+- Safety result: all supported test lanes and both strict-provenance Miri
+  configurations pass.
 
 ## Verified baseline
 
@@ -149,9 +161,9 @@ before combining it with another optimization.
 ### Push fast path
 
 - [ ] Add a focused assembly wrapper for no-growth push on x86-64 and AArch64.
-- [ ] Combine length and capacity retrieval where both are required.
-- [ ] Remove redundant header reads between `push` and `push_unchecked`.
-- [ ] Outline `grow_one` into a cold, non-inlined slow path.
+- [x] Combine length and capacity retrieval where both are required.
+- [x] Remove redundant header reads between `push` and `push_unchecked`.
+- [x] Outline `grow_one` into a cold, non-inlined slow path.
 - [ ] Confirm the common path contains only state load, capacity branch, element
   write, and length publication.
 - [ ] Measure wall time, instructions, cycles, hot-function bytes, and code size.
@@ -368,3 +380,14 @@ general wins.
 - Investigate compact headers and Vec-like transient builder state.
 - Keep final mutation available for public AST rewrites.
 - Treat builder-only inline scratch and pointer tags as later situational experiments.
+
+### 2026-07-10: accept the optimized push fast path
+
+- Public push loads header state once and publishes the already-known length.
+- Growth and layout work is outlined behind a cold, non-inlined helper.
+- Preallocated push improved by 59-79% across the measured sizes.
+- ThinVec reached or beat Vec for one and four pushes and approached parity at
+  1,024 pushes.
+- The full 1,024-element growth lifecycle became about 16% faster than Vec.
+- Requested memory and allocator-call counts were unchanged.
+- Total benchmark text size decreased by 220 bytes.
