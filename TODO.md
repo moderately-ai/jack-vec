@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Guarded reserved `Extend` (`perf/extend-guard`)
 
-- Status: benchmark complete; implementation not started
+- Status: accepted
 - Baseline commit: `f69629b`
+- Candidate commit: `0b818d7`
 - Hypothesis: while consuming the iterator's reserved lower-bound portion, keeping
   initialized length locally and publishing it once through a panic guard will
   remove a header length load/store per element without weakening safety. The
@@ -80,6 +81,24 @@ The central hypothesis is:
 - Scope: one guarded lower-bound loop and one high-signal benchmark size. Keep the
   existing checked `push` fallback for iterator items beyond the reserved portion;
   do not combine `resize`, `extend_from_slice`, clone, or truncate changes.
+- Result: accepted. Against exact parent `f69629b`, reserved extension of 1,024
+  `u64` values improved 24.72% at the paired median, with a bootstrap interval of
+  [-25.12%, -24.36%]. This clears the 15% gate and calibrated 1% envelope.
+- Control result: unchanged Vec measured -0.07% at the paired median and its
+  bootstrap interval spanned zero at [-0.12%, +0.65%]. One round reached +9.29%,
+  so retain the full range rather than describing the control as uniformly quiet.
+- Codegen/size result: the focused Criterion monomorphization shrank 80 bytes, from
+  0x5f5 to 0x5a5. The old unrolled loop stores header length after every element;
+  the candidate vectorizes four range values per iteration, carries initialized
+  length in registers, and stores the header length once after the loop. Whole-ELF
+  text shrank 64 bytes, data was unchanged, and the file grew 32 bytes from section
+  layout/alignment rather than loadable code or data.
+- Correctness result: native, no-default-feature, and Gecko test lanes pass;
+  formatting passes; supported Clippy lanes add no warnings; focused native and
+  Gecko strict-provenance Miri passes. Exact, overestimated, and underestimated
+  lower bounds, empty input, nonempty destination, ZSTs, and iterator panic after
+  partial owning-element initialization are covered. The obsolete private
+  `push_unchecked` helper was removed instead of retaining dead code.
 
 ### Guarded `dedup_by` backshift (`perf/dedup-backshift`)
 
@@ -743,7 +762,7 @@ before combining it with another optimization.
 
 ### Bulk construction and extension
 
-- [ ] Keep a local initialized length while consuming the reserved lower-bound
+- [x] Keep a local initialized length while consuming the reserved lower-bound
   portion of `Extend`, publishing header length through a panic guard instead of
   loading and storing it for every element.
 - [ ] Give exact/trusted internal construction paths a guarded direct-write loop;
