@@ -48,7 +48,11 @@ The central hypothesis is:
   result must explicitly state whether preload was inherited or cleared; “glibc
   System” means the runner recorded an empty effective preload environment.
 
-## Active experiment
+## Experiment record
+
+No experiment is currently active. The next recommended isolated experiment is the
+guarded `retain_mut` hole/backshift rewrite described under P1. Pre-register its
+benchmark boundary, panic behavior, and acceptance threshold before implementation.
 
 ### Splice reserve accounting (`perf/splice-reserve`)
 
@@ -59,11 +63,11 @@ The central hypothesis is:
   interpreted relative to current `vec.len() == end`.
 - Proposed correction: reserve `tail + additional`; the reserve method then checks
   exactly `end + tail + additional`, the required post-move initialized layout.
-- Primary metric: resulting capacity for a five-element vector splicing two elements
-  into twelve. Final length and minimum required capacity are 15. The old native path
-  is predicted to allocate capacity 19; the corrected native and Gecko paths are
-  predicted to allocate 15 for `u64`.
-- Acceptance: exact final contents and length, capacity 15, no additional benchmark,
+- Final regression metric: resulting capacity for a five-element vector splicing two
+  elements into eleven. Final length and minimum required capacity are 14. The exact
+  parent produces capacity 18 natively and 30 in Gecko; the correction must produce
+  14 in both lanes.
+- Acceptance: exact final contents and length, capacity 14, no additional benchmark,
   unchanged behavior when replacement is shorter/equal, checked overflow retained,
   and all relevant ownership, ZST, native, no_std, Gecko, MSRV, Clippy, and focused
   strict-provenance Miri gates pass.
@@ -194,7 +198,8 @@ The central hypothesis is:
 
 ### Retrospective push revalidation
 
-- Status: wall-time gate passed; mechanistic/counter gate pending
+- Status: wall-time, allocation, codegen, code-size, and correctness gates passed;
+  fixed-work counters remain an optional upstream-strengthening gate
 - Baseline commit: `f8fa1e8` (corrected benchmark boundary, old push)
 - Candidate commit: `c3b80a1` (outlined growth and known-length publication)
 - Hypothesis: removing repeated header length/capacity traffic from no-growth push
@@ -227,9 +232,8 @@ The central hypothesis is:
   (3,759,184 to 3,759,136). Retaining future built executables in the artifact set
   is now mandatory so hot-function disassembly remains auditable after worktree
   cleanup.
-- Do not mark complete yet: fixed-work counter calibration/comparison, optimized
-  disassembly, deterministic allocation comparison, and correctness evidence remain
-  required by the pre-registration.
+- Wall time alone did not complete revalidation; the allocation, disassembly,
+  code-size, and correctness results below supplied the declared independent checks.
 - Allocation result: passed. Running the deterministic allocation executable on the
   exact parent and candidate with preload cleared produced identical CSV rows for
   every workload, including requested/peak bytes, allocation/reallocation/drop
@@ -242,10 +246,10 @@ The central hypothesis is:
 - Correctness result: the exact candidate commit already passed the native, no_std,
   Gecko, Rust 1.86, Clippy, and strict-provenance Miri gates recorded in the original
   push experiment. No new implementation code is under test here.
-- Remaining evidence: fixed-work instruction/cycle calibration and comparison. Do
+- Remaining decision: fixed-work instruction/cycle calibration and comparison. Do
   not grow the permanent benchmark suite merely to obtain it; use a small temporary
-  driver or classify the existing wall-time/assembly/allocation evidence as the
-  practical stopping point before upstream submission.
+  driver only if required before upstream submission. The implementation result is
+  not otherwise awaiting another timing experiment.
 
 ### Retrospective append revalidation
 
@@ -290,7 +294,7 @@ The central hypothesis is:
 
 ### Post-append implementation audit
 
-- Status: research complete; no implementation started
+- Status: research complete; splice finding implemented, later candidates pending
 - Highest-confidence finding: `Drain::move_tail`, used by `splice`, passes
   `end + tail + additional` to `ThinVec::reserve`. `reserve` interprets its
   argument as elements additional to the vector's current initialized prefix,
@@ -298,6 +302,8 @@ The central hypothesis is:
   required capacity. Rust's `Vec` passes the initialized layout length and the
   true additional count as separate arguments to `RawVec::reserve`; ThinVec
   cannot copy that expression directly through its public reserve API.
+- Outcome: corrected and validated on `perf/splice-reserve`; retain this paragraph as
+  the audit trail that led to the change, not as an outstanding task.
 - Next generalized candidates: guarded hole/backshift algorithms for
   `retain_mut` and `dedup_by`, one-shot length publication for bulk extension,
   and slice-tail destruction in `truncate`.
@@ -316,9 +322,9 @@ The central hypothesis is:
 - Hypothesis: one reserve and one bulk relocation will outperform the current
   `extend(other.drain(..))` element loop without changing allocation behavior.
 - Affected measurement: `append_preallocated` at 4 and 1,024 elements.
-- Acceptance: reproducible CPU and code-size improvement with identical final
-  contents, source clearing, allocation behavior, panic safety, and Gecko auto-array
-  ownership.
+- Acceptance: reproducible CPU improvement with an explicit, acceptable code-size
+  tradeoff, identical final contents, source clearing, allocation behavior, panic
+  safety, and Gecko auto-array ownership.
 - Baseline: ThinVec took 4.364 ns for 4 elements and 543.7 ns for 1,024 elements;
   Vec took 2.459 ns and 194.4 ns.
 - Result: accepted. ThinVec improved to 3.472 ns for 4 elements (about 20%) and
@@ -326,6 +332,9 @@ The central hypothesis is:
   196.8 ns rather than nearly three times slower.
 - Safety result: dedicated owning-element and ZST tests prove source clearing and
   exactly-once destruction; native and Gecko strict-provenance Miri tests pass.
+- Retrospective size result: the measured append hot monomorphization shrank 190
+  bytes, while total ELF `.text` grew 1,140 bytes (0.038%). Treat that whole-binary
+  increase as a recorded cost, not a code-size improvement.
 
 ### Push fast path (`perf/push-fast-path`)
 
@@ -349,6 +358,8 @@ The central hypothesis is:
   (2,979,384 to 2,979,164 bytes).
 - Safety result: all supported test lanes and both strict-provenance Miri
   configurations pass.
+- Allocator note: the original figures inherited tcmalloc. Exact-parent System-malloc
+  revalidation later reproduced 60-79% improvements across the declared sizes.
 
 ## Verified baseline
 
@@ -539,17 +550,19 @@ preserve their evidence here.
 - [ ] Add exact growth-transition cases only where needed by a growth experiment.
 - [ ] Add requested bytes copied and pointer-stayed versus pointer-moved reallocs.
 - [ ] Add allocator usable-byte diagnostics on macOS and glibc Linux.
-- [ ] Record rustc commit, target, CPU, OS, allocator, and governor with retained
+- [x] Record rustc commit, target, CPU, OS, allocator, and governor with retained
   benchmark artifacts automatically.
-- [ ] Correct baseline documentation so `main` is measured from a separate checkout
-  before the feature branch is compared against it.
+- [x] Replace mutable saved-`main` comparisons with exact-commit detached worktrees
+  using an identical benchmark tree and lockfile.
 - [x] Add a reproducible A/B runner that builds explicit commits in separate
   worktrees, alternates their order, and retains raw per-round artifacts.
 - [x] Measure same-binary timing repeatability for the pinned Linux 1,024-element
   push lane after eliminating stable child-visible labels.
 - [ ] Establish same-binary noise for the fixed-work counter lane.
-- [ ] Retrospectively revalidate push and append against their exact parent commits
-  under the experimental protocol before proposing either change upstream.
+- [x] Retrospectively revalidate push wall time, allocation behavior, codegen, and
+  code size against its exact parent under the experimental protocol.
+- [x] Retrospectively revalidate append wall time and focused codegen against its
+  exact parent, recording the whole-binary text tradeoff.
 - [ ] Treat the smallest push results as provisional superiority claims until
   disassembly and independent paired rounds rule out sub-nanosecond artifacts.
 - [ ] Re-establish allocator-labelled baselines with preload explicitly controlled;
@@ -569,9 +582,11 @@ before combining it with another optimization.
 - [x] Combine length and capacity retrieval where both are required.
 - [x] Remove redundant header reads between `push` and `push_unchecked`.
 - [x] Outline `grow_one` into a cold, non-inlined slow path.
-- [ ] Confirm the common path contains only state load, capacity branch, element
+- [x] Confirm the common path contains only state load, capacity branch, element
   write, and length publication.
-- [ ] Measure wall time, instructions, cycles, hot-function bytes, and code size.
+- [x] Measure paired wall time, hot-function bytes, and total code size.
+- [ ] Measure fixed-work instructions and cycles only if required for upstream
+  submission; do not add a permanent benchmark solely for this purpose.
 
 ### Bulk operations
 
@@ -860,8 +875,8 @@ general wins.
   downstream checks intended to reveal displaced or accidentally omitted work.
 - Require fixed-work normalization for hardware counters and separate definitions
   for requested, usable, peak-live, retained-capacity, and RSS memory claims.
-- Existing push and append results remain promising, but must be retrospectively
-  reproduced under this protocol before an upstream proposal.
+- At adoption time, existing push and append results were only promising and required
+  exact-parent reproduction. That reproduction is recorded in later entries.
 
 ### 2026-07-10: calibrate the paired runner and revalidate push timing
 
@@ -875,8 +890,17 @@ general wins.
   delta inside roughly 0.9%.
 - Revalidated the push optimization against its exact parent under System malloc:
   60-79% improvements across all declared sizes with no total code-size regression.
-- Retrospective push acceptance remains pending independent mechanistic, fixed-work
-  counter, allocation, and correctness evidence.
+- Allocation, optimized-codegen, code-size, and correctness evidence subsequently
+  passed. Fixed-work counters remain optional strengthening before upstream submission.
+
+### 2026-07-10: revalidate append timing and record its size tradeoff
+
+- Revalidated append against its exact parent under label-neutral System malloc.
+- Four elements improved 21.18%; 1,024 elements improved 68.89%, with every paired
+  interval entirely favorable.
+- Confirmed direct reserve plus `memcpy` in optimized code and a 190-byte reduction
+  in the measured hot monomorphization.
+- Recorded rather than hid the 1,140-byte (0.038%) total ELF `.text` increase.
 
 ### 2026-07-10: correct splice reserve accounting
 
