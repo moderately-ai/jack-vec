@@ -2508,8 +2508,9 @@ impl<T> From<Box<[T]>> for ThinVec<T> {
     /// assert_eq!(ThinVec::from(b), thin_vec![1, 2, 3]);
     /// ```
     fn from(s: Box<[T]>) -> Self {
-        // Can just lean on the fact that `Box<[T]>` -> `Vec<T>` is Free.
-        Vec::from(s).into_iter().collect()
+        // `Box<[T]>` -> `Vec<T>` preserves the allocation, then the direct
+        // Vec-to-ThinVec conversion performs the required layout change in bulk.
+        Vec::from(s).into()
     }
 }
 
@@ -3924,6 +3925,53 @@ mod std_tests {
             struct Aligned(u8);
 
             let aligned = ThinVec::from(vec![Aligned(1), Aligned(2)]);
+            assert_eq!(aligned, [Aligned(1), Aligned(2)]);
+            assert_eq!(aligned.as_ptr().align_offset(64), 0);
+        }
+    }
+
+    #[test]
+    fn test_from_box_bulk_delegation() {
+        use alloc::{rc::Rc, vec};
+        use core::cell::Cell;
+
+        assert!(ThinVec::<u64>::from(Box::<[u64]>::default()).is_empty());
+        assert_eq!(
+            ThinVec::from(vec![10, 20, 30].into_boxed_slice()),
+            [10, 20, 30]
+        );
+
+        struct CountDrop(Rc<Cell<usize>>);
+        impl Drop for CountDrop {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        let source = vec![
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+            CountDrop(drops.clone()),
+        ]
+        .into_boxed_slice();
+        let values = ThinVec::from(source);
+        assert_eq!(drops.get(), 0);
+        drop(values);
+        assert_eq!(drops.get(), 3);
+
+        #[derive(Debug, PartialEq)]
+        struct Zst;
+        let zsts = ThinVec::from(vec![Zst, Zst, Zst].into_boxed_slice());
+        assert_eq!(zsts, [Zst, Zst, Zst]);
+
+        #[cfg(not(feature = "gecko-ffi"))]
+        {
+            #[repr(align(64))]
+            #[derive(Debug, PartialEq)]
+            struct Aligned(u8);
+
+            let aligned = ThinVec::from(vec![Aligned(1), Aligned(2)].into_boxed_slice());
             assert_eq!(aligned, [Aligned(1), Aligned(2)]);
             assert_eq!(aligned.as_ptr().align_offset(64), 0);
         }
