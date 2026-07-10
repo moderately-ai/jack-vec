@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `perf/thin-into-vec-bulk`
+- Working branch: `perf/thin-into-box-bulk`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,41 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Direct `ThinVec<T>` to `Box<[T]>` relocation (`perf/thin-into-box-bulk`)
+
+- Status: pre-registered; implementation not started
+- Hypothesis: the current conversion collects `ThinVec::IntoIter` into a boxed
+  slice through generic iterator machinery. Constructing one exact-length
+  uninitialized boxed slice, relocating the initialized ThinVec region once,
+  publishing box initialization, and emptying/deallocating the source should remove
+  per-element checks and any intermediate Vec shrink path.
+- Primary workload: consume a preconstructed 1,024-element `ThinVec<u64>` into a
+  `Box<[u64]>`. Source cloning/setup and returned-box destruction stay outside
+  timing; exact destination allocation, relocation, source-header deallocation,
+  and initialization publication remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope. Use one size only; the already-retained Vec conversion
+  covers small bulk-ownership transfer and correctness tests cover Box edge cases.
+- Fixed measurement parameters: seven paired rounds, seed `20260723`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Memory/allocation gate: compare full source-build-plus-conversion allocation and
+  deallocation counts, requested output bytes, peak live requested bytes, and exact
+  output length. The candidate must neither retain the source nor allocate an
+  intermediate Vec.
+- Correctness gates: singleton and allocated empty inputs, singleton/nonempty and
+  spare-capacity inputs, owning exact-once drops, ZSTs, and native over-alignment.
+  Require native and Gecko strict-provenance Miri plus native, no-default-feature,
+  Gecko, MSRV, formatting, and Clippy lanes.
+- Codegen/size gate: confirm one exact destination allocation, one bulk relocation,
+  initialization publication, and matching source deallocation without an
+  element/capacity loop. Measure focused and whole-ELF size.
+- Scope: change only `From<ThinVec<T>> for Box<[T]>`, focused tests, and one
+  temporary benchmark shape. Do not combine inbound conversions, clone, growth,
+  or Gecko policy changes.
 
 ### Direct `ThinVec<T>` to `Vec<T>` relocation (`perf/thin-into-vec-bulk`)
 
