@@ -202,7 +202,7 @@ The central hypothesis is:
 
 ### Retrospective append revalidation
 
-- Status: pre-registered; not yet run
+- Status: timing and focused-codegen gates passed; small total text tradeoff recorded
 - Baseline commit: `55ca926` (append benchmark present, iterator-driven append)
 - Candidate commit: `e6fbaaf` (single reserve plus bulk relocation)
 - Hypothesis: replacing drain/extend with one non-overlapping bulk copy materially
@@ -223,6 +223,23 @@ The central hypothesis is:
   correctness gate; do not add another permanent benchmark or profiling framework.
 - Expected result: a large 1,024-element improvement and a smaller positive
   four-element result, consistent with the original experiment.
+- Wall-time result: passed. Four elements improved 21.18% at the paired median with
+  bootstrap interval [-22.25%, -20.60%]. The primary 1,024-element case improved
+  68.89%, from 506.8 ns to 157.8 ns, with interval [-69.07%, -68.53%]. Every
+  declared paired round favored the candidate by a wide margin.
+- Focused codegen result: supports the mechanism. The relevant Criterion
+  monomorphization shrank from 0x64d to 0x58f bytes (190 bytes) and replaces the
+  baseline iterator/fold/push calls with direct reserve handling and `memcpy`.
+- Whole-binary size tradeoff: the ELF `.text` section grew 1,140 bytes, or about
+  0.038% (3,010,112 to 3,011,252), and data grew 24 bytes. File size grew 4,416
+  bytes including layout/padding. This does not come from growth of the measured hot
+  monomorphization, but its remaining cross-symbol/link-layout attribution is not
+  proven; retain it as an explicit cost rather than calling code size unchanged.
+- Correctness evidence remains the dedicated owning-element/ZST tests and native plus
+  Gecko strict-provenance Miri gates recorded for the exact implementation commit.
+- Tooling note: `cargo-bloat` 0.12.1 is installed on the builder, but it cannot
+  directly consume an already-built Cargo bench executable. Do not add a synthetic
+  Cargo project solely to hide or over-explain this small recorded delta.
 
 ### Post-append implementation audit
 
