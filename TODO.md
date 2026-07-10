@@ -51,7 +51,7 @@ The central hypothesis is:
 
 ### Remove Gecko compatibility (`refactor/remove-gecko`)
 
-- Status: implementation complete; native performance audit pending
+- Status: accepted
 - Decision: this fork targets native Rust and sqlparsers. Remove the `gecko-ffi`
   feature, nsTArray representation, external singleton linkage, Gecko growth policy,
   AutoThinVec support, Gecko-only tests, documentation, and CI lanes.
@@ -77,6 +77,18 @@ The central hypothesis is:
   warning-denied docs plus 49 doctests, strict-provenance Tree Borrows Miri, and
   diff hygiene all pass. The remaining Gecko mentions in this ledger are preserved
   historical experiment evidence, not supported code or configuration.
+- Native audit result: accepted as neutral-to-slightly-positive. Across 7 paired
+  rounds, `push_preallocated/ThinVec/1024` moved from 1,181.45 ns to 1,179.29 ns,
+  a -0.38% paired median delta (100,000-resample bootstrap interval -0.66% to
+  -0.02%; observed range -0.74% to +0.67%). The optimized CPU benchmark executable
+  grew by only 8 bytes, from 4,030,312 to 4,030,320 bytes (+0.0002%). The runner's
+  harness-difference guard was explicitly overridden after auditing that benches
+  were identical and the manifest change only removed the unused `gecko-ffi`
+  feature; both controlled-path digests are retained in the artifact manifest.
+- Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/remove-gecko-native-audit-20260710`
+- Decision: retain the removal. It deletes 664 lines and the second allocator/ABI
+  model without regressing the measured native hot path or materially changing
+  optimized executable size.
 
 ### Gecko total-byte slow-growth threshold (`fix/gecko-growth-threshold`)
 
