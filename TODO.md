@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Direct `Vec<T>` to `ThinVec<T>` relocation (`perf/vec-into-thin-bulk`)
 
-- Status: baseline harness complete; implementation not started
+- Status: accepted
 - Baseline commit: `b39ecf0`
+- Candidate commit: `1f278f9`
 - Hypothesis: current generic `Vec::IntoIter` collection already vectorizes its
   element movement, so only a direct experiment can distinguish equivalent bulk
   code from avoidable iterator/fallback overhead. One ThinVec allocation, one
@@ -83,6 +84,30 @@ The central hypothesis is:
   call boundary explains it before reverting.
 - Scope: change only `From<Vec<T>> for ThinVec<T>`, focused tests, and one temporary
   benchmark. Do not combine boxed input, clone, growth, or Gecko policy changes.
+- Result: accepted. The 1,024-element conversion improved 25.22% at the paired
+  median, from 215.48 ns to 161.14 ns. Every round was favorable; the bootstrap
+  interval was [-28.33%, -24.17%], clearing the 15% threshold and noise envelope.
+- Mechanism result: the baseline does move four `u64`s per vectorized iteration,
+  but first enters generic reserve/iterator machinery, performs alias/distance and
+  vectorization-threshold checks, retains a scalar tail plus reserve fallback, and
+  carries iterator cleanup state. The candidate allocates the header once and calls
+  optimized glibc `memcpy` for the 8 KiB region before one length publication and
+  source deallocation. Thus the baseline was bulk-capable but not equivalent: tuned
+  library movement plus removed control/unwind state explains the remaining win.
+- Memory result: unchanged at two allocations, zero reallocations, two
+  deallocations, 8,208 requested output bytes, and 16,400 peak live requested bytes.
+  Output capacity remains exactly 1,024.
+- Size result: the Criterion batched monomorph shrank 453 bytes (2,157 to 1,704).
+  Whole-ELF text shrank 1,804 bytes, data shrank 32 bytes, and the executable file
+  shrank 2,840 bytes.
+- Correctness result: singleton and allocated empty inputs, spare capacity, owning
+  exact-once drops, ZSTs, contents, exact capacity, and native over-alignment are
+  covered. Native, no-default-feature, Gecko, Rust 1.86, formatting, supported
+  Clippy, and focused native/Gecko strict-provenance Miri lanes pass. Gecko Clippy
+  retains only its three existing warnings.
+- Decision: retain the direct relocation and one high-signal benchmark. Boxed-slice
+  input can reuse this now-proven primitive through its zero-cost Box-to-Vec
+  conversion, but still requires an isolated end-to-end check.
 
 ### Direct `ThinVec<T>` to `Box<[T]>` relocation (`perf/thin-into-box-bulk`)
 
@@ -1473,3 +1498,12 @@ general wins.
   peak live bytes, and allocator-call counts.
 - Whole-ELF text shrank 1,276 bytes; retained one high-signal benchmark rather than
   repeating the Vec conversion's small-size matrix.
+
+### 2026-07-10: accept direct Vec-to-ThinVec relocation
+
+- Improved the 1,024-element conversion 25.22% even though LLVM had vectorized the
+  old collector; tuned `memcpy` and removal of iterator/reserve/fallback state remain
+  material at 8 KiB.
+- Preserved the exact allocation lifecycle, requested bytes, peak live bytes,
+  destination capacity, and ownership semantics.
+- The focused wrapper shrank 453 bytes and whole-ELF text shrank 1,804 bytes.
