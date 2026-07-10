@@ -37,7 +37,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `fix/clone-panic-guard`
+- Working branch: `perf/resize-guard`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -49,6 +49,36 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Guarded reserved `resize` growth (`perf/resize-guard`)
+
+- Status: pre-registered; benchmark and implementation not started
+- Baseline commit: to be recorded after the benchmark-only commit
+- Hypothesis: after `resize` reserves the full growth, cloning directly into the
+  uninitialized suffix while carrying length in a panic guard will eliminate every
+  repeated public `push` capacity check and header length publication. The final
+  supplied value can still be moved rather than cloned.
+- Primary workload: resize an empty `u64` collection with capacity for 1,024 to
+  length 1,024. Allocation/setup and final destruction stay outside the timed
+  region; cloning/copying, writes, and final length publication remain inside.
+- Primary threshold: at least 15% faster at the paired median under cleared-preload
+  System malloc, bootstrap interval entirely below zero, and improvement outside the
+  calibrated 1% A/A envelope. Report Vec as a link-layout/noise control, but decide
+  on exact-parent ThinVec A/B.
+- Fixed measurement parameters: seven paired rounds, seed `20260718`, CPU 0,
+  Criterion sample size 100, 3-second warm-up, 5-second measurement, 100,000
+  resamples, preload cleared, and label-neutral child paths. Do not extend or remove
+  rounds.
+- Correctness gates: growth from empty and nonempty vectors, no-op equal length,
+  shrinking through truncate, ZSTs, exact final values, clone panic after partial
+  suffix initialization, and exact once-only destruction of original and cloned
+  values. Require native and Gecko strict-provenance Miri and all feature/MSRV lanes.
+- Codegen/size gate: confirm the reserved growth loop carries initialized length in
+  registers and publishes it once, with no unexplained hot-function or whole-binary
+  growth. Reject or record any tradeoff.
+- Scope: one guarded resize growth loop and one high-signal benchmark size. Preserve
+  move-the-last-value behavior; do not combine `extend_from_slice`, clone inlining,
+  truncate, or Gecko growth changes.
 
 ### Clone partial-initialization guard (`fix/clone-panic-guard`)
 
