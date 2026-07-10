@@ -29,6 +29,8 @@ The suite measures:
   final destruction; and
 - resizing reserved capacity to 1,024 scalar elements, excluding allocation and
   final destruction; and
+- truncating 1,024 cheap owning/drop values to zero, excluding allocation and
+  construction; and
 - sequential iteration after construction.
 
 The operation sizes are deliberately limited to 1, 4, and 1,024 elements: singleton

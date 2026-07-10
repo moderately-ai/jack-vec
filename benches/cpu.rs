@@ -10,7 +10,7 @@ use thin_vec::ThinVec;
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
-    NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT, OPERATION_SIZES,
+    DropValue, NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT, OPERATION_SIZES,
 };
 
 fn bench_nested_construct<V: BenchVector<u64>>(
@@ -314,6 +314,36 @@ fn resize_reserved(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_truncate_drop<V: BenchVector<DropValue>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    const LEN: usize = 1_024;
+
+    group.bench_function(V::LABEL, |bencher| {
+        bencher.iter_batched_ref(
+            || {
+                let mut values = V::with_capacity(LEN);
+                for index in 0..LEN {
+                    values.push(DropValue(index as u64));
+                }
+                values
+            },
+            |values| {
+                values.truncate(black_box(0));
+                debug_assert!(values.as_slice().is_empty());
+                black_box(values);
+            },
+            BatchSize::SmallInput,
+        );
+    });
+}
+
+fn truncate_drop_1024(c: &mut Criterion) {
+    let mut group = c.benchmark_group("truncate_drop_1024");
+    group.throughput(Throughput::Elements(1_024));
+    bench_truncate_drop::<Vec<DropValue>>(&mut group);
+    bench_truncate_drop::<ThinVec<DropValue>>(&mut group);
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -325,6 +355,7 @@ criterion_group!(
     retain_mixed,
     dedup_adjacent_pairs,
     extend_reserved,
-    resize_reserved
+    resize_reserved,
+    truncate_drop_1024
 );
 criterion_main!(benches);
