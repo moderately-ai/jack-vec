@@ -843,15 +843,25 @@ impl<T> ThinVec<T> {
     /// vec.push(3);
     /// assert_eq!(vec, [1, 2, 3]);
     /// ```
+    #[inline]
     pub fn push(&mut self, val: T) {
-        let old_len = self.len();
-        if old_len == self.capacity() {
-            self.reserve(1);
+        let header = self.header();
+        let old_len = header.len();
+        if old_len == header.cap() {
+            self.grow_for_push();
         }
         unsafe {
-            // SAFETY: reserve() ensures sufficient capacity.
-            self.push_unchecked(val);
+            // SAFETY: Either the original capacity had room or grow_for_push()
+            // reserved room. Growth does not change the length.
+            self.push_unchecked_at(old_len, val);
         }
+    }
+
+    /// Outlines allocation and layout handling from the common push path.
+    #[cold]
+    #[inline(never)]
+    fn grow_for_push(&mut self) {
+        self.reserve(1);
     }
 
     /// Appends an element to the back like `push`,
@@ -864,6 +874,15 @@ impl<T> ThinVec<T> {
     #[inline]
     unsafe fn push_unchecked(&mut self, val: T) {
         let old_len = self.len();
+        debug_assert!(old_len < self.capacity());
+        unsafe {
+            self.push_unchecked_at(old_len, val);
+        }
+    }
+
+    /// Pushes at a length already loaded and checked by the caller.
+    #[inline]
+    unsafe fn push_unchecked_at(&mut self, old_len: usize, val: T) {
         debug_assert!(old_len < self.capacity());
         unsafe {
             ptr::write(self.data_raw().add(old_len), val);

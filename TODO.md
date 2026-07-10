@@ -37,13 +37,26 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `benchmarks/performance-suite`
+- Working branch: `perf/push-fast-path`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
 - Benchmark toolchain: Rust 1.86
 - Benchmark CPU: Ryzen 9 7950X3D, pinned to CPU 0 on the 96 MiB L3 CCD
 - Benchmark OS/allocator: Ubuntu, Linux 5.15, glibc 2.35
+
+## Active experiment
+
+### Push fast path (`perf/push-fast-path`)
+
+- Status: implementing
+- Hypothesis: publishing the known length directly and outlining growth will reduce
+  redundant header traffic, register pressure, and hot-path code size.
+- Affected measurements: `push_preallocated` and `build_growing_and_drop` only.
+- Baseline: preallocated ThinVec push is 1.98x slower at 1 element, 3.56x at
+  4 elements, and 4.36x at 1,024 elements on the pinned Linux host.
+- Acceptance: reproducible improvement without memory, traversal, correctness, or
+  code-size regression; otherwise revert the experiment.
 
 ## Verified baseline
 
