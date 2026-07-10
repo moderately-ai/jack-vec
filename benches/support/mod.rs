@@ -1,14 +1,5 @@
 use thin_vec::ThinVec;
 
-pub struct DropValue(pub u64);
-
-impl Drop for DropValue {
-    #[inline(never)]
-    fn drop(&mut self) {
-        std::hint::black_box(self.0);
-    }
-}
-
 pub const NESTED_VECTOR_COUNT: usize = 10_000;
 pub const OPERATION_SIZES: &[usize] = &[1, 4, 1_024];
 pub const ITERATION_SIZES: &[usize] = &[8, 1_024];
@@ -33,7 +24,6 @@ pub trait BenchVector<T>: Sized {
     fn resize(&mut self, new_len: usize, value: T)
     where
         T: Clone;
-    fn truncate(&mut self, len: usize);
     fn as_slice(&self) -> &[T];
 }
 
@@ -82,10 +72,6 @@ impl<T> BenchVector<T> for Vec<T> {
         T: Clone,
     {
         Vec::resize(self, new_len, value);
-    }
-
-    fn truncate(&mut self, len: usize) {
-        Vec::truncate(self, len);
     }
 
     fn as_slice(&self) -> &[T] {
@@ -138,10 +124,6 @@ impl<T> BenchVector<T> for ThinVec<T> {
         T: Clone,
     {
         ThinVec::resize(self, new_len, value);
-    }
-
-    fn truncate(&mut self, len: usize) {
-        ThinVec::truncate(self, len);
     }
 
     fn as_slice(&self) -> &[T] {

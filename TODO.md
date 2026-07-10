@@ -52,8 +52,9 @@ The central hypothesis is:
 
 ### Bulk tail destruction in `truncate` (`perf/truncate-bulk-drop`)
 
-- Status: benchmark complete; implementation not started
+- Status: rejected; candidate and permanent benchmark removed
 - Baseline commit: `142cfe2`
+- Candidate commit: `2db50d6`
 - Hypothesis: publishing final length once and dropping the removed suffix as one
   slice will eliminate a header length load/store per destroyed element and allow
   normal slice drop glue to manage unwinding.
@@ -83,6 +84,21 @@ The central hypothesis is:
   Reject or record any tradeoff.
 - Scope: one truncate implementation and one high-signal benchmark shape. Do not
   combine `clear`, clone inlining, extension, or Gecko growth changes.
+- Result: rejected. The candidate improved 0.65% at the paired median, with a
+  bootstrap interval of [-0.68%, -0.61%]. Although directional, this is inside the
+  calibrated 1% envelope and far below the pre-registered 10% threshold. Unchanged
+  Vec was neutral at +0.02%, with an interval spanning zero.
+- Code-size result: whole-ELF text grew 412 bytes, data was unchanged, and the file
+  grew 4,320 bytes. This cost and the observable reverse-to-forward destruction-order
+  change are not justified by a sub-1% timing effect.
+- Correctness result: all feature/test, Clippy, formatting, and focused native and
+  Gecko strict-provenance Miri gates passed. Slice drop glue correctly finished the
+  removed suffix after one destructor panicked. Correctness did not override the
+  failed performance and semantic-risk gates.
+- Decision: restore the original reverse, per-element length-publishing truncate
+  implementation and remove the temporary permanent benchmark. Preserve the raw
+  remote artifacts and this negative result so the idea is not repeated without a
+  materially different mechanism or workload.
 
 ### Guarded reserved `resize` growth (`perf/resize-guard`)
 
@@ -888,8 +904,10 @@ before combining it with another optimization.
   boundary.
 - [x] Make `resize` use its already-reserved unchecked construction path instead
   of repeating the public push capacity branch for every new element.
-- [ ] Specialize `extend_from_slice` around a guarded clone loop before adding a
-  benchmark; use small and moderately large slices only if implementation begins.
+- [x] Inspect `extend_from_slice` before specializing: after guarded `Extend`, the
+  AArch64 `u64` monomorph already vectorizes 64-byte chunks, carries length locally,
+  and publishes it once. Do not add a redundant specialization or benchmark unless
+  a nontrivial `Clone` workload later demonstrates adapter/fallback overhead.
 
 ### Clone and conversions
 
