@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Direct `ThinVec<T>` to `Box<[T]>` relocation (`perf/thin-into-box-bulk`)
 
-- Status: pre-registered; implementation not started
+- Status: baseline harness complete; implementation not started
+- Baseline commit: `41870bc`
 - Hypothesis: the current conversion collects `ThinVec::IntoIter` into a boxed
   slice through generic iterator machinery. Constructing one exact-length
   uninitialized boxed slice, relocating the initialized ThinVec region once,
