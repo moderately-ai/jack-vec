@@ -52,7 +52,8 @@ The central hypothesis is:
 
 ### Gecko total-byte slow-growth threshold (`fix/gecko-growth-threshold`)
 
-- Status: pre-registered; falsification test not started
+- Status: falsification confirmed; correction not started
+- Falsification commit: `ab460e8`
 - Hypothesis: Gecko reserve computes `min_cap_bytes` including header bytes, but
   selects slow growth with `min_cap > 8 MiB`, accidentally treating an element
   count as bytes. nsTArray's threshold is total requested allocation bytes. Requests
@@ -71,6 +72,9 @@ The central hypothesis is:
   9 MiB (a 7 MiB/43.75% reduction) with the same requested initialized capacity.
 - Scope: do not alter first-allocation exactness, megabyte rounding, growth factor,
   native policy, AutoThinVec behavior, or the Gecko ABI/layout.
+- Falsification result: confirmed exactly. The header-inclusive request one byte
+  above 8 MiB produced capacity 16,777,208 (`16 MiB - 8`) rather than the required
+  9,437,176 (`9 MiB - 8`); the exact 8 MiB boundary remained `8 MiB - 8`.
 
 ### Direct array construction (`perf/from-array-bulk`)
 
