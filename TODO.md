@@ -183,6 +183,22 @@ The central hypothesis is:
 - Do not mark complete yet: fixed-work counter calibration/comparison, optimized
   disassembly, deterministic allocation comparison, and correctness evidence remain
   required by the pre-registration.
+- Allocation result: passed. Running the deterministic allocation executable on the
+  exact parent and candidate with preload cleared produced identical CSV rows for
+  every workload, including requested/peak bytes, allocation/reallocation/drop
+  counts, and zero live bytes after destruction.
+- Disassembly result: supports the mechanism. The old 1,024-element hot loop calls a
+  large non-inlined `BenchVector::push` wrapper for every element; that wrapper
+  contains register-save overhead and inlined growth machinery. The candidate loop
+  contains the expected capacity comparison, value store, length increment/store,
+  and loop branch, with growth behind a cold call.
+- Correctness result: the exact candidate commit already passed the native, no_std,
+  Gecko, Rust 1.86, Clippy, and strict-provenance Miri gates recorded in the original
+  push experiment. No new implementation code is under test here.
+- Remaining evidence: fixed-work instruction/cycle calibration and comparison. Do
+  not grow the permanent benchmark suite merely to obtain it; use a small temporary
+  driver or classify the existing wall-time/assembly/allocation evidence as the
+  practical stopping point before upstream submission.
 
 ### Post-append implementation audit
 
