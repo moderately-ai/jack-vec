@@ -1509,7 +1509,23 @@ impl<T> ThinVec<T> {
     /// assert_eq!(vec2, []);
     /// ```
     pub fn append(&mut self, other: &mut ThinVec<T>) {
-        self.extend(other.drain(..))
+        let other_len = other.len();
+        if other_len == 0 {
+            return;
+        }
+
+        self.reserve(other_len);
+
+        unsafe {
+            let self_len = self.len();
+            ptr::copy_nonoverlapping(other.data_raw(), self.data_raw().add(self_len), other_len);
+
+            // The elements have moved into self. Exclude them from other's
+            // initialized prefix before publishing them in self so they can
+            // never be dropped twice.
+            other.set_len_non_singleton(0);
+            self.set_len_non_singleton(self_len + other_len);
+        }
     }
 
     /// Removes the specified range from the vector in bulk, returning all
@@ -4188,6 +4204,40 @@ mod std_tests {
         vec.append(&mut vec2);
         assert_eq!(vec, [1, 2, 3, 4, 5, 6]);
         assert_eq!(vec2, []);
+    }
+
+    #[test]
+    fn test_append_drop_and_zst() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        struct CountDrop(Rc<Cell<usize>>);
+        impl Drop for CountDrop {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        {
+            let mut destination = thin_vec![CountDrop(drops.clone()), CountDrop(drops.clone())];
+            let mut source = thin_vec![
+                CountDrop(drops.clone()),
+                CountDrop(drops.clone()),
+                CountDrop(drops.clone()),
+            ];
+            destination.append(&mut source);
+            assert_eq!(destination.len(), 5);
+            assert!(source.is_empty());
+            assert_eq!(drops.get(), 0);
+        }
+        assert_eq!(drops.get(), 5);
+
+        let mut destination = thin_vec![(), ()];
+        let mut source = thin_vec![(), (), ()];
+        destination.append(&mut source);
+        assert_eq!(destination.len(), 5);
+        assert!(source.is_empty());
     }
 
     #[test]
