@@ -72,6 +72,17 @@ The central hypothesis is:
   stop and revise the hypothesis instead of applying the arithmetic change.
 - Scope: one regression test and the smallest `move_tail` arithmetic correction. No
   Criterion benchmark or unrelated splice rewrite.
+- Native falsification result: confirmed the original prediction exactly. Before the
+  correction, final contents/length were correct but capacity was 19 rather than 15;
+  after the correction it is 15.
+- Gecko prediction correction: the 15-element case remains capacity 30 even with
+  corrected accounting because its 16-byte header makes the request 136 bytes and
+  Gecko rounds it to 256. The original prediction of capacity 15 was false.
+- Pre-registered Gecko boundary follow-up: replace the same two elements with eleven
+  rather than twelve. Final length 14 plus the 16-byte header is exactly 128 bytes;
+  corrected accounting predicts capacity 14, while prefix double-counting predicts
+  a 256-byte allocation and capacity 30. Use this boundary for the shared regression
+  test and report both native and Gecko results.
 
 ### Paired A/B runner and same-binary calibration (`benchmarks/ab-runner`)
 
