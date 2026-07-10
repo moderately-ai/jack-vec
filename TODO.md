@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Guarded `dedup_by` backshift (`perf/dedup-backshift`)
 
-- Status: pre-registered; benchmark and implementation not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; implementation not started
+- Baseline commit: `84ebc41`
 - Hypothesis: after the first adjacent duplicate, dropping duplicates in place and
   copying each later survivor once into the gap will outperform swapping each
   survivor with a duplicate, especially for large elements. A gap guard will repair
