@@ -52,8 +52,8 @@ The central hypothesis is:
 
 ### Guarded reserved `resize` growth (`perf/resize-guard`)
 
-- Status: pre-registered; benchmark and implementation not started
-- Baseline commit: to be recorded after the benchmark-only commit
+- Status: benchmark complete; implementation not started
+- Baseline commit: `5acd1a4`
 - Hypothesis: after `resize` reserves the full growth, cloning directly into the
   uninitialized suffix while carrying length in a panic guard will eliminate every
   repeated public `push` capacity check and header length publication. The final
