@@ -52,6 +52,39 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Compact 32-bit allocation header (`perf/compact-header`)
+
+- Status: pre-registered; implementation pending
+- Baseline commit: `6b0f0ec`
+- Hypothesis: JackVec's native header uses two machine words even though practical
+  collection lengths fit in 32 bits. Replacing `{ len: usize, cap: usize }` with
+  `{ len: u32, cap: u32 }` reduces every allocated header from 16 to 8 bytes on
+  64-bit targets while preserving the one-word owner, singleton, Option niche,
+  contiguous slice, and reconstructable allocation layout.
+- Compatibility: intentionally cap length and capacity at `u32::MAX`. Requests or
+  growth beyond that limit must fail deterministically before allocation or pointer
+  arithmetic; no tagged wide-header fallback in this experiment.
+- Primary memory gate: requested bytes for nonempty `u8` and `u64` JackVecs on a
+  64-bit target must fall by exactly 8 bytes at capacities 1, 4, and 1,024, with
+  unchanged allocation/reallocation/deallocation counts and zero live bytes after
+  drop. Record allocator usable bytes separately later; do not equate requested-byte
+  savings with RSS.
+- Alignment caveat: for element alignment above 8, reduced header bytes may become
+  padding rather than reduce total layout. Preserve and report this rather than
+  claiming a universal eight-byte allocation saving.
+- CPU/code-size gate: preallocated 1,024-element push on the pinned Linux host must
+  not regress beyond the calibrated 1% envelope in seven paired rounds under the
+  existing cleared-preload protocol. Compare focused codegen, complete ELF sections,
+  and allocation output; a memory win does not excuse an unexplained hot-path loss.
+- Correctness gates: boundary capacity rejection without attempting allocation,
+  ZST length/capacity behavior, over-aligned layouts, owning exact-once drops,
+  singleton behavior, one-word `JackVec`/`Option<JackVec>`, all feature/MSRV/docs/
+  Clippy lanes, and strict-provenance Tree Borrows Miri.
+- Scope: header field widths, checked accessors/conversions, focused boundary and
+  layout tests, and only the allocation diagnostics necessary to prove requested
+  bytes. Do not combine builder, growth-policy, pointer-tagging, or capacity-class
+  changes.
+
 ### JackVec API rename (`docs/jackvec-branding`)
 
 - Status: accepted
