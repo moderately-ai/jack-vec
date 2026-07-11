@@ -26,16 +26,20 @@ boxes are historical hypotheses, not current commitments. New work starts here,
 is pre-registered in the experiment record, and is removed or checked off when a
 decision is reached.
 
-### P0: land and complete trustworthy baselines
+### P0: complete trustworthy canonical baselines
 
-- [ ] Land the corrected Linux system-allocator matrix from `perf/iteration-audit`.
-  It replaces the uncontrolled tcmalloc report and includes the shared iteration
-  kernel, explicit allocator provenance, five rotations, and regenerated visuals.
-- [ ] Capture the matching clean M4 macOS matrix at the same Git commit, Rust
-  1.97.0 compiler identity, schema, workload matrix, and explicit `system`
-  allocator policy. Do not pool platform measurements.
-- [ ] Validate the Linux/macOS pair and extend the existing `LATEST.md` and SVGs
-  in one reporting change. Preserve each platform's absolute and relative values.
+- [x] Land the corrected Linux system-allocator matrix, shared iteration kernel,
+  explicit allocator provenance, and regenerated visuals in merge commit
+  `55ea7c3` (PR #4).
+- [ ] After the four-element append decision lands, select that canonical `main`
+  commit and capture both a clean Ryzen 7950X3D Linux matrix and a clean M4 macOS
+  matrix at the same Git commit, Rust 1.97.0 compiler identity, schema, workload
+  matrix, and explicit `system` allocator policy. The current Linux report records
+  the pre-squash experiment commit and remains valid platform evidence, but is not
+  the final canonical pair anchor.
+- [ ] Validate that Linux/macOS pair and extend the existing `LATEST.md` and SVGs
+  in one reporting change. Preserve each platform's absolute and relative values;
+  never pool platforms.
 - [ ] Enable the already-configured CodSpeed ARM64 macro runner only after public
   repository runner-group access is available; keep it a trend lane, not a
   substitute for physical-host baselines.
@@ -44,11 +48,11 @@ decision is reached.
 
 ### P1: credible JackVec CPU gaps from the corrected Linux matrix
 
-- [ ] Audit four-element append (`1.334x Vec`, `0.863x ThinVec`) first. Separate
-  unavoidable one-word-header setup from avoidable reserve, branch, and relocation
-  overhead using same-binary controls, assembly, fixed-work counters, allocation
-  parity, and code size. Preserve the accepted large append (`1.020x Vec`,
-  `0.313x ThinVec`).
+- [x] Audit four-element append. Hoisting no-growth state removed 27.6% of
+  fixed-driver instructions but produced no exact-parent wall-time improvement and
+  was reverted. The focused JackVec/Vec gap was about 3.45%, not the five-library
+  binary's code-layout-sensitive 33.4%; preserve this as a benchmark interpretation
+  warning rather than manufacturing a specialized implementation.
 - [ ] Audit `retain<u64>` (`1.245x Vec`, `0.972x ThinVec`) while preserving panic
   repair, exact-once drops, and the accepted large-element improvement. Determine
   whether predicate-loop/header publication overhead remains avoidable.
@@ -159,7 +163,7 @@ header alignment without a new real-workload counterexample.
 - Canonical repository: `https://github.com/moderately-ai/jack-vec`
 - Historical fork: `https://github.com/tomsanbear/thin-vec`
 - Canonical remote branch: `main`
-- Working branch: `perf/iteration-audit`
+- Working branch: `perf/append-small-audit`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -171,6 +175,82 @@ header alignment without a new real-workload counterexample.
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Preallocated four-element append (`perf/append-small-audit`)
+
+- Status: rejected; implementation and temporary diagnostic reverted
+- Baseline commit: `a6a034a` (implementation identical to canonical `55ea7c3`;
+  ledger cleanup only)
+- Observation: the corrected Linux system-allocator matrix measures JackVec at
+  `1.334x Vec` for four-element preallocated append while still beating upstream
+  ThinVec at `0.863x`. At 1,024 elements JackVec is `1.020x Vec` and `0.313x
+  ThinVec`, so any small-path change must preserve the accepted bulk path.
+- Hypothesis: `append` calls general `reserve`, which reloads destination length
+  and capacity, then reloads destination length again after return even when the
+  caller already has sufficient capacity. Loading destination header state once,
+  bypassing general reserve machinery only when capacity is already proven, and
+  retaining the original length through relocation may reduce fixed overhead
+  without specializing a particular element count.
+- Diagnostic gate: inspect optimized JackVec, Vec, and ThinVec append wrappers and
+  run one same-binary fixed-operation driver before implementation. Count cycles,
+  instructions, branches/misses, cache events, and confirm both sides perform the
+  same 32-byte relocation and length/source publication. Criterion profile totals
+  are invalid because implementations execute different operation counts.
+- Primary: `append_preallocated/JackVec/4` must improve at least 10% at the paired
+  median with the complete bootstrap interval below zero in exactly seven
+  alternating process rounds. Use Rust 1.97.0, CPU 0 of the Ryzen 7950X3D V-cache
+  CCD, explicit system allocator, performance governor, seed 20260712, 100 samples,
+  3-second warm-up, 5-second measurement, and 100,000 resamples.
+- Secondary: `append_preallocated/JackVec/1024` may not regress beyond 1%. Report
+  all Vec, ThinVec, SmallVec4, and SmallVec8 measurements from the same filter as
+  code-layout/noise controls; unchanged controls outside the calibrated envelope
+  require explanation rather than selective omission.
+- Memory/semantic gates: destination capacity, final contents, emptied source,
+  requested/usable live and peak bytes, allocations/reallocations/deallocations,
+  and zero post-drop bytes must match the parent. Cover empty source/destination,
+  preallocated no-growth, required growth, owning exact-once Drop, ZSTs,
+  over-alignment, and overflow behavior.
+- Codegen/size gate: the no-growth path must load destination state once and keep
+  growth cold/general. Reject unexplained whole `.text` growth above 512 bytes or
+  a local speedup created by duplicating reserve/layout machinery.
+- Safety gates: preserve the ordering that removes elements from `other` before
+  publishing them in `self`, so unwinding cannot double-drop. Run stable, MSRV,
+  nightly, no-std/features, Clippy, docs, and strict-provenance Miri.
+- Decision: accept only if every primary, secondary, memory, safety, and size gate
+  passes. Otherwise revert implementation and temporary diagnostics while keeping
+  the negative result here. Do not add a `len == 4` branch unless the pre-change
+  assembly proves runtime copy dispatch is the dominant avoidable mechanism.
+- Pre-change codegen: a forced no-inline JackVec wrapper calls the complete reserve
+  routine on the preallocated hot path, then reloads destination pointer/length
+  before `memcpy`; Vec keeps its capacity check in the caller. A one-million-pair
+  fixed-operation driver measured roughly 66.3 million JackVec instructions and
+  11.0 million branches versus 49.0 million and 9.0 million for Vec.
+- Candidate: `ae75745` (reverted by `4738c51`). It loaded destination length and
+  capacity once, bypassed reserve when spare capacity was proven, and retained the
+  original length through relocation. Optimized no-growth code removed the reserve
+  call exactly as intended. The fixed driver fell to 48.0 million instructions and
+  9.0 million branches (about 27.6% and 18.2% reductions), while streaming cycles
+  remained neutral; these counters establish removed work, not outcome latency.
+- Primary result: failed. Exactly seven alternating Rust 1.97.0 pinned-Linux
+  system-allocator rounds measured 2.7238 ns baseline versus 2.7383 ns candidate
+  for four elements: +0.51% at the paired median, range -3.11%..+2.32%, bootstrap
+  interval -0.05%..+0.87%. The required result was at least 10% faster with the
+  complete interval below zero.
+- Secondary/control result: 1,024 elements were neutral at -0.04% with interval
+  -0.18%..+0.48%. Unchanged Vec was also neutral at both sizes. The focused binary
+  measured JackVec only about 3.45% slower than Vec at four elements, versus 33.4%
+  in the five-implementation binary. This reproduces the repository's established
+  sub-nanosecond code/link-layout sensitivity and invalidates the larger ratio as
+  a stable representation gap.
+- Size/mechanism result: the candidate hot Criterion monomorph shrank 232 bytes,
+  but whole ELF `.text` grew 240 bytes through unrelated layout decisions. Since
+  actual wall time did not improve, neither removed instructions nor local shrinkage
+  justify retaining another append path.
+- Decision: revert without adding a four-element specialization or extending the
+  experiment after its primary failure. Keep the accepted bulk append. Treat the
+  cross-suite four-element point as codegen-sensitive diagnostic data, not a clear
+  optimization target. Artifact:
+  `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-append-small-audit-20260712`.
 
 ### Compact-header data alignment (`perf/iteration-audit`)
 
@@ -198,8 +278,9 @@ header alignment without a new real-workload counterexample.
   not as the intended system-allocator baseline. The runner now requires an
   explicit allocator policy, records inherited/effective injection variables,
   clears both Linux and macOS injection variables for `system`, and rejects a
-  cross-platform pair without that policy. Replace—not relabel—the Linux baseline
-  with a clean system-allocator run.
+  cross-platform pair without that policy. The clean system-allocator replacement
+  landed in PR #4; a future canonical pair will rerun both hosts at one `main`
+  commit rather than relabeling either historical report.
 - Hypothesis: a reconstructable layout that preserves 16-byte data alignment can
   recover vectorized traversal and other bulk-loop throughput. A universal
   16-byte header is only a diagnostic control because it gives back JackVec's
@@ -229,8 +310,8 @@ header alignment without a new real-workload counterexample.
   commit `2da08ee`, Rust 1.97.0, five rotations, 100% minimum pinned-core idle,
   maximum audited one-minute load 1.18, and no host issues. JackVec records eight
   confidence-qualified wins, five equivalents, three inconclusive results, and
-  six losses versus Vec. The next credible CPU target is four-element append,
-  followed by `retain<u64>`.
+  six losses versus Vec. The four-element append follow-up was later rejected;
+  the next credible CPU target is `retain<u64>`.
 
 ### Guarded `Splice` fill (`perf/splice-fill-guard`)
 
@@ -369,7 +450,7 @@ header alignment without a new real-workload counterexample.
 
 ### Adversarial safety and repository hardening (`main`)
 
-- Status: first correction set accepted; deeper panic/performance loop active
+- Status: accepted; follow-up performance findings were completed independently
 - Safety audit: no confirmed memory-safety defect in allocation layout, provenance,
   singleton/ZST handling, conversions, mutation guards, or iterator repair.
 - Range correction: `split_off` now validates before subtracting. `drain`, `splice`,
@@ -392,9 +473,9 @@ header alignment without a new real-workload counterexample.
   fixed MSRV, and one dated nightly shared by unstable tests and Miri.
 - Benchmark correction: allocator-usable documentation matches the CSV and Linux
   `malloc_usable_size` is restricted to the tested GNU environment.
-- Next: add focused unwind-state tests, then isolate the evidenced two-move
-  `swap_remove` and fully-consumed `IntoIter::drop` opportunities as separately
-  pre-registered performance experiments.
+- Follow-up outcome: focused unwind-state tests landed; the two-move
+  `swap_remove` experiment was accepted and the fully-consumed `IntoIter::drop`
+  fast path was measured and rejected.
 
 ### Tagged small-length cache (`perf/tagged-small-length`)
 
@@ -455,8 +536,8 @@ header alignment without a new real-workload counterexample.
 
 ### Nested metadata scan (`benchmarks/metadata-scan`)
 
-- Status: accepted as a permanent high-signal benchmark; generalized pointer
-  tagging rejected, macOS-specific prototype eligible
+- Status: accepted as a permanent high-signal benchmark; generalized and
+  macOS-motivated pointer-tagging prototypes rejected
 - Baseline commit: `48ddf42`
 - Question: does JackVec's allocation-header metadata access create enough cost in
   an empty-heavy recursive workload to justify investigating a cached/tagged
@@ -1792,7 +1873,8 @@ header alignment without a new real-workload counterexample.
 
 ### Post-append implementation audit
 
-- Status: research complete; splice finding implemented, later candidates pending
+- Status: complete; splice, retain, dedup, extend, resize, clone, and truncate
+  candidates all reached recorded accept/reject decisions
 - Highest-confidence finding: `Drain::move_tail`, used by `splice`, passes
   `end + tail + additional` to `ThinVec::reserve`. `reserve` interprets its
   argument as elements additional to the vector's current initialized prefix,
@@ -1802,9 +1884,8 @@ header alignment without a new real-workload counterexample.
   cannot copy that expression directly through its public reserve API.
 - Outcome: corrected and validated on `perf/splice-reserve`; retain this paragraph as
   the audit trail that led to the change, not as an outstanding task.
-- Next generalized candidates: guarded hole/backshift algorithms for
-  `retain_mut` and `dedup_by`, one-shot length publication for bulk extension,
-  and slice-tail destruction in `truncate`.
+- Follow-up outcome: guarded `retain_mut` and `dedup_by`, guarded bulk extension,
+  and guarded resize were accepted; slice-tail truncate was measured and rejected.
 - Measurement finding: Criterion's time-based profiling mode performs a
   different number of operations for implementations with different throughput.
   Raw `perf stat` totals from those runs are therefore not comparable. Hardware
@@ -1863,21 +1944,21 @@ header alignment without a new real-workload counterexample.
 
 ### Representation and requested memory
 
-On the measured 64-bit targets:
+On the corrected 64-bit Linux system-allocator baseline:
 
-| Property | `Vec<T>` | `ThinVec<T>` |
-|---|---:|---:|
-| Owner size | 24 B | 8 B |
-| Native nonempty header | 0 B | 16 B |
-| Empty allocation | none | none; shared singleton |
+| Property | `Vec<T>` | `JackVec<T>` | upstream `ThinVec<T>` |
+|---|---:|---:|---:|
+| Owner size | 24 B | 8 B | 8 B |
+| Native nonempty header | 0 B | 8 B | 16 B |
+| Empty allocation | none | none; shared singleton | none; shared singleton |
 
 For 10,000 nested `u64` containers:
 
-| Workload | `Vec` requested bytes | `ThinVec` requested bytes | Result |
-|---|---:|---:|---:|
-| Empty | 240,000 | 80,000 | ThinVec uses 67% less |
-| Sparse | 304,000 | 176,000 | ThinVec uses 42% less |
-| Four elements each | 560,000 | 560,000 | Equal |
+| Workload | `Vec` requested | `JackVec` requested | `ThinVec` requested | JackVec usable |
+|---|---:|---:|---:|---:|
+| Empty | 240,000 B | 80,000 B | 80,000 B | 80,008 B |
+| Sparse | 304,000 B | 160,000 B | 176,000 B | 160,008 B |
+| Four elements each | 560,000 B | 480,000 B | 560,000 B | 480,024 B |
 
 Requested bytes are not allocator usable size or RSS. The allocation runner also
 asserts that every workload returns to zero live requested bytes after drop.
@@ -2046,8 +2127,8 @@ preserve their evidence here.
 - [x] Pin remote CPU measurements to one physical core/cache domain.
 - [x] Add a metadata-only nested scan for `len` and `is_empty`; keep `capacity`
   excluded because it tests a different mechanism and is lower-frequency.
-- [ ] Add exact growth-transition cases only where needed by a growth experiment.
-- [ ] Add requested bytes copied and pointer-stayed versus pointer-moved reallocs.
+- Historical proposal: Add exact growth-transition cases only where needed by a growth experiment.
+- Historical proposal: Add requested bytes copied and pointer-stayed versus pointer-moved reallocs.
 - [x] Add allocator usable-byte diagnostics on macOS and glibc Linux.
 - [x] Record rustc commit, target, CPU, OS, allocator, and governor with retained
   benchmark artifacts automatically.
@@ -2057,14 +2138,14 @@ preserve their evidence here.
   worktrees, alternates their order, and retains raw per-round artifacts.
 - [x] Measure same-binary timing repeatability for the pinned Linux 1,024-element
   push lane after eliminating stable child-visible labels.
-- [ ] Establish same-binary noise for the fixed-work counter lane.
+- Historical proposal: Establish same-binary noise for the fixed-work counter lane.
 - [x] Retrospectively revalidate push wall time, allocation behavior, codegen, and
   code size against its exact parent under the experimental protocol.
 - [x] Retrospectively revalidate append wall time and focused codegen against its
   exact parent, recording the whole-binary text tradeoff.
-- [ ] Treat the smallest push results as provisional superiority claims until
+- Historical proposal: Treat the smallest push results as provisional superiority claims until
   disassembly and independent paired rounds rule out sub-nanosecond artifacts.
-- [ ] Re-establish allocator-labelled baselines with preload explicitly controlled;
+- Historical proposal: Re-establish allocator-labelled baselines with preload explicitly controlled;
   the builder host injects tcmalloc globally, so prior “glibc” labels are invalid.
 
 Keep new benchmarks scarce. A benchmark must distinguish a concrete design choice
@@ -2077,14 +2158,14 @@ before combining it with another optimization.
 
 ### Push fast path
 
-- [ ] Add a focused assembly wrapper for no-growth push on x86-64 and AArch64.
+- Historical proposal: Add a focused assembly wrapper for no-growth push on x86-64 and AArch64.
 - [x] Combine length and capacity retrieval where both are required.
 - [x] Remove redundant header reads between `push` and `push_unchecked`.
 - [x] Outline `grow_one` into a cold, non-inlined slow path.
 - [x] Confirm the common path contains only state load, capacity branch, element
   write, and length publication.
 - [x] Measure paired wall time, hot-function bytes, and total code size.
-- [ ] Measure fixed-work instructions and cycles only if required for upstream
+- Historical proposal: Measure fixed-work instructions and cycles only if required for upstream
   submission; do not add a permanent benchmark solely for this purpose.
 
 ### Bulk operations
@@ -2140,52 +2221,54 @@ before combining it with another optimization.
 - [x] Remove AutoThinVec and its stack-buffer ownership model.
 - [x] Remove Gecko-only tests, documentation, feature flags, and CI lanes.
 
-## P1: spiritual-successor prototype
+## Historical spiritual-successor proposal (superseded)
 
-Use a separate experimental type until representation, safety, and performance are
-proven. Do not silently alter ThinVec's stable native layout.
+This proposal produced JackVec's current compact owner/header, direct exact
+construction, and rejected generalized builder. Remaining variants moved into the
+active evidence-gated roadmap; none of the checkboxes in this archival section are
+actionable.
 
-### Compact final representation
+### Compact final representation — completed as JackVec
 
-- [ ] Prototype a one-word `LeanVec<T>` owner.
-- [ ] Prototype an 8-byte common header: `{ len: u32, cap: u32 }`.
-- [ ] Evaluate an explicitly compact-only type versus a tagged rare wide-header
+- Historical proposal: Prototype a one-word `LeanVec<T>` owner.
+- Historical proposal: Prototype an 8-byte common header: `{ len: u32, cap: u32 }`.
+- Historical proposal: Evaluate an explicitly compact-only type versus a tagged rare wide-header
   fallback for capacities beyond `u32::MAX`.
-- [ ] Preserve the singleton, slice surface, Option niche, Send/Sync behavior, and
+- Historical proposal: Preserve the singleton, slice surface, Option niche, Send/Sync behavior, and
   exact deallocation layout.
-- [ ] Measure requested and usable bytes across `u8`, `u64`, AST-sized, and
+- Historical proposal: Measure requested and usable bytes across `u8`, `u64`, AST-sized, and
   over-aligned elements around allocator size-class boundaries.
 
-### Transient builder
+### Transient builder — generalized prototype rejected
 
-- [ ] Prototype `LeanVecBuilder<T>` with pointer, length, and capacity inline.
-- [ ] Keep builder length/capacity in registers during repeated pushes.
-- [ ] Allocate the final prefix header from the start so finalization can transfer
+- Historical proposal: Prototype `LeanVecBuilder<T>` with pointer, length, and capacity inline.
+- Historical proposal: Keep builder length/capacity in registers during repeated pushes.
+- Historical proposal: Allocate the final prefix header from the start so finalization can transfer
   ownership without moving elements.
-- [ ] Publish final header state once in `finish()`.
-- [ ] Ensure builder Drop handles partially initialized elements and parse errors.
-- [ ] Preserve mutation on the final `LeanVec`; the builder optimizes the common
+- Historical proposal: Publish final header state once in `finish()`.
+- Historical proposal: Ensure builder Drop handles partially initialized elements and parse errors.
+- Historical proposal: Preserve mutation on the final `LeanVec`; the builder optimizes the common
   construction phase without freezing the public collection.
-- [ ] Compare builder push against both current ThinVec and Vec at 1, 4, and 1,024.
+- Historical proposal: Compare builder push against both current ThinVec and Vec at 1, 4, and 1,024.
 
-### Exact construction
+### Exact construction — array and macro paths accepted; broader API deferred
 
-- [ ] Add guarded `one`, `two`, `from_array`, and `from_fn` constructors.
-- [ ] Centralize partial-initialization panic guards using `MaybeUninit`.
-- [ ] Never trust safe `ExactSizeIterator` as an unsafe initialization guarantee.
-- [ ] Evaluate fixed-arity one-word `HeapArray<T, N>` only for true arity invariants.
+- Historical proposal: Add guarded `one`, `two`, `from_array`, and `from_fn` constructors.
+- Historical proposal: Centralize partial-initialization panic guards using `MaybeUninit`.
+- Historical proposal: Never trust safe `ExactSizeIterator` as an unsafe initialization guarantee.
+- Historical proposal: Evaluate fixed-arity one-word `HeapArray<T, N>` only for true arity invariants.
 
-## P2: situational successor experiments
+## Historical situational successor proposals
 
 These are evidence-gated and should not complicate the baseline type until a real
 workload demonstrates a win.
 
 ### Builder-only inline scratch
 
-- [ ] Collect real final-length histograms before choosing an inline count.
-- [ ] Prototype builder scratch counts 2 and 4; do not put inline elements in the
+- Historical proposal: Collect real final-length histograms before choosing an inline count.
+- Historical proposal: Prototype builder scratch counts 2 and 4; do not put inline elements in the
   final collection.
-- [ ] Measure stack size, spill rate, copy cost, final retained bytes, and full parse
+- Historical proposal: Measure stack size, spill rate, copy cost, final retained bytes, and full parse
   time for AST-sized elements.
 
 ### Pointer-tagged cached length
@@ -2199,17 +2282,17 @@ workload demonstrates a win.
 
 ### Canonical capacity classes
 
-- [ ] Compare a packed `len + capacity-class` header with direct `u32 len/cap`.
-- [ ] Ensure the class reconstructs the exact requested allocation layout.
-- [ ] Measure spare capacity, moved reallocations, usable bytes, and growth CPU
+- Historical proposal: Compare a packed `len + capacity-class` header with direct `u32 len/cap`.
+- Historical proposal: Ensure the class reconstructs the exact requested allocation layout.
+- Historical proposal: Measure spare capacity, moved reallocations, usable bytes, and growth CPU
   across macOS malloc, glibc, and mimalloc.
 
 ### Caller-informed construction policy
 
-- [ ] Keep policy in the builder or construction call, not the final public type.
-- [ ] Evaluate exact, singleton-biased, small-list, and geometric growth policies
+- Historical proposal: Keep policy in the builder or construction call, not the final public type.
+- Historical proposal: Evaluate exact, singleton-biased, small-list, and geometric growth policies
   against measured final-length distributions.
-- [ ] Avoid per-vector stateful allocators and unchecked allocator usable-size
+- Historical proposal: Avoid per-vector stateful allocators and unchecked allocator usable-size
   capacity.
 
 ## sqlparsers proving workload
@@ -2232,39 +2315,39 @@ Verified characteristics:
   most of the benefit, leaving about 3.5-4.6% unique gain with significant ownership
   and safe-clone complications.
 
-Tasks:
+Historical task decomposition (superseded by active P3):
 
-- [ ] Add corpus instrumentation for per-field `(len, capacity)` histograms.
-- [ ] Record empty, 1, 2, 3, 4, 5-8, and greater-than-8 buckets.
-- [ ] Attribute allocations, reallocations, requested bytes, and retained capacity to
+- Historical proposal: Add corpus instrumentation for per-field `(len, capacity)` histograms.
+- Historical proposal: Record empty, 1, 2, 3, 4, 5-8, and greater-than-8 buckets.
+- Historical proposal: Attribute allocations, reallocations, requested bytes, and retained capacity to
   child-list construction rather than aggregate parser totals.
-- [ ] Record mutation-after-parse frequency for public visitor/rewriter workflows.
-- [ ] Patch sqlparsers to use `LeanVecBuilder` internally while keeping final fields
+- Historical proposal: Record mutation-after-parse frequency for public visitor/rewriter workflows.
+- Historical proposal: Patch sqlparsers to use `LeanVecBuilder` internally while keeping final fields
   one word and mutation-capable.
-- [ ] Run its existing wall-time, deterministic instruction, allocation, retained
+- Historical proposal: Run its existing wall-time, deterministic instruction, allocation, retained
   memory, node-size, render, serde, and Miri gates.
-- [ ] Require no regression in traversal or final AST size before adoption.
+- Historical proposal: Require no regression in traversal or final AST size before adoption.
 
 ## Platform diagnostics
 
 ### Linux
 
 - [x] Add optional `malloc_usable_size` reporting as a diagnostic only.
-- [ ] Use `perf stat` for cycles, instructions, branches/misses, cache misses, dTLB
+- Historical proposal: Use `perf stat` for cycles, instructions, branches/misses, cache misses, dTLB
   misses, faults, context switches, and migrations.
-- [ ] Use `perf record` only to attribute demonstrated regressions or wins.
-- [ ] Add a fixed-operation micro-driver before comparing `perf stat` counter
+- Historical proposal: Use `perf record` only to attribute demonstrated regressions or wins.
+- Historical proposal: Add a fixed-operation micro-driver before comparing `perf stat` counter
   totals; Criterion `--profile-time` totals are throughput-dependent.
-- [ ] Compare glibc System allocation with mimalloc and, where relevant,
+- Historical proposal: Compare glibc System allocation with mimalloc and, where relevant,
   mozjemalloc.
 
 ### macOS
 
 - [x] Add optional `malloc_size` reporting and compare requested with usable bytes.
-- [ ] Use `xctrace` Time Profiler and CPU Counters on filtered, already-built
+- Historical proposal: Use `xctrace` Time Profiler and CPU Counters on filtered, already-built
   benchmark executables.
 - [x] Record moved reallocations and size-class transitions.
-- [ ] Keep macOS and Linux baselines separate.
+- [x] Keep macOS and Linux baselines separate.
 
 Hardware counters and allocator instrumentation explain wall-clock results; they do
 not replace clean wall-clock measurements.
@@ -2478,3 +2561,37 @@ general wins.
   class; corrected slow growth requests 9 MiB, saving 7 MiB/43.75%.
 - Added exact boundary tests and left native, ZST, overflow, first-allocation,
   AutoThinVec, and ABI behavior unchanged.
+
+### 2026-07-11: establish JackVec and remove the Gecko compatibility lane
+
+- Renamed the native fork to package `jack-vec`, crate `jack_vec`, type `JackVec`,
+  and macro `jack_vec!` while preserving explicit Mozilla ThinVec attribution.
+- Removed Gecko/nsTArray and AutoThinVec support after native codegen proved
+  unchanged; retained no misleading CPU speedup claim from identical machine code.
+- Moved the canonical repository to `moderately-ai/jack-vec`, enabled lean public
+  OSS protections, and kept crates.io publication mechanically disabled.
+
+### 2026-07-11: accept compact representation and complete mutation experiments
+
+- Reduced the native allocation header from 16 to 8 bytes while preserving its
+  8-byte alignment, one-word owner/Option niche, singleton, and reconstructable
+  layout. Requested memory now beats upstream ThinVec for nonempty nested lists.
+- Accepted guarded retain, dedup, extend, resize, splice fill, two-move
+  `swap_remove`, exact macro construction, and direct ownership conversions where
+  their pre-registered CPU, memory, safety, and code-size gates passed.
+- Rejected generalized builder, cached pointer-tag length, exhausted IntoIter Drop,
+  generalized clone inlining, bulk truncate, and boxed-input delegation after their
+  declared performance or code-size gates failed.
+
+### 2026-07-11: correct the cross-vector comparison baseline
+
+- Added the five-implementation comparison crate, allocation diagnostics, exact
+  toolchain/host validation, deterministic reports and SVGs, and CodSpeed trend CI.
+- Replaced separately monomorphized iteration folds with one shared slice kernel;
+  the corrected 1,024-element result is equivalent across all implementations.
+- Discovered builder-wide tcmalloc injection, required an explicit allocator policy,
+  and replaced the uncontrolled Linux report with a clean system-allocator matrix.
+- Corrected Linux JackVec results are eight confidence-qualified wins, five
+  equivalents, three inconclusive results, and six losses versus Vec. Four-element
+  append was audited next and rejected as an implementation target after its exact-
+  parent candidate was neutral; `retain<u64>` is the next credible CPU target.
