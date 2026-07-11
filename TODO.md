@@ -54,7 +54,8 @@ The central hypothesis is:
 
 ### Nested metadata scan (`benchmarks/metadata-scan`)
 
-- Status: pre-registered; implementation pending
+- Status: accepted as a permanent high-signal benchmark; generalized pointer
+  tagging rejected, macOS-specific prototype eligible
 - Baseline commit: `48ddf42`
 - Question: does JackVec's allocation-header metadata access create enough cost in
   an empty-heavy recursive workload to justify investigating a cached/tagged
@@ -84,6 +85,29 @@ The central hypothesis is:
   length design and therefore could not falsify that mechanism. It was removed
   before committing or running the declared cross-platform measurements. Capacity
   access is a distinct, less common question and does not justify another benchmark.
+- Benchmark commit: `8d1893e`
+- Linux result: seven alternating, pinned Rust 1.86 rounds with allocator preload
+  cleared measured median estimates of 3.9742 microseconds for Vec and 3.9984
+  microseconds for JackVec. JackVec is 0.61% slower; individual paired differences
+  remain roughly 0.5-1.0%, far below the declared 5% prototype threshold.
+- macOS result: seven alternating Rust 1.86 rounds on Apple M4 Max measured median
+  estimates of 1.8643 microseconds for Vec and 3.1859 microseconds for JackVec.
+  JackVec is 70.89% slower. One noisy Vec round reached 2.0293 microseconds, but the
+  large gap persists in every pair and the median excludes that disturbance.
+- Mechanism: focused AArch64 assembly explains the macOS gap. Vec's contiguous
+  three-word records let LLVM process eight lengths per loop with NEON vector
+  compares and additions. JackVec's one-word records require loading four header
+  pointers and then four dependent 32-bit lengths; LLVM can unroll but cannot
+  vectorize the pointer chase. This is a code-generation/layout interaction, not a
+  general claim that header access costs 70% on all CPUs.
+- Decision: retain this single benchmark because it protects a distinct recursive-
+  metadata workload. Reject cached/tagged length as a generalized default: the
+  primary pinned Linux context demonstrates no material headroom. A separately
+  pre-registered, platform-situational prototype may proceed because Apple silicon
+  exceeds the threshold decisively, but it must also prove that pointer masking and
+  tag maintenance do not regress push, traversal, code size, or safety.
+- Artifacts: `benchmark-results/jackvec-metadata-scan-macos-20260711` and
+  `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-metadata-scan-linux-20260711`.
 
 ### Allocator usable-size and reallocation diagnostics (`benchmarks/allocator-usable-size`)
 
@@ -1613,7 +1637,8 @@ preserve their evidence here.
 - [x] Separate preallocated push timing from allocation and destruction.
 - [x] Reduce operation sizes to high-signal points: 1, 4, and 1,024.
 - [x] Pin remote CPU measurements to one physical core/cache domain.
-- [ ] Add a metadata-only nested scan: `len`, `is_empty`, and possibly `capacity`.
+- [x] Add a metadata-only nested scan for `len` and `is_empty`; keep `capacity`
+  excluded because it tests a different mechanism and is lower-frequency.
 - [ ] Add exact growth-transition cases only where needed by a growth experiment.
 - [ ] Add requested bytes copied and pointer-stayed versus pointer-moved reallocs.
 - [x] Add allocator usable-byte diagnostics on macOS and glibc Linux.
