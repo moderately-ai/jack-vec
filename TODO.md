@@ -48,11 +48,11 @@ decision is reached.
 
 ### P1: credible JackVec CPU gaps from the corrected Linux matrix
 
-- [ ] Audit four-element append (`1.334x Vec`, `0.863x ThinVec`) first. Separate
-  unavoidable one-word-header setup from avoidable reserve, branch, and relocation
-  overhead using same-binary controls, assembly, fixed-work counters, allocation
-  parity, and code size. Preserve the accepted large append (`1.020x Vec`,
-  `0.313x ThinVec`).
+- [x] Audit four-element append. Hoisting no-growth state removed 27.6% of
+  fixed-driver instructions but produced no exact-parent wall-time improvement and
+  was reverted. The focused JackVec/Vec gap was about 3.45%, not the five-library
+  binary's code-layout-sensitive 33.4%; preserve this as a benchmark interpretation
+  warning rather than manufacturing a specialized implementation.
 - [ ] Audit `retain<u64>` (`1.245x Vec`, `0.972x ThinVec`) while preserving panic
   repair, exact-once drops, and the accepted large-element improvement. Determine
   whether predicate-loop/header publication overhead remains avoidable.
@@ -178,7 +178,7 @@ header alignment without a new real-workload counterexample.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
-- Status: active; diagnostic/codegen phase
+- Status: rejected; implementation and temporary diagnostic reverted
 - Baseline commit: `a6a034a` (implementation identical to canonical `55ea7c3`;
   ledger cleanup only)
 - Observation: the corrected Linux system-allocator matrix measures JackVec at
@@ -220,6 +220,37 @@ header alignment without a new real-workload counterexample.
   passes. Otherwise revert implementation and temporary diagnostics while keeping
   the negative result here. Do not add a `len == 4` branch unless the pre-change
   assembly proves runtime copy dispatch is the dominant avoidable mechanism.
+- Pre-change codegen: a forced no-inline JackVec wrapper calls the complete reserve
+  routine on the preallocated hot path, then reloads destination pointer/length
+  before `memcpy`; Vec keeps its capacity check in the caller. A one-million-pair
+  fixed-operation driver measured roughly 66.3 million JackVec instructions and
+  11.0 million branches versus 49.0 million and 9.0 million for Vec.
+- Candidate: `ae75745` (reverted by `4738c51`). It loaded destination length and
+  capacity once, bypassed reserve when spare capacity was proven, and retained the
+  original length through relocation. Optimized no-growth code removed the reserve
+  call exactly as intended. The fixed driver fell to 48.0 million instructions and
+  9.0 million branches (about 27.6% and 18.2% reductions), while streaming cycles
+  remained neutral; these counters establish removed work, not outcome latency.
+- Primary result: failed. Exactly seven alternating Rust 1.97.0 pinned-Linux
+  system-allocator rounds measured 2.7238 ns baseline versus 2.7383 ns candidate
+  for four elements: +0.51% at the paired median, range -3.11%..+2.32%, bootstrap
+  interval -0.05%..+0.87%. The required result was at least 10% faster with the
+  complete interval below zero.
+- Secondary/control result: 1,024 elements were neutral at -0.04% with interval
+  -0.18%..+0.48%. Unchanged Vec was also neutral at both sizes. The focused binary
+  measured JackVec only about 3.45% slower than Vec at four elements, versus 33.4%
+  in the five-implementation binary. This reproduces the repository's established
+  sub-nanosecond code/link-layout sensitivity and invalidates the larger ratio as
+  a stable representation gap.
+- Size/mechanism result: the candidate hot Criterion monomorph shrank 232 bytes,
+  but whole ELF `.text` grew 240 bytes through unrelated layout decisions. Since
+  actual wall time did not improve, neither removed instructions nor local shrinkage
+  justify retaining another append path.
+- Decision: revert without adding a four-element specialization or extending the
+  experiment after its primary failure. Keep the accepted bulk append. Treat the
+  cross-suite four-element point as codegen-sensitive diagnostic data, not a clear
+  optimization target. Artifact:
+  `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-append-small-audit-20260712`.
 
 ### Compact-header data alignment (`perf/iteration-audit`)
 
@@ -279,8 +310,8 @@ header alignment without a new real-workload counterexample.
   commit `2da08ee`, Rust 1.97.0, five rotations, 100% minimum pinned-core idle,
   maximum audited one-minute load 1.18, and no host issues. JackVec records eight
   confidence-qualified wins, five equivalents, three inconclusive results, and
-  six losses versus Vec. The next credible CPU target is four-element append,
-  followed by `retain<u64>`.
+  six losses versus Vec. The four-element append follow-up was later rejected;
+  the next credible CPU target is `retain<u64>`.
 
 ### Guarded `Splice` fill (`perf/splice-fill-guard`)
 
@@ -2561,5 +2592,6 @@ general wins.
 - Discovered builder-wide tcmalloc injection, required an explicit allocator policy,
   and replaced the uncontrolled Linux report with a clean system-allocator matrix.
 - Corrected Linux JackVec results are eight confidence-qualified wins, five
-  equivalents, three inconclusive results, and six losses versus Vec. The first
-  remaining audit target is four-element append.
+  equivalents, three inconclusive results, and six losses versus Vec. Four-element
+  append was audited next and rejected as an implementation target after its exact-
+  parent candidate was neutral; `retain<u64>` is the next credible CPU target.
