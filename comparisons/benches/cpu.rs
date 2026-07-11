@@ -170,17 +170,17 @@ fn push_preallocated(c: &mut Criterion) {
     group.finish();
 }
 
+#[inline(never)]
+fn sum_u64_slice(values: &[u64]) -> u64 {
+    values
+        .iter()
+        .fold(0_u64, |sum, value| sum.wrapping_add(*value))
+}
+
 fn bench_iteration<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>, len: usize) {
     let values = build_reserved::<V>(len);
     group.bench_function(BenchmarkId::new(V::LABEL, len), |bencher| {
-        bencher.iter(|| {
-            black_box(
-                values
-                    .as_slice()
-                    .iter()
-                    .fold(0_u64, |sum, value| sum.wrapping_add(*value)),
-            )
-        });
+        bencher.iter(|| black_box(sum_u64_slice(black_box(values.as_slice()))));
     });
 }
 

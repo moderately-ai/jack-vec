@@ -93,6 +93,14 @@ The central hypothesis is:
   billion for aligned Vec. Instructions were effectively equal; IPC fell from
   6.2 to 4.6--4.7. This proves the 1,024-element iteration loss is data alignment,
   not generic header indirection or Criterion noise.
+- Harness finding: a seven-round two-binary 16-byte-header control was invalidated
+  by its unchanged Vec control: Vec/1024 shifted from about 102 ns in the baseline
+  binary to 59 ns in the candidate, while JackVec shifted in the opposite
+  direction. The generic benchmark emitted a separately optimized fold kernel per
+  implementation, making instruction/code placement part of the apparent vector
+  comparison (and explaining the implausible spilled SmallVec4/SmallVec8 split).
+  The permanent benchmark must call one shared, non-inlined slice kernel so real
+  data alignment remains measured without comparing five different loop bodies.
 - Hypothesis: a reconstructable layout that preserves 16-byte data alignment can
   recover vectorized traversal and other bulk-loop throughput. A universal
   16-byte header is only a diagnostic control because it gives back JackVec's
