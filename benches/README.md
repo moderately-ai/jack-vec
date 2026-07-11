@@ -1,9 +1,14 @@
 # Performance benchmarks
 
-The suite compares `JackVec<u64>` with `Vec<u64>` along the dimensions affected by
-their different representations. It deliberately does not benchmark every method:
-most higher-level operations delegate to slices and would not isolate the tradeoff
-this crate makes.
+The suite compares `JackVec` against a matrix of alternative representations along
+the dimensions affected by their different layouts: the standard `Vec`, `ThinVec`,
+and `SmallVec` with inline capacities of 4 (`SmallVec4`) and 8 (`SmallVec8`)
+elements. It deliberately does not benchmark every method: most higher-level
+operations delegate to slices and would not isolate the tradeoff this crate makes.
+
+The conversion benchmarks (`jack_into_vec`, `jack_into_box`, `vec_into_jack`, and
+`array_into_jack`) remain `JackVec`/`Vec`-specific because they exercise `From`
+impls that only exist between those two types.
 
 ## CPU benchmarks
 

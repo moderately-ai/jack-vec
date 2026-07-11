@@ -27,8 +27,11 @@ jobs:
           cache-target: release
           bins: cargo-codspeed
 
+      # Only the Criterion `cpu` suite is instrumented. The `allocations`
+      # benchmark is a standalone allocation-accounting binary that produces no
+      # CodSpeed benchmarks, so it is deliberately excluded here.
       - name: Build the benchmark target(s)
-        run: cargo codspeed build
+        run: cargo codspeed build --bench cpu
 
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v4

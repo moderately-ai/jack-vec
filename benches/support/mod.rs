@@ -1,4 +1,8 @@
+use std::ops::{Deref, DerefMut};
+
 use jack_vec::JackVec;
+use smallvec::SmallVec;
+use thin_vec::ThinVec;
 
 pub const NESTED_VECTOR_COUNT: usize = 10_000;
 pub const OPERATION_SIZES: &[usize] = &[1, 4, 1_024];
@@ -148,6 +152,151 @@ impl<T> BenchVector<T> for JackVec<T> {
         JackVec::as_slice(self)
     }
 }
+
+impl<T> BenchVector<T> for ThinVec<T> {
+    const LABEL: &'static str = "ThinVec";
+
+    fn new() -> Self {
+        Self::new()
+    }
+
+    fn with_capacity(capacity: usize) -> Self {
+        Self::with_capacity(capacity)
+    }
+
+    fn push(&mut self, value: T) {
+        ThinVec::push(self, value);
+    }
+
+    fn append(&mut self, other: &mut Self) {
+        ThinVec::append(self, other);
+    }
+
+    fn retain_mut<F>(&mut self, predicate: F)
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        ThinVec::retain_mut(self, predicate);
+    }
+
+    fn dedup_by<F>(&mut self, same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool,
+    {
+        ThinVec::dedup_by(self, same_bucket);
+    }
+
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
+        Extend::extend(self, iter);
+    }
+
+    fn resize(&mut self, new_len: usize, value: T)
+    where
+        T: Clone,
+    {
+        ThinVec::resize(self, new_len, value);
+    }
+
+    fn len(&self) -> usize {
+        ThinVec::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        ThinVec::is_empty(self)
+    }
+
+    fn as_slice(&self) -> &[T] {
+        ThinVec::as_slice(self)
+    }
+}
+
+/// Newtype wrappers give each inline capacity a distinct `LABEL` while sharing
+/// a single `SmallVec` implementation of the benchmark surface.
+macro_rules! small_vec_wrapper {
+    ($name:ident, $inline:literal, $label:literal) => {
+        pub struct $name<T>(SmallVec<[T; $inline]>);
+
+        impl<T> Deref for $name<T> {
+            type Target = SmallVec<[T; $inline]>;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl<T> DerefMut for $name<T> {
+            fn deref_mut(&mut self) -> &mut Self::Target {
+                &mut self.0
+            }
+        }
+
+        impl<T> BenchVector<T> for $name<T> {
+            const LABEL: &'static str = $label;
+
+            fn new() -> Self {
+                Self(SmallVec::new())
+            }
+
+            fn with_capacity(capacity: usize) -> Self {
+                Self(SmallVec::with_capacity(capacity))
+            }
+
+            fn push(&mut self, value: T) {
+                SmallVec::push(&mut self.0, value);
+            }
+
+            fn append(&mut self, other: &mut Self) {
+                SmallVec::append(&mut self.0, &mut other.0);
+            }
+
+            fn retain_mut<F>(&mut self, predicate: F)
+            where
+                F: FnMut(&mut T) -> bool,
+            {
+                SmallVec::retain_mut(&mut self.0, predicate);
+            }
+
+            fn dedup_by<F>(&mut self, same_bucket: F)
+            where
+                F: FnMut(&mut T, &mut T) -> bool,
+            {
+                SmallVec::dedup_by(&mut self.0, same_bucket);
+            }
+
+            fn extend<I>(&mut self, iter: I)
+            where
+                I: IntoIterator<Item = T>,
+            {
+                Extend::extend(&mut self.0, iter);
+            }
+
+            fn resize(&mut self, new_len: usize, value: T)
+            where
+                T: Clone,
+            {
+                SmallVec::resize(&mut self.0, new_len, value);
+            }
+
+            fn len(&self) -> usize {
+                SmallVec::len(&self.0)
+            }
+
+            fn is_empty(&self) -> bool {
+                SmallVec::is_empty(&self.0)
+            }
+
+            fn as_slice(&self) -> &[T] {
+                SmallVec::as_slice(&self.0)
+            }
+        }
+    };
+}
+
+small_vec_wrapper!(SmallVec4, 4, "SmallVec4");
+small_vec_wrapper!(SmallVec8, 8, "SmallVec8");
 
 #[derive(Clone, Copy)]
 pub enum NestedWorkload {

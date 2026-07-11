@@ -37,7 +37,8 @@ assert_eq!(values.as_slice(), &[1, 2, 3]);
 ```
 
 See [`benches/README.md`](benches/README.md) for CPU and allocation benchmarks
-that compare `JackVec` with `Vec`.
+that compare `JackVec` with `Vec`, `ThinVec`, and `SmallVec` (inline capacities 4
+and 8).
 
 ## Lineage and attribution
 

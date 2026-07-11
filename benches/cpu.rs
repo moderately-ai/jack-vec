@@ -10,9 +10,10 @@ use jack_vec::JackVec;
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, nested_metadata_checksum, sum_nested,
-    sum_vector, BenchVector, NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT,
-    OPERATION_SIZES,
+    sum_vector, BenchVector, NestedWorkload, SmallVec4, SmallVec8, APPEND_SIZES, ITERATION_SIZES,
+    NESTED_VECTOR_COUNT, OPERATION_SIZES,
 };
+use thin_vec::ThinVec;
 
 fn bench_nested_construct<V: BenchVector<u64>>(
     group: &mut BenchmarkGroup<'_, WallTime>,
@@ -32,6 +33,9 @@ fn nested_construct(c: &mut Criterion) {
     for workload in NestedWorkload::ALL {
         bench_nested_construct::<Vec<u64>>(&mut group, workload);
         bench_nested_construct::<JackVec<u64>>(&mut group, workload);
+        bench_nested_construct::<ThinVec<u64>>(&mut group, workload);
+        bench_nested_construct::<SmallVec4<u64>>(&mut group, workload);
+        bench_nested_construct::<SmallVec8<u64>>(&mut group, workload);
     }
 
     group.finish();
@@ -54,6 +58,9 @@ fn nested_traverse(c: &mut Criterion) {
     for workload in NestedWorkload::ALL {
         bench_nested_traverse::<Vec<u64>>(&mut group, workload);
         bench_nested_traverse::<JackVec<u64>>(&mut group, workload);
+        bench_nested_traverse::<ThinVec<u64>>(&mut group, workload);
+        bench_nested_traverse::<SmallVec4<u64>>(&mut group, workload);
+        bench_nested_traverse::<SmallVec8<u64>>(&mut group, workload);
     }
 
     group.finish();
@@ -71,6 +78,9 @@ fn nested_metadata_scan(c: &mut Criterion) {
     group.throughput(Throughput::Elements(NESTED_VECTOR_COUNT as u64));
     bench_nested_metadata::<Vec<u64>>(&mut group);
     bench_nested_metadata::<JackVec<u64>>(&mut group);
+    bench_nested_metadata::<ThinVec<u64>>(&mut group);
+    bench_nested_metadata::<SmallVec4<u64>>(&mut group);
+    bench_nested_metadata::<SmallVec8<u64>>(&mut group);
     group.finish();
 }
 
@@ -95,6 +105,19 @@ fn build_growing_and_drop(c: &mut Criterion) {
         group.throughput(Throughput::Elements(len as u64));
         bench_build::<Vec<u64>, _>(&mut group, "Vec", len, build_growing::<Vec<u64>>);
         bench_build::<JackVec<u64>, _>(&mut group, "JackVec", len, build_growing::<JackVec<u64>>);
+        bench_build::<ThinVec<u64>, _>(&mut group, "ThinVec", len, build_growing::<ThinVec<u64>>);
+        bench_build::<SmallVec4<u64>, _>(
+            &mut group,
+            "SmallVec4",
+            len,
+            build_growing::<SmallVec4<u64>>,
+        );
+        bench_build::<SmallVec8<u64>, _>(
+            &mut group,
+            "SmallVec8",
+            len,
+            build_growing::<SmallVec8<u64>>,
+        );
     }
 
     group.finish();
@@ -126,6 +149,9 @@ fn push_preallocated(c: &mut Criterion) {
         group.throughput(Throughput::Elements(len as u64));
         bench_push_preallocated::<Vec<u64>>(&mut group, len);
         bench_push_preallocated::<JackVec<u64>>(&mut group, len);
+        bench_push_preallocated::<ThinVec<u64>>(&mut group, len);
+        bench_push_preallocated::<SmallVec4<u64>>(&mut group, len);
+        bench_push_preallocated::<SmallVec8<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -145,6 +171,9 @@ fn sequential_iteration(c: &mut Criterion) {
         group.throughput(Throughput::Elements(len as u64));
         bench_iteration::<Vec<u64>>(&mut group, len);
         bench_iteration::<JackVec<u64>>(&mut group, len);
+        bench_iteration::<ThinVec<u64>>(&mut group, len);
+        bench_iteration::<SmallVec4<u64>>(&mut group, len);
+        bench_iteration::<SmallVec8<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -175,6 +204,9 @@ fn append_preallocated(c: &mut Criterion) {
         group.throughput(Throughput::Elements(len as u64));
         bench_append::<Vec<u64>>(&mut group, len);
         bench_append::<JackVec<u64>>(&mut group, len);
+        bench_append::<ThinVec<u64>>(&mut group, len);
+        bench_append::<SmallVec4<u64>>(&mut group, len);
+        bench_append::<SmallVec8<u64>>(&mut group, len);
     }
 
     group.finish();
@@ -220,10 +252,16 @@ fn retain_mixed(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1_024));
     bench_retain_u64::<Vec<u64>>(&mut group);
     bench_retain_u64::<JackVec<u64>>(&mut group);
+    bench_retain_u64::<ThinVec<u64>>(&mut group);
+    bench_retain_u64::<SmallVec4<u64>>(&mut group);
+    bench_retain_u64::<SmallVec8<u64>>(&mut group);
 
     group.throughput(Throughput::Elements(256));
     bench_retain_large::<Vec<[u64; 8]>>(&mut group);
     bench_retain_large::<JackVec<[u64; 8]>>(&mut group);
+    bench_retain_large::<ThinVec<[u64; 8]>>(&mut group);
+    bench_retain_large::<SmallVec4<[u64; 8]>>(&mut group);
+    bench_retain_large::<SmallVec8<[u64; 8]>>(&mut group);
 
     group.finish();
 }
@@ -274,10 +312,16 @@ fn dedup_adjacent_pairs(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1_024));
     bench_dedup_u64::<Vec<u64>>(&mut group);
     bench_dedup_u64::<JackVec<u64>>(&mut group);
+    bench_dedup_u64::<ThinVec<u64>>(&mut group);
+    bench_dedup_u64::<SmallVec4<u64>>(&mut group);
+    bench_dedup_u64::<SmallVec8<u64>>(&mut group);
 
     group.throughput(Throughput::Elements(256));
     bench_dedup_large::<Vec<[u64; 8]>>(&mut group);
     bench_dedup_large::<JackVec<[u64; 8]>>(&mut group);
+    bench_dedup_large::<ThinVec<[u64; 8]>>(&mut group);
+    bench_dedup_large::<SmallVec4<[u64; 8]>>(&mut group);
+    bench_dedup_large::<SmallVec8<[u64; 8]>>(&mut group);
 
     group.finish();
 }
@@ -303,6 +347,9 @@ fn extend_reserved(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1_024));
     bench_extend_reserved::<Vec<u64>>(&mut group);
     bench_extend_reserved::<JackVec<u64>>(&mut group);
+    bench_extend_reserved::<ThinVec<u64>>(&mut group);
+    bench_extend_reserved::<SmallVec4<u64>>(&mut group);
+    bench_extend_reserved::<SmallVec8<u64>>(&mut group);
     group.finish();
 }
 
@@ -327,6 +374,9 @@ fn resize_reserved(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1_024));
     bench_resize_reserved::<Vec<u64>>(&mut group);
     bench_resize_reserved::<JackVec<u64>>(&mut group);
+    bench_resize_reserved::<ThinVec<u64>>(&mut group);
+    bench_resize_reserved::<SmallVec4<u64>>(&mut group);
+    bench_resize_reserved::<SmallVec8<u64>>(&mut group);
     group.finish();
 }
 
