@@ -26,20 +26,22 @@ boxes are historical hypotheses, not current commitments. New work starts here,
 is pre-registered in the experiment record, and is removed or checked off when a
 decision is reached.
 
-### P0: complete trustworthy canonical baselines
+### P0: complete trustworthy canonical Linux baseline
 
 - [x] Land the corrected Linux system-allocator matrix, shared iteration kernel,
   explicit allocator provenance, and regenerated visuals in merge commit
   `55ea7c3` (PR #4).
-- [ ] After the four-element append decision lands, select that canonical `main`
-  commit and capture both a clean Ryzen 7950X3D Linux matrix and a clean M4 macOS
-  matrix at the same Git commit, Rust 1.97.0 compiler identity, schema, workload
-  matrix, and explicit `system` allocator policy. The current Linux report records
-  the pre-squash experiment commit and remains valid platform evidence, but is not
-  the final canonical pair anchor.
-- [ ] Validate that Linux/macOS pair and extend the existing `LATEST.md` and SVGs
-  in one reporting change. Preserve each platform's absolute and relative values;
-  never pool platforms.
+- [x] Capture and validate a clean Ryzen 7950X3D Linux matrix from canonical
+  `main` merge commit `2dc82e0`, using Rust 1.97.0 and the explicit `system`
+  allocator policy, then regenerate the Linux-only `LATEST.md` and SVGs.
+- [ ] Deferred: capture the matching macOS matrix only when dedicated,
+  controllable Apple Silicon hardware is available. The local M4 host is not an
+  acceptable canonical source while interactive iTerm2/WindowServer load prevents
+  the runner from satisfying its idle gate. Never bypass that gate with
+  `--allow-host-noise`.
+- [ ] Deferred with macOS: validate the Linux/macOS pair and extend `LATEST.md` and
+  the SVGs without pooling either platform's absolute or relative values. The
+  absence of a macOS result does not block publishing the canonical Linux result.
 - [ ] Enable the already-configured CodSpeed ARM64 macro runner only after public
   repository runner-group access is available; keep it a trend lane, not a
   substitute for physical-host baselines.
@@ -137,7 +139,8 @@ header alignment without a new real-workload counterexample.
   active roadmap; configuration is ready but organization runner-group access and
   `CODSPEED_MACRO_ENABLED=true` remain external prerequisites.
 - [x] Move the matching clean M4 macOS capture and pair validation into the active
-  roadmap; retain full raw rounds outside Git.
+  roadmap; subsequently defer it until dedicated hardware is available, retaining
+  full raw rounds outside Git and publishing no rejected/noisy local result.
 - [x] Move practical-equivalence-band review into the active roadmap with its
   evidence threshold unchanged.
 
@@ -175,6 +178,33 @@ header alignment without a new real-workload counterexample.
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Canonical Linux comparison baseline (`bench/canonical-linux-baseline`)
+
+- Status: complete on Linux; macOS deliberately deferred
+- Source: canonical `main` merge commit
+  `2dc82e0656ba2c3997c4dc2dd26b905ce621bb2f`; Rust 1.97.0
+  (`2d8144b7880597b6e6d3dfd63a9a9efae3f533d3`); explicit system allocator.
+- Linux quality: five balanced rotations pinned to CPU 0 of the Ryzen 7950X3D,
+  all twelve runtime audits at 100% idle, maximum audited one-minute load 1.13,
+  no busy processes or host issues, and the performance governor restored to
+  `schedutil` afterward. The runner cleared the builder's inherited tcmalloc
+  `LD_PRELOAD`; the recorded effective injection is null.
+- Integrity: 110 CPU rows and 60 allocation rows; every allocation has zero
+  requested/usable bytes after drop and every reallocation count equals its moved
+  plus in-place counts. Reporting tests and deterministic regeneration pass.
+- Result: JackVec has seven confidence-qualified wins, five equivalents, four
+  inconclusive results, and six losses versus Vec. Empty and sparse nested
+  requested heap are 0.333x and 0.526x Vec. This remains a situational density
+  design with targeted CPU wins, not an across-the-board faster Vec.
+- Rejected macOS capture: the local M4 runner correctly refused to proceed when
+  iTerm2 and WindowServer each sustained roughly 28% CPU and two consecutive
+  >=90% idle samples could not be obtained. No local macOS result is authoritative
+  or published. Retry only on dedicated controllable hardware; never use
+  `--allow-host-noise` to manufacture a pair.
+- Decision: publish the canonical Linux result and Linux-only graphics now.
+  Cross-platform validation and graphics remain deferred and do not block Linux
+  performance work; the next credible implementation audit is `retain<u64>`.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 

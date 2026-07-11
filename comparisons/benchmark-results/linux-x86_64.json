@@ -1386,7 +1386,7 @@
       "benchmark": "append_preallocated/1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 160.17291554599245,
+      "median_ns": 159.1217759252242,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1395,53 +1395,53 @@
     },
     {
       "benchmark": "append_preallocated/1024",
-      "classification": "inconclusive",
+      "classification": "equivalent",
       "implementation": "JackVec",
-      "median_ns": 163.41215927995563,
+      "median_ns": 163.07525993351885,
       "ratio_ci95": [
-        1.0174369059337276,
-        1.032576992134615
+        1.0227353030869633,
+        1.0287631126126113
       ],
-      "ratio_to_vec": 1.0184187823291182
+      "ratio_to_vec": 1.0250212207474763
     },
     {
       "benchmark": "append_preallocated/1024",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 521.5983660688614,
+      "median_ns": 524.0696715049656,
       "ratio_ci95": [
-        3.205042459741613,
-        3.2733062679932505
+        3.237308243576225,
+        3.3066383422675236
       ],
-      "ratio_to_vec": 3.270540728322082
+      "ratio_to_vec": 3.279184424434133
     },
     {
       "benchmark": "append_preallocated/1024",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 210.06355780443113,
+      "median_ns": 207.89942980592153,
       "ratio_ci95": [
-        1.285069602602837,
-        1.3197121808236052
+        1.3020981844671782,
+        1.3192550410056465
       ],
-      "ratio_to_vec": 1.3161057696941427
+      "ratio_to_vec": 1.3075781214438398
     },
     {
       "benchmark": "append_preallocated/1024",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 196.38371067333136,
+      "median_ns": 197.3592128890662,
       "ratio_ci95": [
-        1.2166573980987048,
-        1.2404888958272693
+        1.229104297537234,
+        1.2458775102176851
       ],
-      "ratio_to_vec": 1.2313706597220364
+      "ratio_to_vec": 1.23844244233301
     },
     {
       "benchmark": "append_preallocated/4",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 2.794042511351854,
+      "median_ns": 2.7731093072648454,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1452,51 +1452,51 @@
       "benchmark": "append_preallocated/4",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 3.7279018878624495,
+      "median_ns": 3.6679762923617525,
       "ratio_ci95": [
-        1.2998381645838382,
-        1.348250833819429
+        1.310617489776436,
+        1.3649267839178418
       ],
-      "ratio_to_vec": 1.3295881265237688
+      "ratio_to_vec": 1.313110188901033
     },
     {
       "benchmark": "append_preallocated/4",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 4.317646302632596,
+      "median_ns": 4.330914960074119,
       "ratio_ci95": [
-        1.5384064135976976,
-        1.556552391394826
+        1.549069070721944,
+        1.5965910700353079
       ],
-      "ratio_to_vec": 1.5508539310268377
+      "ratio_to_vec": 1.5603399154052995
     },
     {
       "benchmark": "append_preallocated/4",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 5.721821243042672,
+      "median_ns": 5.728884385640866,
       "ratio_ci95": [
-        2.0311587336677026,
-        2.0610830166515597
+        2.0440380140781995,
+        2.1087843320700683
       ],
-      "ratio_to_vec": 2.047424616578168
+      "ratio_to_vec": 2.0668551134673447
     },
     {
       "benchmark": "append_preallocated/4",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 5.704092315013086,
+      "median_ns": 5.739447840444993,
       "ratio_ci95": [
-        2.019313623974253,
-        2.147839573022315
+        2.0470483294232618,
+        2.167444197590498
       ],
-      "ratio_to_vec": 2.048839037023854
+      "ratio_to_vec": 2.077192474331007
     },
     {
       "benchmark": "build_growing_and_drop/1",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 11.49125557811567,
+      "median_ns": 11.529056453009172,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1505,53 +1505,53 @@
     },
     {
       "benchmark": "build_growing_and_drop/1",
-      "classification": "win",
+      "classification": "inconclusive",
       "implementation": "JackVec",
-      "median_ns": 10.90502352419615,
+      "median_ns": 10.96729095630069,
       "ratio_ci95": [
-        0.916597021986322,
-        0.9586379226515621
+        0.9115769833411566,
+        0.9742980536065873
       ],
-      "ratio_to_vec": 0.947078976091108
+      "ratio_to_vec": 0.9482776925075164
     },
     {
       "benchmark": "build_growing_and_drop/1",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 10.516007626652433,
+      "median_ns": 10.678908952347218,
       "ratio_ci95": [
-        0.8817160245995838,
-        0.940018196108239
+        0.8926096193804921,
+        0.9380984437685
       ],
-      "ratio_to_vec": 0.9065650545806921
+      "ratio_to_vec": 0.9283521044500348
     },
     {
       "benchmark": "build_growing_and_drop/1",
       "classification": "win",
       "implementation": "SmallVec4",
-      "median_ns": 2.054063187652905,
+      "median_ns": 2.055141371341366,
       "ratio_ci95": [
-        0.17721465149384796,
-        0.17959277562134834
+        0.17175690654034112,
+        0.17945413883067138
       ],
-      "ratio_to_vec": 0.17903169414751302
+      "ratio_to_vec": 0.17812172932666473
     },
     {
       "benchmark": "build_growing_and_drop/1",
       "classification": "win",
       "implementation": "SmallVec8",
-      "median_ns": 3.2126024967165643,
+      "median_ns": 3.206554448121352,
       "ratio_ci95": [
-        0.27463237587239103,
-        0.2827137473137171
+        0.26317186205773374,
+        0.28018187751031887
       ],
-      "ratio_to_vec": 0.27819636864116604
+      "ratio_to_vec": 0.27320933538961806
     },
     {
       "benchmark": "build_growing_and_drop/1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 699.8556263101061,
+      "median_ns": 718.9990207773076,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1560,53 +1560,53 @@
     },
     {
       "benchmark": "build_growing_and_drop/1024",
-      "classification": "inconclusive",
+      "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 611.9267177502354,
+      "median_ns": 600.4655617253983,
       "ratio_ci95": [
-        0.7846572747242015,
-        1.0690000187158102
+        0.8027450489740046,
+        0.9096039309447914
       ],
-      "ratio_to_vec": 0.8743613607516968
+      "ratio_to_vec": 0.9036270142488732
     },
     {
       "benchmark": "build_growing_and_drop/1024",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 557.1906354630892,
+      "median_ns": 591.5381634358589,
       "ratio_ci95": [
-        0.7629267218885628,
-        0.9683829873165666
+        0.7642164229001129,
+        0.9538106755504159
       ],
-      "ratio_to_vec": 0.8044861920403531
+      "ratio_to_vec": 0.8676517136999049
     },
     {
       "benchmark": "build_growing_and_drop/1024",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 933.8900403355245,
+      "median_ns": 1023.2415890522875,
       "ratio_ci95": [
-        1.3253172103064097,
-        1.6187553115955446
+        1.2072035263135883,
+        1.6982740100484117
       ],
-      "ratio_to_vec": 1.4759713886835248
+      "ratio_to_vec": 1.4304962651868716
     },
     {
       "benchmark": "build_growing_and_drop/1024",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 929.4838285314125,
+      "median_ns": 962.888007149699,
       "ratio_ci95": [
-        1.2779233213612182,
-        1.4946731155732673
+        1.3053054141661975,
+        1.519636885136893
       ],
-      "ratio_to_vec": 1.4317821180831225
+      "ratio_to_vec": 1.3511798490264182
     },
     {
       "benchmark": "build_growing_and_drop/4",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 12.383364879414792,
+      "median_ns": 12.49788556748803,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1617,51 +1617,51 @@
       "benchmark": "build_growing_and_drop/4",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 11.622488064558572,
+      "median_ns": 11.777901455020174,
       "ratio_ci95": [
-        0.9220824764418566,
-        0.9401101543000395
+        0.9005861598552767,
+        0.9519790274657892
       ],
-      "ratio_to_vec": 0.9379327468546215
+      "ratio_to_vec": 0.9516009757718712
     },
     {
       "benchmark": "build_growing_and_drop/4",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 11.3678848989573,
+      "median_ns": 11.486747524296103,
       "ratio_ci95": [
-        0.9085117293280376,
-        0.9543182581035011
+        0.880165610151821,
+        0.9331070939131871
       ],
-      "ratio_to_vec": 0.9100808245478623
+      "ratio_to_vec": 0.9121128075106353
     },
     {
       "benchmark": "build_growing_and_drop/4",
       "classification": "win",
       "implementation": "SmallVec4",
-      "median_ns": 10.901327631166954,
+      "median_ns": 10.891909436294435,
       "ratio_ci95": [
-        0.8576748146582402,
-        0.8816242046122791
+        0.834586474059543,
+        0.8810002458900991
       ],
-      "ratio_to_vec": 0.8803648876910334
+      "ratio_to_vec": 0.8677696850744278
     },
     {
       "benchmark": "build_growing_and_drop/4",
       "classification": "win",
       "implementation": "SmallVec8",
-      "median_ns": 9.186105614393206,
+      "median_ns": 8.800602515484474,
       "ratio_ci95": [
-        0.6931705118199425,
-        0.7944701173572201
+        0.665416700154565,
+        0.7892313713586743
       ],
-      "ratio_to_vec": 0.7418101383464459
+      "ratio_to_vec": 0.7009553977125577
     },
     {
       "benchmark": "dedup_adjacent_pairs/64_byte",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 972.7387630348795,
+      "median_ns": 973.5667699218666,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1672,51 +1672,51 @@
       "benchmark": "dedup_adjacent_pairs/64_byte",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 1070.4035296328984,
+      "median_ns": 1069.7356821937617,
       "ratio_ci95": [
-        1.0982132844241868,
-        1.1004018450887179
+        1.0962289828634753,
+        1.100548171838493
       ],
-      "ratio_to_vec": 1.099864493948965
+      "ratio_to_vec": 1.0990772733161394
     },
     {
       "benchmark": "dedup_adjacent_pairs/64_byte",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 1097.9020385898862,
+      "median_ns": 1055.3377738475583,
       "ratio_ci95": [
-        1.0808809171631322,
-        1.1339314953427706
+        1.0807298252689688,
+        1.133537663888339
       ],
-      "ratio_to_vec": 1.1302429025796041
+      "ratio_to_vec": 1.0814744928670752
     },
     {
       "benchmark": "dedup_adjacent_pairs/64_byte",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 1099.3128271788341,
+      "median_ns": 1098.5736408073685,
       "ratio_ci95": [
-        1.1267490536451221,
-        1.1394744142295854
+        1.1266492262935923,
+        1.133292047275039
       ],
-      "ratio_to_vec": 1.1311154311586264
+      "ratio_to_vec": 1.1292562751243436
     },
     {
       "benchmark": "dedup_adjacent_pairs/64_byte",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 1098.7605541804182,
+      "median_ns": 1099.7333008177666,
       "ratio_ci95": [
-        1.127882615615235,
-        1.1349512719068484
+        1.1290434776172444,
+        1.1339964592595781
       ],
-      "ratio_to_vec": 1.1311267074354536
+      "ratio_to_vec": 1.130452187988431
     },
     {
       "benchmark": "dedup_adjacent_pairs/u64",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 307.613152823659,
+      "median_ns": 305.53605611463576,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1727,106 +1727,106 @@
       "benchmark": "dedup_adjacent_pairs/u64",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 328.8723810750472,
+      "median_ns": 330.1726891935225,
       "ratio_ci95": [
-        1.0417480092454188,
-        1.0960986499071799
+        1.0625943285931767,
+        1.0979804757255827
       ],
-      "ratio_to_vec": 1.069110270663801
+      "ratio_to_vec": 1.0824684698151275
     },
     {
       "benchmark": "dedup_adjacent_pairs/u64",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 524.800204432664,
+      "median_ns": 440.8845448291676,
       "ratio_ci95": [
-        1.3866207195069966,
-        1.7173380268447764
+        1.4079087199275586,
+        1.7389206643531414
       ],
-      "ratio_to_vec": 1.6930945555292625
+      "ratio_to_vec": 1.4429869601502932
     },
     {
       "benchmark": "dedup_adjacent_pairs/u64",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 396.14635508524395,
+      "median_ns": 394.4844278943805,
       "ratio_ci95": [
-        1.249929090596081,
-        1.3234253029643606
+        1.2713276212063875,
+        1.3848259011169102
       ],
-      "ratio_to_vec": 1.2810032610567437
+      "ratio_to_vec": 1.2839427635136513
     },
     {
       "benchmark": "dedup_adjacent_pairs/u64",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 397.9712301587301,
+      "median_ns": 395.934343721565,
       "ratio_ci95": [
-        1.2628780445411638,
-        1.3315888029349958
+        1.2853936393978156,
+        1.3161907860339417
       ],
-      "ratio_to_vec": 1.2900308494005235
+      "ratio_to_vec": 1.3079603341839663
     },
     {
       "benchmark": "extend_reserved_1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 154.1303116024776,
+      "median_ns": 153.27272960328142,
       "ratio_ci95": [
         1.0,
         1.0
       ],
       "ratio_to_vec": 1.0
-    },
-    {
-      "benchmark": "extend_reserved_1024",
-      "classification": "inconclusive",
-      "implementation": "JackVec",
-      "median_ns": 159.46427432216905,
-      "ratio_ci95": [
-        1.011645074745935,
-        1.05307952157345
-      ],
-      "ratio_to_vec": 1.0346068379686952
     },
     {
       "benchmark": "extend_reserved_1024",
       "classification": "inconclusive",
-      "implementation": "ThinVec",
-      "median_ns": 149.00692138414504,
+      "implementation": "JackVec",
+      "median_ns": 157.30628584316,
       "ratio_ci95": [
-        0.9383618600618147,
-        0.9716515728588463
+        1.0136675169454317,
+        1.0683415553592965
       ],
-      "ratio_to_vec": 0.9635754179796598
+      "ratio_to_vec": 1.0263162028256345
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 149.61981959338695,
+      "ratio_ci95": [
+        0.9695462615827709,
+        0.9865000230510963
+      ],
+      "ratio_to_vec": 0.9806782380271769
     },
     {
       "benchmark": "extend_reserved_1024",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 184.0752169720347,
+      "median_ns": 183.85883503401362,
       "ratio_ci95": [
-        1.1599380556589027,
-        1.2003977372061965
+        1.189429680849849,
+        1.2305589844078022
       ],
-      "ratio_to_vec": 1.194330640380297
+      "ratio_to_vec": 1.2001225201039543
     },
     {
       "benchmark": "extend_reserved_1024",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 182.01735815745127,
+      "median_ns": 180.7669857359681,
       "ratio_ci95": [
-        1.1462430414479867,
-        1.189108983629469
+        1.160439518441564,
+        1.2225635875425414
       ],
-      "ratio_to_vec": 1.1827666201289584
+      "ratio_to_vec": 1.1730811737473457
     },
     {
       "benchmark": "nested_construct_and_drop/empty",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 18959.340734366036,
+      "median_ns": 19014.963668961558,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1837,51 +1837,51 @@
       "benchmark": "nested_construct_and_drop/empty",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 9642.448895705522,
+      "median_ns": 10728.953514739229,
       "ratio_ci95": [
-        0.5002434680355722,
-        0.5680181986104464
+        0.501564400590058,
+        0.570553513827637
       ],
-      "ratio_to_vec": 0.5112108517835104
+      "ratio_to_vec": 0.5622113409171752
     },
     {
       "benchmark": "nested_construct_and_drop/empty",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 10747.226462057692,
+      "median_ns": 10747.945172962802,
       "ratio_ci95": [
-        0.5651298055029649,
-        0.5762366525831322
+        0.562615928112154,
+        0.5788876361691688
       ],
-      "ratio_to_vec": 0.5696885784349376
+      "ratio_to_vec": 0.564879801760039
     },
     {
       "benchmark": "nested_construct_and_drop/empty",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 22251.788560632085,
+      "median_ns": 22329.32332169656,
       "ratio_ci95": [
-        1.1700831824618905,
-        1.2044287713830912
+        1.1712562406151095,
+        1.2065990628176744
       ],
-      "ratio_to_vec": 1.1757139165756259
+      "ratio_to_vec": 1.184954275434454
     },
     {
       "benchmark": "nested_construct_and_drop/empty",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 27187.11686678982,
+      "median_ns": 27415.132311621965,
       "ratio_ci95": [
-        1.4261346642731434,
-        1.45835360925609
+        1.4295487100824091,
+        1.4760185457940196
       ],
-      "ratio_to_vec": 1.447408852923845
+      "ratio_to_vec": 1.4644423312821477
     },
     {
       "benchmark": "nested_construct_and_drop/small",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 226517.1144082633,
+      "median_ns": 229960.6734848485,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1892,51 +1892,51 @@
       "benchmark": "nested_construct_and_drop/small",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 213288.40917397663,
+      "median_ns": 211679.80677083333,
       "ratio_ci95": [
-        0.8965874505613862,
-        0.9458198241665767
+        0.9015373285266651,
+        0.9497979498595954
       ],
-      "ratio_to_vec": 0.9437711760101072
+      "ratio_to_vec": 0.9205043782617915
     },
     {
       "benchmark": "nested_construct_and_drop/small",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 214035.34479166666,
+      "median_ns": 213783.82135416666,
       "ratio_ci95": [
-        0.8944960450029138,
-        0.9483826650660273
+        0.8982272918532215,
+        0.9437614486606211
       ],
-      "ratio_to_vec": 0.9464805772594259
+      "ratio_to_vec": 0.9331341466097155
     },
     {
       "benchmark": "nested_construct_and_drop/small",
       "classification": "win",
       "implementation": "SmallVec4",
-      "median_ns": 128721.88981093952,
+      "median_ns": 128571.81578947368,
       "ratio_ci95": [
-        0.5568034898998891,
-        0.5708758433458613
+        0.5566397885651166,
+        0.5675445859558153
       ],
-      "ratio_to_vec": 0.5680684301045823
+      "ratio_to_vec": 0.5598337060813978
     },
     {
       "benchmark": "nested_construct_and_drop/small",
       "classification": "win",
       "implementation": "SmallVec8",
-      "median_ns": 131863.72829861112,
+      "median_ns": 132941.99295343139,
       "ratio_ci95": [
-        0.5682802617656333,
-        0.5857736925071304
+        0.5723005317445589,
+        0.5913354505199144
       ],
-      "ratio_to_vec": 0.5834784290971285
+      "ratio_to_vec": 0.5781075126403759
     },
     {
       "benchmark": "nested_construct_and_drop/sparse",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 63121.47997425997,
+      "median_ns": 63301.273857142856,
       "ratio_ci95": [
         1.0,
         1.0
@@ -1947,51 +1947,51 @@
       "benchmark": "nested_construct_and_drop/sparse",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 56704.90982142858,
+      "median_ns": 56520.54405779406,
       "ratio_ci95": [
-        0.8870333393691006,
-        0.9140157072171505
+        0.8728453068326454,
+        0.9007526428339636
       ],
-      "ratio_to_vec": 0.8923439710511276
+      "ratio_to_vec": 0.8889260262122394
     },
     {
       "benchmark": "nested_construct_and_drop/sparse",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 54584.925287356324,
+      "median_ns": 53792.59315619968,
       "ratio_ci95": [
-        0.8481359964006424,
-        0.8781635118881044
+        0.8360605975253537,
+        0.8582399886426275
       ],
-      "ratio_to_vec": 0.8620004998794688
+      "ratio_to_vec": 0.8533024682681449
     },
     {
       "benchmark": "nested_construct_and_drop/sparse",
       "classification": "win",
       "implementation": "SmallVec4",
-      "median_ns": 40560.40676847662,
+      "median_ns": 40854.36117879104,
       "ratio_ci95": [
-        0.6289545121501527,
-        0.6536741325215479
+        0.6388084047560328,
+        0.6498508974482099
       ],
-      "ratio_to_vec": 0.6424706152617586
+      "ratio_to_vec": 0.6441950472919015
     },
     {
       "benchmark": "nested_construct_and_drop/sparse",
       "classification": "win",
       "implementation": "SmallVec8",
-      "median_ns": 45610.577414965985,
+      "median_ns": 45760.691203703704,
       "ratio_ci95": [
-        0.7096560720171043,
-        0.7262278219605758
+        0.7156368168278243,
+        0.7258826639513546
       ],
-      "ratio_to_vec": 0.7167336239267664
+      "ratio_to_vec": 0.7216158926066908
     },
     {
       "benchmark": "nested_metadata_scan_sparse",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 3973.0030741410487,
+      "median_ns": 3973.9503402749424,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2002,51 +2002,51 @@
       "benchmark": "nested_metadata_scan_sparse",
       "classification": "equivalent",
       "implementation": "JackVec",
-      "median_ns": 4003.8275468791417,
+      "median_ns": 4003.6331128381585,
       "ratio_ci95": [
-        1.0068981015504161,
-        1.0145010511332668
+        1.0060695732790197,
+        1.0078098864456775
       ],
-      "ratio_to_vec": 1.0101095784006857
+      "ratio_to_vec": 1.0074728106507105
     },
     {
       "benchmark": "nested_metadata_scan_sparse",
       "classification": "equivalent",
       "implementation": "ThinVec",
-      "median_ns": 4003.6772793533,
+      "median_ns": 4002.1534213062496,
       "ratio_ci95": [
-        1.006319571474522,
-        1.0130910700795284
+        1.006113182417145,
+        1.008873515098675
       ],
-      "ratio_to_vec": 1.0074540302834483
+      "ratio_to_vec": 1.0068749036227087
     },
     {
       "benchmark": "nested_metadata_scan_sparse",
       "classification": "inconclusive",
       "implementation": "SmallVec4",
-      "median_ns": 4156.714338507021,
+      "median_ns": 4192.712876151856,
       "ratio_ci95": [
-        1.0158743103151195,
-        1.0580023782964492
+        1.0157393296728943,
+        1.0614537128527628
       ],
-      "ratio_to_vec": 1.0513591522643446
+      "ratio_to_vec": 1.0544694999340143
     },
     {
       "benchmark": "nested_metadata_scan_sparse",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 5112.390979722116,
+      "median_ns": 4933.845864946315,
       "ratio_ci95": [
-        1.2498107970604542,
-        1.3398565473555795
+        1.2339581202911,
+        1.339525200607732
       ],
-      "ratio_to_vec": 1.292370850692826
+      "ratio_to_vec": 1.2419113271789597
     },
     {
       "benchmark": "nested_traverse/empty",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 2191.750836087504,
+      "median_ns": 2191.7911208896166,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2057,51 +2057,51 @@
       "benchmark": "nested_traverse/empty",
       "classification": "equivalent",
       "implementation": "JackVec",
-      "median_ns": 2153.2508157128686,
+      "median_ns": 2152.5813631645715,
       "ratio_ci95": [
-        0.9820149265110161,
-        0.9852791825896788
+        0.9812695058617165,
+        0.9823047572972748
       ],
-      "ratio_to_vec": 0.9823614124842314
+      "ratio_to_vec": 0.9822183689707509
     },
     {
       "benchmark": "nested_traverse/empty",
       "classification": "equivalent",
       "implementation": "ThinVec",
-      "median_ns": 2155.136283435521,
+      "median_ns": 2152.570487027956,
       "ratio_ci95": [
-        0.9815059927948094,
-        0.9853773446266664
+        0.9818435321656704,
+        0.984486693107443
       ],
-      "ratio_to_vec": 0.983139400818134
+      "ratio_to_vec": 0.9822997941024236
     },
     {
       "benchmark": "nested_traverse/empty",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 5875.006463219616,
+      "median_ns": 5880.294899233101,
       "ratio_ci95": [
-        2.678896684240865,
-        2.692278350454198
+        2.679761365214207,
+        2.6914087539461926
       ],
-      "ratio_to_vec": 2.680808423720563
+      "ratio_to_vec": 2.6830971030471042
     },
     {
       "benchmark": "nested_traverse/empty",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 6052.416315499173,
+      "median_ns": 6064.43510410921,
       "ratio_ci95": [
-        2.730145136771341,
-        2.767309408383384
+        2.766568905623981,
+        2.8183592202122867
       ],
-      "ratio_to_vec": 2.7614527234780692
+      "ratio_to_vec": 2.7671177276457146
     },
     {
       "benchmark": "nested_traverse/small",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 21414.992845786965,
+      "median_ns": 21424.14281650071,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2112,51 +2112,51 @@
       "benchmark": "nested_traverse/small",
       "classification": "equivalent",
       "implementation": "JackVec",
-      "median_ns": 21420.348415379667,
+      "median_ns": 21417.230167667665,
       "ratio_ci95": [
-        0.9995497100577972,
-        1.0086086952463478
+        0.9988376788663644,
+        0.9999443550703201
       ],
-      "ratio_to_vec": 1.000124039715426
+      "ratio_to_vec": 0.9994997846293556
     },
     {
       "benchmark": "nested_traverse/small",
       "classification": "equivalent",
       "implementation": "ThinVec",
-      "median_ns": 21424.41072891073,
+      "median_ns": 21425.859340073155,
       "ratio_ci95": [
-        0.9960586988718746,
-        1.003852881569345
+        0.9978667851514963,
+        1.0034281538748808
       ],
-      "ratio_to_vec": 1.0004397798865303
+      "ratio_to_vec": 0.9999837684512618
     },
     {
       "benchmark": "nested_traverse/small",
       "classification": "equivalent",
       "implementation": "SmallVec4",
-      "median_ns": 21418.572888219227,
+      "median_ns": 21408.585055643878,
       "ratio_ci95": [
-        0.9996555656182038,
-        1.0002315922951437
+        0.995165397513921,
+        0.9997338931724153
       ],
-      "ratio_to_vec": 0.9997327541926596
+      "ratio_to_vec": 0.9990558818227202
     },
     {
       "benchmark": "nested_traverse/small",
       "classification": "equivalent",
       "implementation": "SmallVec8",
-      "median_ns": 21419.927480121354,
+      "median_ns": 21425.625527356628,
       "ratio_ci95": [
-        0.9990621182687982,
-        1.0005631212726014
+        0.9953289973802608,
+        1.006964962435776
       ],
-      "ratio_to_vec": 1.0001901231824737
+      "ratio_to_vec": 1.0000692074762858
     },
     {
       "benchmark": "nested_traverse/sparse",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 3087.824130190797,
+      "median_ns": 3081.5125801939303,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2165,108 +2165,108 @@
     },
     {
       "benchmark": "nested_traverse/sparse",
-      "classification": "equivalent",
+      "classification": "inconclusive",
       "implementation": "JackVec",
-      "median_ns": 3082.562393284007,
+      "median_ns": 3151.4061198497693,
       "ratio_ci95": [
-        0.9829493744980716,
-        1.0120635485985672
+        1.0028479642283141,
+        1.1395768779680808
       ],
-      "ratio_to_vec": 0.9992059100739077
+      "ratio_to_vec": 1.0171333195403154
     },
     {
       "benchmark": "nested_traverse/sparse",
-      "classification": "equivalent",
+      "classification": "inconclusive",
       "implementation": "ThinVec",
-      "median_ns": 3092.109044359255,
+      "median_ns": 3117.1231150619024,
       "ratio_ci95": [
-        0.9927844276689622,
-        1.0255867216898658
+        0.9995574442013027,
+        1.0654063980609019
       ],
-      "ratio_to_vec": 0.9989879908983073
+      "ratio_to_vec": 1.0141868780363776
     },
     {
       "benchmark": "nested_traverse/sparse",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 6880.873944687046,
+      "median_ns": 6885.922440259041,
       "ratio_ci95": [
-        2.213175461934932,
-        2.233124536287866
+        2.192246844903565,
+        2.2558785353061643
       ],
-      "ratio_to_vec": 2.2283892004762187
+      "ratio_to_vec": 2.240584883853197
     },
     {
       "benchmark": "nested_traverse/sparse",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 5362.402458983106,
+      "median_ns": 5397.225234111953,
       "ratio_ci95": [
-        1.7140483782732727,
-        1.8052769651795886
+        1.7421618941958232,
+        1.8358349545436048
       ],
-      "ratio_to_vec": 1.7324666051671358
+      "ratio_to_vec": 1.768170446512888
     },
     {
       "benchmark": "push_preallocated/1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 448.35393430099316,
+      "median_ns": 447.83197151587115,
       "ratio_ci95": [
         1.0,
         1.0
       ],
       "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 427.49110444777614,
+      "ratio_ci95": [
+        0.9509368231296788,
+        0.9703195808022108
+      ],
+      "ratio_to_vec": 0.9540115759794655
     },
     {
       "benchmark": "push_preallocated/1024",
       "classification": "win",
-      "implementation": "JackVec",
-      "median_ns": 427.53675371800375,
-      "ratio_ci95": [
-        0.9503406585026164,
-        0.9542398042538811
-      ],
-      "ratio_to_vec": 0.9523878778029582
-    },
-    {
-      "benchmark": "push_preallocated/1024",
-      "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 421.0121865643713,
+      "median_ns": 421.48658650868026,
       "ratio_ci95": [
-        0.9245209209056419,
-        0.9443095965784474
+        0.9316018079535281,
+        0.9471026328411861
       ],
-      "ratio_to_vec": 0.9383075505626651
+      "ratio_to_vec": 0.9412735782295603
     },
     {
       "benchmark": "push_preallocated/1024",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 718.6651987670068,
+      "median_ns": 719.8847313485303,
       "ratio_ci95": [
-        1.592927279743963,
-        1.609169840981262
+        1.5907355504006404,
+        1.614602719138319
       ],
-      "ratio_to_vec": 1.6028970502677595
+      "ratio_to_vec": 1.6074884714277655
     },
     {
       "benchmark": "push_preallocated/1024",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 724.1310006166209,
+      "median_ns": 724.5499962271269,
       "ratio_ci95": [
-        1.6118821678645274,
-        1.6382703532946132
+        1.6033361146610412,
+        1.6473029611909613
       ],
-      "ratio_to_vec": 1.620476396756259
+      "ratio_to_vec": 1.6179059163073821
     },
     {
       "benchmark": "push_preallocated/4",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 2.4424022452467873,
+      "median_ns": 2.4262635852774626,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2277,51 +2277,51 @@
       "benchmark": "push_preallocated/4",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 2.1511694215908825,
+      "median_ns": 2.1499451106000875,
       "ratio_ci95": [
-        0.8588330161902367,
-        0.896705598366185
+        0.8730114139844272,
+        0.8927264073621053
       ],
-      "ratio_to_vec": 0.8821094667544078
+      "ratio_to_vec": 0.8825231817710724
     },
     {
       "benchmark": "push_preallocated/4",
       "classification": "win",
       "implementation": "ThinVec",
-      "median_ns": 2.2543744429545156,
+      "median_ns": 2.2448707267448835,
       "ratio_ci95": [
-        0.9046095415284482,
-        0.93646387491388
+        0.9217587197093688,
+        0.9339807642145486
       ],
-      "ratio_to_vec": 0.929766942187247
+      "ratio_to_vec": 0.9321425784307354
     },
     {
       "benchmark": "push_preallocated/4",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 14.155153442875573,
+      "median_ns": 14.130617066895635,
       "ratio_ci95": [
-        5.657250502621601,
-        5.939555624419647
+        5.738366997137285,
+        5.8891699090328125
       ],
-      "ratio_to_vec": 5.8122743674786035
+      "ratio_to_vec": 5.819991596657877
     },
     {
       "benchmark": "push_preallocated/4",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 14.186863564652612,
+      "median_ns": 14.142230362851965,
       "ratio_ci95": [
-        5.699930368295227,
-        5.973664284763698
+        5.726837984431153,
+        5.8930425602089604
       ],
-      "ratio_to_vec": 5.820020713385067
+      "ratio_to_vec": 5.82752326215247
     },
     {
       "benchmark": "resize_reserved_1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 144.51217017482793,
+      "median_ns": 143.97173554956572,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2332,51 +2332,51 @@
       "benchmark": "resize_reserved_1024",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 154.2296353963929,
+      "median_ns": 152.3524874596303,
       "ratio_ci95": [
-        1.0553831095076893,
-        1.077326099368539
+        1.0366256655269757,
+        1.061913684653719
       ],
-      "ratio_to_vec": 1.0668141754044416
+      "ratio_to_vec": 1.0582110917679346
     },
     {
       "benchmark": "resize_reserved_1024",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 429.1447141098803,
+      "median_ns": 430.5218184903017,
       "ratio_ci95": [
-        2.936608659172558,
-        3.006213511951008
+        2.8887677683766433,
+        3.014411465023893
       ],
-      "ratio_to_vec": 2.969764238810807
+      "ratio_to_vec": 2.9934623586161173
     },
     {
       "benchmark": "resize_reserved_1024",
       "classification": "equivalent",
       "implementation": "SmallVec4",
-      "median_ns": 144.2137358677748,
+      "median_ns": 144.40954168732733,
       "ratio_ci95": [
-        0.9868449769895029,
-        1.0170822733455749
+        0.9738934115793956,
+        1.018732612314296
       ],
-      "ratio_to_vec": 0.9958431594007856
+      "ratio_to_vec": 1.0011798441756639
     },
     {
       "benchmark": "resize_reserved_1024",
       "classification": "inconclusive",
       "implementation": "SmallVec8",
-      "median_ns": 144.06552599249966,
+      "median_ns": 142.41122215395592,
       "ratio_ci95": [
-        0.947586286878275,
-        1.009273292664424
+        0.9358935182889567,
+        1.0019204507458765
       ],
-      "ratio_to_vec": 1.000211795592092
+      "ratio_to_vec": 0.9912389714781715
     },
     {
       "benchmark": "retain_mixed/64_byte",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 287.6386459345643,
+      "median_ns": 289.0002317741256,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2387,51 +2387,51 @@
       "benchmark": "retain_mixed/64_byte",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 316.6989759160148,
+      "median_ns": 319.47790585975025,
       "ratio_ci95": [
-        1.0997258422429634,
-        1.1196110907432661
+        1.090674122482881,
+        1.1159154269392086
       ],
-      "ratio_to_vec": 1.1046703011416203
+      "ratio_to_vec": 1.1125648616865913
     },
     {
       "benchmark": "retain_mixed/64_byte",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 444.7467362579281,
+      "median_ns": 450.62319688109164,
       "ratio_ci95": [
-        1.529194529569517,
-        1.61125611293202
+        1.5509763540045578,
+        1.571569164967262
       ],
-      "ratio_to_vec": 1.5458630873961383
+      "ratio_to_vec": 1.562971696471232
     },
     {
       "benchmark": "retain_mixed/64_byte",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 553.0084640873209,
+      "median_ns": 549.8394682129747,
       "ratio_ci95": [
-        1.8892363153033247,
-        1.9665880826352913
+        1.8835896591403318,
+        1.9235637845585816
       ],
-      "ratio_to_vec": 1.9257264675115549
+      "ratio_to_vec": 1.9003042478756724
     },
     {
       "benchmark": "retain_mixed/64_byte",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 547.5689540566959,
+      "median_ns": 545.0178426197458,
       "ratio_ci95": [
-        1.880084097834924,
-        1.9204244828700965
+        1.870367862848266,
+        1.9067238197729035
       ],
-      "ratio_to_vec": 1.9099624797461328
+      "ratio_to_vec": 1.8849068533036555
     },
     {
       "benchmark": "retain_mixed/u64",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 559.6799238568345,
+      "median_ns": 563.790987535954,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2442,51 +2442,51 @@
       "benchmark": "retain_mixed/u64",
       "classification": "loss",
       "implementation": "JackVec",
-      "median_ns": 696.9369131455398,
+      "median_ns": 697.8841909966745,
       "ratio_ci95": [
-        1.2321317342147897,
-        1.2497687042501886
+        1.2330014156457225,
+        1.247254661162859
       ],
-      "ratio_to_vec": 1.2458200139085445
+      "ratio_to_vec": 1.2344717539660341
     },
     {
       "benchmark": "retain_mixed/u64",
       "classification": "loss",
       "implementation": "ThinVec",
-      "median_ns": 716.8968520840458,
+      "median_ns": 715.9557951042241,
       "ratio_ci95": [
-        1.2742554163702322,
-        1.2851750090943015
+        1.2640978268701415,
+        1.2861687898149665
       ],
-      "ratio_to_vec": 1.2828040116234825
+      "ratio_to_vec": 1.270095344944894
     },
     {
       "benchmark": "retain_mixed/u64",
       "classification": "loss",
       "implementation": "SmallVec4",
-      "median_ns": 924.4324438724439,
+      "median_ns": 923.8251149891776,
       "ratio_ci95": [
-        1.6455718784362292,
-        1.6625706641390818
+        1.6295382618973102,
+        1.6527545586840877
       ],
-      "ratio_to_vec": 1.6531813306765915
+      "ratio_to_vec": 1.6480135217303624
     },
     {
       "benchmark": "retain_mixed/u64",
       "classification": "loss",
       "implementation": "SmallVec8",
-      "median_ns": 926.1100667837377,
+      "median_ns": 926.8343579083107,
       "ratio_ci95": [
-        1.640887973754944,
-        1.662709189305235
+        1.6344299483961182,
+        1.658661064335564
       ],
-      "ratio_to_vec": 1.653973713145028
+      "ratio_to_vec": 1.642988697294102
     },
     {
       "benchmark": "sequential_iteration/1024",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 102.54410800061908,
+      "median_ns": 102.52981657623499,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2497,51 +2497,51 @@
       "benchmark": "sequential_iteration/1024",
       "classification": "equivalent",
       "implementation": "JackVec",
-      "median_ns": 102.5200353017756,
+      "median_ns": 102.59274942265938,
       "ratio_ci95": [
-        0.998010156853741,
-        1.0054949513743043
+        0.9994263171646819,
+        1.005291431709969
       ],
-      "ratio_to_vec": 0.9997652454215766
+      "ratio_to_vec": 1.001573326175845
     },
     {
       "benchmark": "sequential_iteration/1024",
       "classification": "equivalent",
       "implementation": "ThinVec",
-      "median_ns": 102.5409428525814,
+      "median_ns": 102.54498921286611,
       "ratio_ci95": [
-        0.9997632886438483,
-        1.0020994164844435
+        0.9968382657954248,
+        1.0019808372252437
       ],
-      "ratio_to_vec": 0.9999843113174085
+      "ratio_to_vec": 1.0000557309430784
     },
     {
       "benchmark": "sequential_iteration/1024",
       "classification": "equivalent",
       "implementation": "SmallVec4",
-      "median_ns": 102.51863368162587,
+      "median_ns": 102.5253085179926,
       "ratio_ci95": [
-        0.9982340313098046,
-        0.9999774428190341
+        0.9970831015996708,
+        1.0000782474149201
       ],
-      "ratio_to_vec": 0.9998442838611404
+      "ratio_to_vec": 0.9996735309213719
     },
     {
       "benchmark": "sequential_iteration/1024",
       "classification": "equivalent",
       "implementation": "SmallVec8",
-      "median_ns": 102.51817048986614,
+      "median_ns": 102.5147117904555,
       "ratio_ci95": [
-        0.9982116636225398,
-        1.0000093796572411
+        0.9968903809481392,
+        0.9999696959395223
       ],
-      "ratio_to_vec": 0.9998903250770509
+      "ratio_to_vec": 0.9996282344406475
     },
     {
       "benchmark": "sequential_iteration/8",
       "classification": "baseline",
       "implementation": "Vec",
-      "median_ns": 1.8130193881798002,
+      "median_ns": 1.8139084847853835,
       "ratio_ci95": [
         1.0,
         1.0
@@ -2552,45 +2552,45 @@
       "benchmark": "sequential_iteration/8",
       "classification": "win",
       "implementation": "JackVec",
-      "median_ns": 1.6565789994411733,
+      "median_ns": 1.6562676872125328,
       "ratio_ci95": [
-        0.9090008724110883,
-        0.9149503127581036
+        0.9085006046984061,
+        0.9143978461653626
       ],
-      "ratio_to_vec": 0.9137882787837998
+      "ratio_to_vec": 0.9141779283856676
     },
     {
       "benchmark": "sequential_iteration/8",
       "classification": "equivalent",
       "implementation": "ThinVec",
-      "median_ns": 1.8174344265050788,
+      "median_ns": 1.818195758939959,
       "ratio_ci95": [
-        1.0024351853896671,
-        1.0163134587696114
+        0.9966018586059234,
+        1.0159569276013307
       ],
-      "ratio_to_vec": 1.0027036174977584
+      "ratio_to_vec": 1.0027697319667095
     },
     {
       "benchmark": "sequential_iteration/8",
       "classification": "win",
       "implementation": "SmallVec4",
-      "median_ns": 1.654307784430614,
+      "median_ns": 1.6544126206283782,
       "ratio_ci95": [
-        0.9075116613801381,
-        0.9139455868590667
+        0.90565194571437,
+        0.9135556026215353
       ],
-      "ratio_to_vec": 0.9117885298536805
+      "ratio_to_vec": 0.9118892872937392
     },
     {
       "benchmark": "sequential_iteration/8",
-      "classification": "win",
+      "classification": "inconclusive",
       "implementation": "SmallVec8",
-      "median_ns": 1.6581082018880293,
+      "median_ns": 1.6605544993655093,
       "ratio_ci95": [
-        0.9073642268961972,
-        0.9165200687553093
+        0.9085968202503878,
+        1.0029921438433136
       ],
-      "ratio_to_vec": 0.9153073240418217
+      "ratio_to_vec": 0.9159932066951821
     }
   ],
   "metadata": {
@@ -2617,15 +2617,15 @@
       "release": "1.97.0"
     },
     "cpu_summary": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  32\nOn-line CPU(s) list:                     0-31\nVendor ID:                               AuthenticAMD\nModel name:                              AMD Ryzen 9 7950X3D 16-Core Processor\nCPU family:                              25\nModel:                                   97\nThread(s) per core:                      2\nCore(s) per socket:                      16\nSocket(s):                               1\nStepping:                                2\nFrequency boost:                         enabled\nCPU max MHz:                             5759.9639\nCPU min MHz:                             3000.0000\nBogoMIPS:                                8383.97\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb cat_l3 cdp_l3 hw_pstate ssbd mba ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local avx512_bf16 clzero irperf xsaveerptr rdpru wbnoinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold avic vgif v_spec_ctrl avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid overflow_recov succor smca fsrm flush_l1d ibpb_exit_to_user\nVirtualization:                          AMD-V\nL1d cache:                               512 KiB (16 instances)\nL1i cache:                               512 KiB (16 instances)\nL2 cache:                                16 MiB (16 instances)\nL3 cache:                                128 MiB (2 instances)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-31\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Mitigation; safe RET\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; STIBP always-on; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: Clear CPU buffers attempted, no microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace",
-    "git_commit": "2da08eea786c9755fa6ac883026ebfc8eeeb904e",
+    "git_commit": "2dc82e0656ba2c3997c4dc2dd26b905ce621bb2f",
     "git_dirty": false,
     "governor": "performance",
     "host_issues": [],
     "kernel": "Linux Ubuntu-2204-jammy-amd64-base 5.15.0-177-generic #187-Ubuntu SMP Sat Apr 11 22:54:33 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
     "load_average": [
-      0.4541015625,
-      0.5361328125,
-      0.451171875
+      0.08984375,
+      0.37890625,
+      0.42822265625
     ],
     "logical_cpus": 32,
     "machine": "x86_64",
@@ -2637,136 +2637,136 @@
         "cpu_idle_percent": 100.0,
         "label": "after-build",
         "load_average": [
-          0.91259765625,
-          0.66015625,
-          0.5
+          0.95947265625,
+          0.58984375,
+          0.49951171875
         ],
-        "timestamp_utc": "2026-07-11T18:37:49.104871+00:00"
+        "timestamp_utc": "2026-07-11T19:57:48.033500+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-round-1",
         "load_average": [
-          1.00341796875,
-          0.90771484375,
-          0.66650390625
+          1.08935546875,
+          0.9326171875,
+          0.685546875
         ],
-        "timestamp_utc": "2026-07-11T18:43:16.016885+00:00"
+        "timestamp_utc": "2026-07-11T20:03:14.854282+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "settled-after-round-1",
         "load_average": [
-          0.9228515625,
-          0.892578125,
-          0.66259765625
+          1.001953125,
+          0.9169921875,
+          0.681640625
         ],
-        "timestamp_utc": "2026-07-11T18:43:21.039409+00:00"
+        "timestamp_utc": "2026-07-11T20:03:19.876708+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-round-2",
         "load_average": [
-          1.00341796875,
-          1.0,
-          0.7919921875
+          1.0654296875,
+          1.04345703125,
+          0.82568359375
         ],
-        "timestamp_utc": "2026-07-11T18:49:00.776711+00:00"
+        "timestamp_utc": "2026-07-11T20:08:59.736173+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "settled-after-round-2",
         "load_average": [
-          0.9228515625,
-          0.9833984375,
-          0.78759765625
+          0.97998046875,
+          1.02587890625,
+          0.82080078125
         ],
-        "timestamp_utc": "2026-07-11T18:49:05.799348+00:00"
+        "timestamp_utc": "2026-07-11T20:09:04.758105+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-round-3",
         "load_average": [
-          1.17626953125,
-          1.11083984375,
-          0.92333984375
+          1.08447265625,
+          1.05078125,
+          0.90869140625
         ],
-        "timestamp_utc": "2026-07-11T18:54:47.287828+00:00"
+        "timestamp_utc": "2026-07-11T20:14:45.899723+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "settled-after-round-3",
         "load_average": [
-          1.08203125,
-          1.09228515625,
-          0.91796875
+          0.99755859375,
+          1.033203125,
+          0.90380859375
         ],
-        "timestamp_utc": "2026-07-11T18:54:52.310207+00:00"
+        "timestamp_utc": "2026-07-11T20:14:50.922386+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-round-4",
         "load_average": [
-          1.03955078125,
-          1.0498046875,
-          0.96728515625
+          1.1279296875,
+          1.05078125,
+          0.96142578125
         ],
-        "timestamp_utc": "2026-07-11T19:00:32.156962+00:00"
+        "timestamp_utc": "2026-07-11T20:20:31.441173+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "settled-after-round-4",
         "load_average": [
-          0.9560546875,
-          1.0322265625,
-          0.9619140625
+          1.03759765625,
+          1.033203125,
+          0.9560546875
         ],
-        "timestamp_utc": "2026-07-11T19:00:37.179229+00:00"
+        "timestamp_utc": "2026-07-11T20:20:36.463687+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-round-5",
         "load_average": [
-          1.18017578125,
-          1.10693359375,
-          1.01708984375
+          1.03271484375,
+          1.04833984375,
+          1.0
         ],
-        "timestamp_utc": "2026-07-11T19:06:18.622430+00:00"
+        "timestamp_utc": "2026-07-11T20:26:17.951003+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "settled-after-round-5",
         "load_average": [
-          1.08544921875,
-          1.08837890625,
-          1.01123046875
+          0.94970703125,
+          1.03076171875,
+          0.99462890625
         ],
-        "timestamp_utc": "2026-07-11T19:06:23.644999+00:00"
+        "timestamp_utc": "2026-07-11T20:26:22.973798+00:00"
       },
       {
         "busy_processes": [],
         "cpu_idle_percent": 100.0,
         "label": "after-allocations",
         "load_average": [
-          0.998046875,
-          1.06982421875,
-          1.00537109375
+          0.87353515625,
+          1.01318359375,
+          0.9892578125
         ],
-        "timestamp_utc": "2026-07-11T19:06:28.712615+00:00"
+        "timestamp_utc": "2026-07-11T20:26:28.041793+00:00"
       }
     ],
     "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
-    "timestamp_utc": "2026-07-11T18:36:51.049001+00:00"
+    "timestamp_utc": "2026-07-11T19:56:50.068658+00:00"
   },
   "platform_id": "linux-x86_64",
   "practical_equivalence_band": [
