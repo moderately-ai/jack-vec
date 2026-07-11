@@ -12,6 +12,7 @@ import math
 import os
 import platform
 import random
+import re
 import statistics
 import subprocess
 import sys
@@ -84,6 +85,80 @@ def host_metadata(cpu: int | None) -> dict[str, Any]:
     return metadata
 
 
+def compiler_identity(verbose: str) -> dict[str, str]:
+    identity = {}
+    for line in verbose.splitlines()[1:]:
+        if ": " in line:
+            key, value = line.split(": ", 1)
+            identity[key.replace("-", "_").replace(" ", "_")] = value
+    return identity
+
+
+def cpu_idle_percent(sample_seconds: float = 1.0, cpu: int | None = None) -> float:
+    if sys.platform.startswith("linux"):
+        def counters() -> tuple[int, int]:
+            label = "cpu" if cpu is None else f"cpu{cpu}"
+            line = next(line for line in Path("/proc/stat").read_text().splitlines() if line.split()[0] == label)
+            fields = [int(value) for value in line.split()[1:]]
+            return sum(fields), fields[3] + fields[4]
+
+        total_before, idle_before = counters()
+        time.sleep(sample_seconds)
+        total_after, idle_after = counters()
+        return 100.0 * (idle_after - idle_before) / (total_after - total_before)
+    if sys.platform == "darwin":
+        output = command(["top", "-l", "2", "-n", "0", "-s", str(max(1, round(sample_seconds)))])
+        matches = re.findall(r"CPU usage:.*?([0-9.]+)% idle", output)
+        if not matches:
+            raise ValueError("could not parse macOS CPU idle percentage")
+        return float(matches[-1])
+    return 100.0
+
+
+def busy_processes() -> list[dict[str, Any]]:
+    output = command(["ps", "-Ao", "pcpu=,pid=,comm="])
+    processes = []
+    for line in output.splitlines():
+        parts = line.strip().split(None, 2)
+        if len(parts) != 3:
+            continue
+        try:
+            cpu = float(parts[0])
+        except ValueError:
+            continue
+        if cpu >= 25.0:
+            processes.append({"cpu_percent": cpu, "pid": int(parts[1]), "command": parts[2]})
+    return sorted(processes, key=lambda process: process["cpu_percent"], reverse=True)[:10]
+
+
+def runtime_audit(label: str, cpu: int | None = None) -> dict[str, Any]:
+    return {
+        "label": label,
+        "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "load_average": list(os.getloadavg()) if hasattr(os, "getloadavg") else None,
+        "cpu_idle_percent": cpu_idle_percent(cpu=cpu),
+        "busy_processes": busy_processes(),
+    }
+
+
+def wait_for_idle(
+    label: str, timeout: int, cpu: int | None = None, minimum_idle: float = 90.0
+) -> dict[str, Any]:
+    deadline = time.monotonic() + timeout
+    consecutive = 0
+    latest = None
+    while time.monotonic() < deadline:
+        latest = runtime_audit(label, cpu)
+        if latest["cpu_idle_percent"] >= minimum_idle:
+            consecutive += 1
+            if consecutive == 2:
+                return latest
+        else:
+            consecutive = 0
+        time.sleep(3)
+    raise RuntimeError(f"host did not reach {minimum_idle:.1f}% idle within {timeout}s; last audit: {latest}")
+
+
 def host_issues(metadata: dict[str, Any]) -> list[str]:
     issues = []
     load = metadata.get("load_average")
@@ -98,6 +173,34 @@ def host_issues(metadata: dict[str, Any]) -> list[str]:
             issues.append(f"CPU governor is {governor!r}, expected 'performance'")
     if sys.platform == "darwin" and "lowpowermode 1" in metadata.get("low_power_mode", ""):
         issues.append("macOS Low Power Mode is enabled")
+    return issues
+
+
+def pair_issues(left: dict[str, Any], right: dict[str, Any]) -> list[str]:
+    issues = []
+    for field in ("schema_version", "round_count", "toolchain"):
+        if left.get(field) != right.get(field):
+            issues.append(f"{field} differs: {left.get(field)!r} != {right.get(field)!r}")
+    for side, document in (("left", left), ("right", right)):
+        if not document.get("metadata", {}).get("authoritative"):
+            issues.append(f"{side} report is not authoritative")
+    if left.get("metadata", {}).get("git_commit") != right.get("metadata", {}).get("git_commit"):
+        issues.append("git commits differ")
+    identity_fields = ("release", "commit_hash", "LLVM_version")
+    for field in identity_fields:
+        left_value = left.get("metadata", {}).get("compiler_identity", {}).get(field)
+        right_value = right.get("metadata", {}).get("compiler_identity", {}).get(field)
+        if left_value != right_value:
+            issues.append(f"compiler {field} differs: {left_value!r} != {right_value!r}")
+    left_cpu = {(row["benchmark"], row["implementation"]) for row in left.get("cpu", [])}
+    right_cpu = {(row["benchmark"], row["implementation"]) for row in right.get("cpu", [])}
+    if left_cpu != right_cpu:
+        issues.append("CPU matrices differ")
+    allocation_key = lambda row: (row["benchmark"], row["input"], row["element_size"], row["implementation"])
+    if {allocation_key(row) for row in left.get("allocations", [])} != {
+        allocation_key(row) for row in right.get("allocations", [])
+    }:
+        issues.append("allocation matrices differ")
     return issues
 
 
@@ -243,6 +346,12 @@ def run(args: argparse.Namespace) -> None:
         os.sched_setaffinity(0, {args.cpu})
 
     metadata = host_metadata(args.cpu)
+    identity = compiler_identity(metadata["rustc"])
+    metadata["compiler_identity"] = identity
+    if identity.get("release") != args.toolchain:
+        raise SystemExit(
+            f"requested toolchain {args.toolchain!r} resolved to rustc release {identity.get('release')!r}"
+        )
     issues = host_issues(metadata)
     if issues and not args.allow_host_noise:
         formatted = "\n- ".join(issues)
@@ -258,6 +367,8 @@ def run(args: argparse.Namespace) -> None:
     raw_dir.mkdir(parents=True, exist_ok=False)
 
     command(["cargo", "build", "--release", "-p", "jack-vec-comparisons", "--benches"], capture=False)
+    audits = [wait_for_idle("after-build", args.settle_timeout, args.cpu)]
+    runtime_issues = []
     rounds = []
     for round_index in range(args.rounds):
         print(f"CPU round {round_index + 1}/{args.rounds}, rotation {round_index % 5}", flush=True)
@@ -272,12 +383,27 @@ def run(args: argparse.Namespace) -> None:
         round_data = read_criterion_round(started_ns)
         rounds.append(round_data)
         (raw_dir / f"cpu-round-{round_index + 1}.json").write_text(json.dumps(round_data, indent=2, sort_keys=True) + "\n")
+        post_round = runtime_audit(f"after-round-{round_index + 1}", args.cpu)
+        audits.append(post_round)
+        load = post_round.get("load_average")
+        if load and load[0] > (metadata.get("logical_cpus") or 1) * 0.5:
+            issue = f"round {round_index + 1} may be contaminated by load: {post_round}"
+            if not args.allow_host_noise:
+                raise RuntimeError(issue)
+            runtime_issues.append(issue)
+        audits.append(
+            wait_for_idle(f"settled-after-round-{round_index + 1}", args.settle_timeout, args.cpu)
+        )
 
     allocation_csv = command(["cargo", "bench", "-p", "jack-vec-comparisons", "--bench", "allocations"])
     (raw_dir / "allocations.csv").write_text(allocation_csv + "\n")
     allocations = list(csv.DictReader(io.StringIO(allocation_csv)))
     if not allocations:
         raise ValueError("allocation benchmark produced no rows")
+    audits.append(wait_for_idle("after-allocations", args.settle_timeout, args.cpu))
+    metadata["runtime_audits"] = audits
+    metadata["host_issues"].extend(runtime_issues)
+    metadata["authoritative"] = metadata["authoritative"] and not runtime_issues
 
     document = {
         "schema_version": 1,
@@ -305,6 +431,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-name")
     parser.add_argument("--allow-dirty", action="store_true")
     parser.add_argument("--allow-host-noise", action="store_true")
+    parser.add_argument("--settle-timeout", type=int, default=300)
     args = parser.parse_args()
     if args.rounds < 3:
         parser.error("--rounds must be at least 3")

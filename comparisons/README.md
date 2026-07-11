@@ -42,6 +42,9 @@ Latin-square registration rotations:
 ```console
 python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --output-name macos-aarch64
 python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --cpu 0 --output-name linux-x86_64
+python3 comparisons/tools/validate_pair.py \
+  comparisons/benchmark-results/macos-aarch64.json \
+  comparisons/benchmark-results/linux-x86_64.json
 ```
 
 The exact toolchain argument is mandatory and must match across hosts. The Linux
@@ -50,6 +53,13 @@ CCD, leave sibling CPU 16 idle, use the performance governor during measurement,
 and restore its prior governor afterwards. The runner records but does not mutate
 power-management policy. macOS runs should be on AC power with Low Power Mode
 disabled and without other sustained work.
+
+The runner resolves and verifies the requested `rustc` release, records its
+commit and LLVM identity, waits for two consecutive idle samples after building
+and between every round, records load and busy processes, and rejects a round if
+sustained system load indicates contamination. `validate_pair.py` independently
+refuses reports whose commit, compiler identity, schema, workload matrix, or
+authoritative status differs.
 
 Compact JSON and Markdown summaries in `benchmark-results/` are versioned. Raw
 per-round estimates and allocation CSV files live under the ignored

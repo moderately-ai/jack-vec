@@ -29,6 +29,9 @@ The central hypothesis is:
 - [x] Add deterministic workload checksums, adapter parity tests, allocation
   leak/reallocation invariants, balanced physical-host rotations, and explicit
   win/loss/equivalent/inconclusive reporting.
+- [x] Require and verify an exact compiler release, audit pinned-core/system idle
+  state between rounds, and reject cross-host reports with mismatched compiler
+  hashes, commits, schemas, matrices, or authority status.
 - [x] Add CodSpeed CPU simulation for pull requests and `main`.
 - [ ] Enable public-repository access for the `moderately-ai` Actions runner
   group, set `CODSPEED_MACRO_ENABLED=true`, and validate ARM64 Linux wall time.

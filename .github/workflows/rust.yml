@@ -44,6 +44,9 @@ jobs:
         run: cargo +stable clippy -p jack-vec-comparisons --all-targets -- -D warnings
       - name: Test comparison reporting tools
         run: python3 -m unittest discover -s comparisons/tools -p 'test_*.py'
+      - name: Validate versioned physical-host pair
+        if: hashFiles('comparisons/benchmark-results/macos-aarch64.json', 'comparisons/benchmark-results/linux-x86_64.json') != ''
+        run: python3 comparisons/tools/validate_pair.py comparisons/benchmark-results/macos-aarch64.json comparisons/benchmark-results/linux-x86_64.json
 
   msrv:
     runs-on: ubuntu-latest

@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -59,6 +60,27 @@ class ReportingTests(unittest.TestCase):
             self.assertEqual(run_matrix.benchmark_identity(path), ("build/1024", "JackVec"))
         finally:
             run_matrix.CRITERION = original
+
+    def test_pair_validation_rejects_compiler_and_matrix_differences(self):
+        base = {
+            "schema_version": 1,
+            "round_count": 5,
+            "toolchain": "1.97.0",
+            "metadata": {
+                "authoritative": True,
+                "git_commit": "abc",
+                "compiler_identity": {"release": "1.97.0", "commit_hash": "hash", "LLVM_version": "22"},
+            },
+            "cpu": [{"benchmark": "build/4", "implementation": "Vec"}],
+            "allocations": [{"benchmark": "build", "input": "4", "element_size": "8", "implementation": "Vec"}],
+        }
+        other = json.loads(json.dumps(base))
+        self.assertEqual(run_matrix.pair_issues(base, other), [])
+        other["metadata"]["compiler_identity"]["commit_hash"] = "other"
+        other["cpu"] = []
+        issues = run_matrix.pair_issues(base, other)
+        self.assertIn("CPU matrices differ", issues)
+        self.assertTrue(any("commit_hash" in issue for issue in issues))
 
 
 if __name__ == "__main__":
