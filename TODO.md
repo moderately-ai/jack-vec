@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### Allocator usable-size and reallocation diagnostics (`benchmarks/allocator-usable-size`)
 
-- Status: pre-registered; implementation pending
+- Status: accepted as diagnostic tooling; no library policy change justified
 - Baseline commit: `fe7aa89`
 - Question: where does JackVec's requested allocation size map to a smaller physical
   allocator class, and when does growth remain in place versus move/copy? Requested
@@ -76,6 +76,46 @@ The central hypothesis is:
   repeatable moved-reallocation cost. This experiment makes no speedup claim.
 - Scope: benchmark allocator wrapper and documentation only. No library source,
   growth factor, capacity, layout, or public API changes.
+- Implementation commit: `8174aca`
+- Instrumentation result: all workloads return both requested and usable live
+  bytes to zero, usable bytes never fall below requested bytes, and moved plus
+  in-place reallocations equal total reallocations. Allocation lifecycle counts
+  are unchanged. The runner labels macOS `malloc_size`, Linux
+  `malloc_usable_size`, and the requested-byte fallback explicitly.
+- macOS result: allocator classes erase much of the requested-byte advantage for
+  dense four-element nesting: JackVec requests 480,000 versus Vec's 560,000 bytes,
+  but uses 578,304 versus 582,144 bytes physically, a 3,840-byte or 0.66% usable
+  advantage. Sparse nesting remains a strong physical win at 194,304 versus
+  326,144 bytes (40.42% less). At 1,024 `u64` elements, Vec's 8,192-byte request
+  remains 8,192 usable bytes while JackVec's 8,200-byte combined allocation maps
+  to 8,704; a 1,032-byte `JackVec<u8>` likewise maps to 1,536. These are genuine
+  Darwin allocator-class cliffs, not extra bytes requested by JackVec.
+- Linux glibc result: the same boundaries behave differently. Both Vec's 8,192-
+  byte storage and JackVec's 8,200-byte combined allocation report 8,200 usable
+  bytes; `JackVec<u8>` at 1,032 requested also reports exactly 1,032 usable.
+  Four-element nested JackVec uses 480,024 versus Vec's 640,008 bytes (25.00%
+  less), and sparse nesting uses 160,008 versus 320,008 (50.00% less). The compact
+  header therefore produces substantially larger physical wins under this glibc
+  workload than under macOS malloc.
+- Reallocation result: growing both implementations to 1,024 elements performs
+  eight reallocations. The observed moved/in-place split varied by allocator and
+  even between macOS process runs, so it is retained as a deterministic-workload
+  diagnostic and must not be interpreted as a CPU result or stable allocator
+  guarantee.
+- Decision: retain the diagnostic columns. Reject a generalized allocator-class-
+  aware growth change: the motivating 8,200-byte cliff exists on macOS but not on
+  the measured glibc host, allocator usable size is not part of Rust's allocator
+  contract, and changing logical capacity to consume undocumented slack would
+  require requesting/deallocating a matching rounded layout. Any future attempt
+  must be explicitly allocator-specific, opt-in, and benchmarked as a separate
+  policy rather than changing JackVec's default semantics.
+- Validation: macOS and Linux allocation runs, 103 all-target tests on both hosts,
+  formatting, diff checks, local warning-denied Clippy, Rust 1.86 checks, and a
+  Linux Rust 1.86 allocation-bench Clippy lane pass. Rust 1.86's full-library
+  Clippy additionally reports six pre-existing `Drain` needless-lifetime lints;
+  these are outside this benchmark-only branch and were allowed only to isolate
+  the changed target.
+- Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-allocator-usable-linux-20260711/run.log`.
 
 ### Exact macro construction (`perf/exact-macro-construction`)
 
