@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### Compact 32-bit allocation header (`perf/compact-header`)
 
-- Status: pre-registered; implementation pending
+- Status: accepted
 - Baseline commit: `6b0f0ec`
 - Hypothesis: JackVec's native header uses two machine words even though practical
   collection lengths fit in 32 bits. Replacing `{ len: usize, cap: usize }` with
@@ -84,6 +84,35 @@ The central hypothesis is:
   layout tests, and only the allocation diagnostics necessary to prove requested
   bytes. Do not combine builder, growth-policy, pointer-tagging, or capacity-class
   changes.
+- Memory result: passed exactly. The header is 8 bytes with 8-byte alignment.
+  Reserved `u8` requested bytes are 9, 12, and 1,032 at capacities 1, 4, and
+  1,024; reserved `u64` bytes are 16, 40, and 8,200. Each is exactly 8 bytes below
+  the 16-byte-header baseline, with one allocation, no reallocations, one
+  deallocation, and zero live bytes after drop. For 10,000 containers, sparse
+  requested memory falls 176,000 -> 160,000 bytes and four-element memory falls
+  560,000 -> 480,000; empty owner memory remains 80,000 because empties allocate
+  nothing. Over-aligned layouts remain correct and may consume the saving as padding.
+- First CPU falsification (`dbcf003`): failed decisively at +13.98%, with every
+  round slower and `.text` +1,184 bytes. Removing the checked length conversion in
+  `77c25cf` did not help (+14.80%), disproving the initial conversion-check theory.
+- Root cause: changing two `usize` fields to `u32` reduced `Header`'s declared
+  alignment from 8 to 4. For `u64`, `data_raw` could no longer prove the empty
+  singleton's one-past-header pointer aligned, so optimized hot loops gained a
+  capacity load/test, data-pointer `lea`, and conditional move on every push.
+- Correction (`1e14cd8`): `repr(C, align(8))` keeps the header at 8 bytes while
+  restoring the compile-time alignment proof for ordinary elements. The final
+  seven-round push audit measured +0.50% (range +0.18%..+1.03%, interval
+  +0.29%..+0.56%), inside the pre-registered 1% envelope. `.text` shrank 1,008
+  bytes, `.rodata` grew 48 bytes, and the executable grew only 8 bytes. Record the
+  half-percent point estimate as a possible small tradeoff, not a speedup or zero.
+- Correctness result: the `u32::MAX` ZST boundary succeeds without allocation and
+  the next capacity rejects before allocation on 64-bit. Updated maximum-range
+  drain tests pass. All-target, no-default, serde, malloc-size, Rust 1.86,
+  warning-denied Clippy/docs, 49 doctests, allocation/CPU smoke, strict-provenance
+  Tree Borrows Miri, over-alignment, owner/Option niche, and diff gates pass.
+- Artifacts: `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-compact-header-20260710`,
+  `.../jackvec-compact-header-corrected-20260710`, and
+  `.../jackvec-compact-header-aligned-20260710`.
 
 ### JackVec API rename (`docs/jackvec-branding`)
 
