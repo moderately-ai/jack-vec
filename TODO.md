@@ -37,8 +37,9 @@ The central hypothesis is:
 
 ## Repository state
 
-- Fork: `https://github.com/tomsanbear/thin-vec`
-- Canonical branch: `jackvec`
+- Canonical repository: `https://github.com/moderately-ai/jack-vec`
+- Historical fork: `https://github.com/tomsanbear/thin-vec`
+- Canonical remote branch: `main` (`jackvec` remains the local working branch)
 - Working branch: `benchmarks/allocator-usable-size`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`

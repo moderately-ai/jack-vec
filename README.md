@@ -1,4 +1,4 @@
-[![Rust CI](https://github.com/tomsanbear/thin-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/tomsanbear/thin-vec/actions) [![crates.io](https://img.shields.io/crates/v/jack-vec.svg)](https://crates.io/crates/jack-vec) [![Docs](https://docs.rs/jack-vec/badge.svg)](https://docs.rs/jack-vec)
+[![Rust CI](https://github.com/moderately-ai/jack-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/moderately-ai/jack-vec/actions) [![crates.io](https://img.shields.io/crates/v/jack-vec.svg)](https://crates.io/crates/jack-vec) [![Docs](https://docs.rs/jack-vec/badge.svg)](https://docs.rs/jack-vec)
 
 # JackVec
 
