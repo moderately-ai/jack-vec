@@ -1,9 +1,21 @@
-# Unreleased
-* Rename the fork to JackVec: the package is `jackvec`, the primary type is
-  `JackVec`, and the construction macro is `jack_vec!`. The project remains
-  directly derived from and attributed to Mozilla's ThinVec.
-* Raise the minimum supported Rust version to 1.86.
-* Add CPU and allocation benchmarks comparing ThinVec with Vec.
+# JackVec 0.1.0 (unreleased)
+
+* Establish the `jackvec` package, `JackVec` type, and `jack_vec!` macro while
+  preserving explicit attribution to Mozilla's ThinVec.
+* Focus the implementation on native Rust and remove Gecko/nsTArray FFI and
+  AutoThinVec compatibility.
+* Reduce the allocation header from 16 to 8 bytes on 64-bit targets, with a
+  maximum capacity of `u32::MAX` elements.
+* Optimize push, append, extend, resize, retain, deduplication, array/macro
+  construction, and ownership conversions.
+* Strengthen panic safety for cloning, extension, resizing, retain, and dedup.
+* Add reproducible CPU, allocation, code-size, and cross-platform benchmark
+  tooling.
+* Set the minimum supported Rust version to 1.86.
+
+# ThinVec upstream history
+
+The entries below predate the JackVec fork and are retained for provenance.
 
 # Versions 0.2.17 and 0.2.18 (2026-04-29)
 * Fix compiling some feature combinations in no_std mode

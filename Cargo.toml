@@ -1,6 +1,6 @@
 [package]
 name = "jackvec"
-version = "0.2.18"
+version = "0.1.0"
 authors = ["Aria Beingessner <a.beingessner@gmail.com>"]
 edition = "2018"
 rust-version = "1.86"
@@ -9,6 +9,9 @@ readme = "README.md"
 homepage = "https://github.com/tomsanbear/thin-vec"
 repository = "https://github.com/tomsanbear/thin-vec"
 license = "MIT OR Apache-2.0"
+keywords = ["vec", "collection", "compact", "memory"]
+categories = ["data-structures", "no-std"]
+exclude = ["/.github", "/.gitignore", "/TODO.md", "/tools", "/benchmark-results"]
 
 [features]
 unstable = []

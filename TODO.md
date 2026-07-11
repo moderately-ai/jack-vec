@@ -1,7 +1,7 @@
 # JackVec performance roadmap
 
 This document is the active project ledger for performance work on the
-`tomsanbear/thin-vec` fork, now being prepared under the JackVec project name.
+`tomsanbear/thin-vec` fork under the JackVec project name.
 JackVec is a direct descendant of Mozilla's ThinVec; historical ThinVec names in
 this ledger are retained so results and commit records remain accurate. Update
 the ledger whenever an experiment starts, finishes, changes priority, or produces
@@ -15,9 +15,8 @@ with deeply nested, empty-heavy owned ASTs as the proving workload.
 
 The central hypothesis is:
 
-> ThinVec chose the right final representation, but uses that final
-> representation during construction too. A successor can use Vec-like transient
-> state while building and still produce a one-word final collection.
+> ThinVec chose the right one-word owner. JackVec can improve its allocation
+> representation and construction algorithms while preserving that final density.
 
 ## Non-negotiable invariants
 
@@ -39,7 +38,7 @@ The central hypothesis is:
 ## Repository state
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
-- Working branch: `docs/jackvec-branding`
+- Canonical branch: `jackvec`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -1540,7 +1539,7 @@ preserve their evidence here.
 Keep new benchmarks scarce. A benchmark must distinguish a concrete design choice
 or protect an established property. Remove redundant sizes and methods.
 
-## P1: generalized ThinVec wins
+## P1: generalized JackVec wins
 
 Each change below should be isolated, measured, and either retained or reverted
 before combining it with another optimization.
