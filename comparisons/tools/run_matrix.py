@@ -25,6 +25,7 @@ PRACTICAL_BAND = (0.97, 1.03)
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "comparisons" / "benchmark-results"
 CRITERION = ROOT / "target" / "criterion"
+ALLOCATOR_ENVIRONMENT = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")
 
 
 def command(args: list[str], *, capture: bool = True, check: bool = True, env: dict[str, str] | None = None) -> str:
@@ -42,6 +43,15 @@ def command(args: list[str], *, capture: bool = True, check: bool = True, env: d
 
 def git_dirty() -> bool:
     return bool(command(["git", "status", "--porcelain"]))
+
+
+def configure_allocator(policy: str) -> dict[str, Any]:
+    inherited = {name: os.environ.get(name) for name in ALLOCATOR_ENVIRONMENT}
+    if policy == "system":
+        for name in ALLOCATOR_ENVIRONMENT:
+            os.environ.pop(name, None)
+    effective = {name: os.environ.get(name) for name in ALLOCATOR_ENVIRONMENT}
+    return {"policy": policy, "inherited_environment": inherited, "effective_environment": effective}
 
 
 def host_metadata(cpu: int | None) -> dict[str, Any]:
@@ -184,6 +194,9 @@ def pair_issues(left: dict[str, Any], right: dict[str, Any]) -> list[str]:
     for side, document in (("left", left), ("right", right)):
         if not document.get("metadata", {}).get("authoritative"):
             issues.append(f"{side} report is not authoritative")
+        allocator = document.get("metadata", {}).get("allocator")
+        if not allocator or allocator.get("policy") != "system":
+            issues.append(f"{side} report does not use an explicit system allocator policy")
     if left.get("metadata", {}).get("git_commit") != right.get("metadata", {}).get("git_commit"):
         issues.append("git commits differ")
     identity_fields = ("release", "commit_hash", "LLVM_version")
@@ -296,9 +309,11 @@ def markdown_report(document: dict[str, Any]) -> str:
     lines = [
         f"# JackVec comparison: {document['platform_id']}",
         "",
-        f"Commit: `{metadata['git_commit']}`  ",
-        f"Rust: `{metadata['rustc'].splitlines()[0]}`  ",
-        f"Platform: `{metadata['platform']}`  ",
+        f"- Commit: `{metadata['git_commit']}`",
+        f"- Rust: `{metadata['rustc'].splitlines()[0]}`",
+        f"- Platform: `{metadata['platform']}`",
+        f"- Allocator policy: `{metadata['allocator']['policy']}`; effective override environment: "
+        f"`{metadata['allocator']['effective_environment']}`",
         f"Rounds: {document['round_count']}; practical-equivalence band: 0.97–1.03× Vec.",
         "",
         "A win or loss requires the complete paired bootstrap interval to clear the practical-equivalence band. Results that cross a boundary are reported as inconclusive.",
@@ -337,6 +352,7 @@ def markdown_report(document: dict[str, Any]) -> str:
 
 def run(args: argparse.Namespace) -> None:
     os.environ["RUSTUP_TOOLCHAIN"] = args.toolchain
+    allocator = configure_allocator(args.allocator)
     dirty = git_dirty()
     if dirty and not args.allow_dirty:
         raise SystemExit("refusing an authoritative run from a dirty worktree; use --allow-dirty for exploratory data")
@@ -346,6 +362,7 @@ def run(args: argparse.Namespace) -> None:
         os.sched_setaffinity(0, {args.cpu})
 
     metadata = host_metadata(args.cpu)
+    metadata["allocator"] = allocator
     identity = compiler_identity(metadata["rustc"])
     metadata["compiler_identity"] = identity
     if identity.get("release") != args.toolchain:
@@ -427,6 +444,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--toolchain", required=True, help="exact rustup toolchain, for example 1.97.0")
+    parser.add_argument(
+        "--allocator",
+        required=True,
+        choices=("system", "environment"),
+        help="system clears allocator injection variables; environment records but preserves them",
+    )
     parser.add_argument("--cpu", type=int)
     parser.add_argument("--output-name")
     parser.add_argument("--allow-dirty", action="store_true")

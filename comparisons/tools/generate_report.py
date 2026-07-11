@@ -137,6 +137,13 @@ def write_latest(report: dict, output: Path) -> None:
         return (float(alloc[benchmark, input_, element_size, left]["live_requested"])
                 / float(alloc[benchmark, input_, element_size, right]["live_requested"]))
 
+    largest_jack_gaps = sorted(
+        ((row["median_ns"] / cpu[row["benchmark"], "Vec"]["median_ns"], row["benchmark"])
+         for row in report["cpu"] if row["implementation"] == "JackVec"),
+        reverse=True,
+    )[:3]
+    gap_summary = ", ".join(f"`{benchmark}` ({ratio:.3f}×)" for ratio, benchmark in largest_jack_gaps)
+
     output.write_text(f"""# Latest benchmark comparison
 
 This is the authoritative `{report['platform_id']}` baseline. Lower ratios are
@@ -162,11 +169,9 @@ implementation and scenario is retained, and platforms are never pooled.
   {cpu_ratio('append_preallocated/1024', 'JackVec', 'Vec'):.3f}× Vec and
   {cpu_ratio('append_preallocated/1024', 'JackVec', 'ThinVec'):.3f}× upstream
   ThinVec. This is a large targeted improvement, not a universal CPU claim.
-- The clearest JackVec CPU losses versus Vec include 1,024-element sequential
-  iteration ({cpu_ratio('sequential_iteration/1024', 'JackVec', 'Vec'):.3f}×),
-  `u64` retain ({cpu_ratio('retain_mixed/u64', 'JackVec', 'Vec'):.3f}×), and
-  four-element append ({cpu_ratio('append_preallocated/4', 'JackVec', 'Vec'):.3f}×).
-  They are retained here as investigation targets.
+- JackVec's three largest median CPU gaps versus Vec are {gap_summary}. They are
+  retained here as investigation targets; confidence-aware classifications remain
+  authoritative over point-estimate ordering.
 - Against the inline candidates, JackVec wins most measured CPU medians, while
   SmallVec avoids heap allocation when values fit inline. Neither representation
   dominates every workload.
@@ -210,6 +215,9 @@ and spill counts.
 
 - Commit: `{metadata['git_commit']}`
 - Compiler: `{metadata['compiler_identity']['release']}` (`{metadata['compiler_identity']['commit_hash']}`)
+- Allocator policy: `{metadata['allocator']['policy']}`; inherited injection:
+  `{metadata['allocator']['inherited_environment']}`; effective injection:
+  `{metadata['allocator']['effective_environment']}`
 - CPU rounds: {report['round_count']}; CPU rows: {len(report['cpu'])}; allocation rows: {len(report['allocations'])}
 - Minimum pinned-core idle audit: {min(a['cpu_idle_percent'] for a in audits):.1f}%
 - Maximum audited one-minute load: {max(a['load_average'][0] for a in audits):.2f}

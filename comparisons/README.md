@@ -40,8 +40,8 @@ An authoritative physical-host run requires a clean commit and performs five
 Latin-square registration rotations:
 
 ```console
-uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --output-name macos-aarch64
-uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --cpu 0 --output-name linux-x86_64
+uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --allocator system --output-name macos-aarch64
+uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --allocator system --cpu 0 --output-name linux-x86_64
 uv run --project comparisons/tools --locked python comparisons/tools/validate_pair.py \
   comparisons/benchmark-results/macos-aarch64.json \
   comparisons/benchmark-results/linux-x86_64.json
@@ -51,7 +51,11 @@ The exact toolchain argument is mandatory and must match across hosts. The Linux
 host is expected to pin CPU 0 on the Ryzen 7950X3D's 96 MiB V-cache
 CCD, leave sibling CPU 16 idle, use the performance governor during measurement,
 and restore its prior governor afterwards. The runner records but does not mutate
-power-management policy. macOS runs should be on AC power with Low Power Mode
+power-management policy. The allocator policy is also mandatory: `system` clears
+`LD_PRELOAD` and `DYLD_INSERT_LIBRARIES` for every build and measurement while
+recording their inherited and effective values. Environment-injected allocator
+runs are explicitly recorded but cannot form an authoritative cross-platform
+pair. macOS runs should be on AC power with Low Power Mode
 disabled and without other sustained work.
 
 The runner resolves and verifies the requested `rustc` release, records its
