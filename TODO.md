@@ -32,6 +32,10 @@ The central hypothesis is:
 - [x] Require and verify an exact compiler release, audit pinned-core/system idle
   state between rounds, and reject cross-host reports with mismatched compiler
   hashes, commits, schemas, matrices, or authority status.
+- [x] Track reporting and visualization tooling as a locked uv project with an
+  exact Python and Matplotlib environment, isolated from benchmark execution.
+- [ ] Generate deterministic SVG heatmaps, performance profiles, CPU/memory
+  tradeoff views, and an embedded `LATEST.md` from validated report pairs.
 - [x] Add CodSpeed CPU simulation for pull requests and `main`.
 - [ ] Enable public-repository access for the `moderately-ai` Actions runner
   group, set `CODSPEED_MACRO_ENABLED=true`, and validate ARM64 Linux wall time.

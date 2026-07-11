@@ -40,9 +40,9 @@ An authoritative physical-host run requires a clean commit and performs five
 Latin-square registration rotations:
 
 ```console
-python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --output-name macos-aarch64
-python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --cpu 0 --output-name linux-x86_64
-python3 comparisons/tools/validate_pair.py \
+uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --output-name macos-aarch64
+uv run --project comparisons/tools --locked python comparisons/tools/run_matrix.py --toolchain 1.97.0 --cpu 0 --output-name linux-x86_64
+uv run --project comparisons/tools --locked python comparisons/tools/validate_pair.py \
   comparisons/benchmark-results/macos-aarch64.json \
   comparisons/benchmark-results/linux-x86_64.json
 ```
@@ -78,3 +78,11 @@ ARM64 Linux wall time runs on `main` and manual dispatch after the organization
 enables public-repository macro-runner access and sets the repository variable
 `CODSPEED_MACRO_ENABLED=true`. These continuous trends complement rather than
 replace the controlled M4 macOS and x86_64 Linux reports.
+
+## Python tooling
+
+Reporting and visualization scripts are a non-packaged uv project rooted at
+`comparisons/tools`. Python 3.11.13, uv 0.11.28 in CI, Matplotlib 3.11.0, and
+all transitive dependencies are locked. Use `uv run --project
+comparisons/tools --locked ...` from the repository root; do not install plotting
+dependencies into the benchmark crate or the system Python environment.

@@ -1,5 +1,6 @@
 /benchmark-results/
 /target/
 /comparisons/benchmark-results/raw/
+/comparisons/tools/.venv/
 __pycache__/
 *.py[cod]
