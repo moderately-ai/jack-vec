@@ -55,7 +55,7 @@ use core::{fmt, mem, ops, ptr, slice};
 #[cfg(feature = "malloc_size_of")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 
-const MAX_CAP: usize = usize::MAX;
+const MAX_CAP: usize = u32::MAX as usize;
 
 #[cold]
 fn capacity_overflow() -> ! {
@@ -84,30 +84,35 @@ impl<T, E> UnwrapCapOverflow<T> for Result<T, E> {
     }
 }
 
+#[inline]
+fn header_size(value: usize) -> u32 {
+    value.try_into().unwrap_cap_overflow()
+}
+
 // The allocation header of a JackVec.
 #[repr(C)]
 struct Header {
-    _len: usize,
-    _cap: usize,
+    _len: u32,
+    _cap: u32,
 }
 
 impl Header {
     #[inline]
     fn len(&self) -> usize {
-        self._len
+        self._len as usize
     }
 
     #[inline]
     fn set_len(&mut self, len: usize) {
-        self._len = len;
+        self._len = header_size(len);
     }
 
     fn cap(&self) -> usize {
-        self._cap
+        self._cap as usize
     }
 
     fn set_cap(&mut self, cap: usize) {
-        self._cap = cap;
+        self._cap = header_size(cap);
     }
 }
 
@@ -182,6 +187,7 @@ fn layout<T>(cap: usize) -> Layout {
 /// Panics if the required size overflows `isize::MAX` when rounded up to the required alignment.
 fn header_with_capacity<T>(cap: usize) -> NonNull<Header> {
     debug_assert!(cap > 0);
+    let stored_cap = header_size(cap);
     unsafe {
         let layout = layout::<T>(cap);
         let header = alloc(layout) as *mut Header;
@@ -196,9 +202,9 @@ fn header_with_capacity<T>(cap: usize) -> NonNull<Header> {
                 _len: 0,
                 _cap: if mem::size_of::<T>() == 0 {
                     // "Infinite" capacity for zero-sized types:
-                    MAX_CAP
+                    MAX_CAP as u32
                 } else {
-                    cap
+                    stored_cap
                 },
             },
         );
@@ -325,7 +331,7 @@ impl<T> JackVec<T> {
     /// // space is needed to store the actual elements.
     /// let vec_units = JackVec::<()>::with_capacity(10);
     ///
-    /// // assert_eq!(vec_units.capacity(), usize::MAX);
+    /// // assert_eq!(vec_units.capacity(), u32::MAX as usize);
     /// ```
     pub fn with_capacity(cap: usize) -> JackVec<T> {
         // `padding` contains ~static assertions against types that are
@@ -336,6 +342,10 @@ impl<T> JackVec<T> {
         // double panic. We duplicate the assertion here so that it is
         // testable,
         let _ = padding::<T>();
+
+        if cap > MAX_CAP {
+            capacity_overflow();
+        }
 
         if cap == 0 {
             unsafe {
@@ -1506,6 +1516,9 @@ impl<T> JackVec<T> {
     /// Unsafe because it can cause length to be greater than capacity.
     unsafe fn reallocate(&mut self, new_cap: usize) {
         debug_assert!(new_cap > 0);
+        if new_cap > MAX_CAP {
+            capacity_overflow();
+        }
         if !self.is_singleton() {
             let old_cap = self.capacity();
             let ptr = realloc(
@@ -2822,6 +2835,20 @@ mod tests {
         assert_eq!(size_of::<JackVec<u8>>(), size_of::<&u8>());
 
         assert_eq!(size_of::<Option<JackVec<u8>>>(), size_of::<&u8>());
+        assert_eq!(size_of::<super::Header>(), 8);
+    }
+
+    #[test]
+    fn test_max_capacity_zst() {
+        let vec = JackVec::<()>::with_capacity(MAX_CAP);
+        assert_eq!(vec.capacity(), MAX_CAP);
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[test]
+    #[should_panic(expected = "capacity overflow")]
+    fn test_capacity_above_u32_max() {
+        let _ = JackVec::<()>::with_capacity(MAX_CAP + 1);
     }
 
     #[test]
@@ -4480,19 +4507,19 @@ mod std_tests {
 
     #[test]
     fn test_drain_max_vec_size() {
-        let mut v = JackVec::<()>::with_capacity(usize::MAX);
+        let mut v = JackVec::<()>::with_capacity(MAX_CAP);
         unsafe {
-            v.set_len(usize::MAX);
+            v.set_len(MAX_CAP);
         }
-        for _ in v.drain(usize::MAX - 1..) {}
-        assert_eq!(v.len(), usize::MAX - 1);
+        for _ in v.drain(MAX_CAP - 1..) {}
+        assert_eq!(v.len(), MAX_CAP - 1);
 
-        let mut v = JackVec::<()>::with_capacity(usize::MAX);
+        let mut v = JackVec::<()>::with_capacity(MAX_CAP);
         unsafe {
-            v.set_len(usize::MAX);
+            v.set_len(MAX_CAP);
         }
-        for _ in v.drain(usize::MAX - 1..=usize::MAX - 1) {}
-        assert_eq!(v.len(), usize::MAX - 1);
+        for _ in v.drain(MAX_CAP - 1..=MAX_CAP - 1) {}
+        assert_eq!(v.len(), MAX_CAP - 1);
     }
 
     #[test]
@@ -5130,7 +5157,7 @@ mod std_tests {
         }
 
         const HEADER_SIZE: usize = core::mem::size_of::<Header>();
-        assert_eq!(2 * core::mem::size_of::<usize>(), HEADER_SIZE);
+        assert_eq!(2 * core::mem::size_of::<u32>(), HEADER_SIZE);
 
         #[repr(C, align(128))]
         struct Funky<T>(T);

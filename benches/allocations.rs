@@ -163,6 +163,27 @@ where
     );
 }
 
+fn report_reserved_u8(len: usize) {
+    let measurement = measure(|| {
+        let mut values = JackVec::<u8>::with_capacity(len);
+        values.resize(len, 0);
+        values
+    });
+    assert_eq!(measurement.live_after_drop, 0, "benchmark workload leaked");
+    println!(
+        "push_reserved_u8,{},JackVec<u8>,{},{},{},{},{},{},{},{}",
+        len,
+        1,
+        size_of::<JackVec<u8>>(),
+        measurement.live_before_drop,
+        measurement.peak_live,
+        measurement.live_after_drop,
+        measurement.allocations,
+        measurement.reallocations,
+        measurement.deallocations,
+    );
+}
+
 fn report_jack_into_vec(len: usize) {
     let measurement = measure(|| {
         let output = Vec::from(build_reserved::<JackVec<u64>>(len));
@@ -254,6 +275,7 @@ fn main() {
         report_vector::<JackVec<u64>, _>("push_reserved", len, || {
             build_reserved::<JackVec<u64>>(len)
         });
+        report_reserved_u8(len);
     }
 
     for &len in &[4, 1_024] {
