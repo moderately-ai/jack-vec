@@ -1306,10 +1306,14 @@ impl<T> JackVec<T> {
             return;
         }
 
-        self.reserve(other_len);
+        let self_header = self.header();
+        let self_len = self_header.len();
+        let spare_capacity = self_header.cap() - self_len;
+        if other_len > spare_capacity {
+            self.reserve(other_len);
+        }
 
         unsafe {
-            let self_len = self.len();
             ptr::copy_nonoverlapping(other.data_raw(), self.data_raw().add(self_len), other_len);
 
             // The elements have moved into self. Exclude them from other's
@@ -4843,6 +4847,23 @@ mod std_tests {
         vec.append(&mut vec2);
         assert_eq!(vec, [1, 2, 3, 4, 5, 6]);
         assert_eq!(vec2, []);
+
+        let mut preallocated = JackVec::with_capacity(8);
+        preallocated.extend([0, 1, 2, 3]);
+        let original_ptr = preallocated.as_ptr();
+        let mut source = JackVec::with_capacity(4);
+        source.extend([4, 5, 6, 7]);
+        preallocated.append(&mut source);
+        assert_eq!(preallocated, [0, 1, 2, 3, 4, 5, 6, 7]);
+        assert_eq!(preallocated.capacity(), 8);
+        assert_eq!(preallocated.as_ptr(), original_ptr);
+        assert!(source.is_empty());
+        assert_eq!(source.capacity(), 4);
+
+        let mut empty = JackVec::<u64>::new();
+        preallocated.append(&mut empty);
+        assert_eq!(preallocated, [0, 1, 2, 3, 4, 5, 6, 7]);
+        assert!(empty.is_empty());
     }
 
     #[test]
@@ -4877,6 +4898,22 @@ mod std_tests {
         destination.append(&mut source);
         assert_eq!(destination.len(), 5);
         assert!(source.is_empty());
+
+        #[repr(align(64))]
+        #[derive(Debug, PartialEq)]
+        struct Aligned(u8);
+
+        let mut aligned_destination = JackVec::with_capacity(4);
+        aligned_destination.extend([Aligned(1), Aligned(2)]);
+        let mut aligned_source = JackVec::with_capacity(2);
+        aligned_source.extend([Aligned(3), Aligned(4)]);
+        aligned_destination.append(&mut aligned_source);
+        assert_eq!(
+            aligned_destination,
+            [Aligned(1), Aligned(2), Aligned(3), Aligned(4)]
+        );
+        assert!(aligned_source.is_empty());
+        assert_eq!(aligned_destination.as_ptr().align_offset(64), 0);
     }
 
     #[test]
