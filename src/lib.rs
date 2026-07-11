@@ -2374,7 +2374,13 @@ impl<T> Drop for IntoIter<T> {
         }
 
         if !self.vec.is_singleton() {
-            drop_non_singleton(self);
+            if self.start == self.vec.len() {
+                unsafe {
+                    self.vec.set_len_non_singleton(0);
+                }
+            } else {
+                drop_non_singleton(self);
+            }
         }
     }
 }
@@ -4889,6 +4895,44 @@ mod std_tests {
     #[test]
     fn test_into_iter_count() {
         assert_eq!(jack_vec![1, 2, 3].into_iter().count(), 3);
+    }
+
+    #[test]
+    fn test_into_iter_full_and_partial_drop_exactly_once() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        struct Counted {
+            id: usize,
+            drops: Rc<[Cell<usize>; 4]>,
+        }
+
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                let previous = self.drops[self.id].replace(1);
+                assert_eq!(previous, 0, "value {} dropped twice", self.id);
+            }
+        }
+
+        fn values(drops: &Rc<[Cell<usize>; 4]>) -> JackVec<Counted> {
+            (0..4)
+                .map(|id| Counted {
+                    id,
+                    drops: drops.clone(),
+                })
+                .collect()
+        }
+
+        let full_drops = Rc::new(core::array::from_fn(|_| Cell::new(0)));
+        values(&full_drops).into_iter().for_each(drop);
+        assert!(full_drops.iter().all(|count| count.get() == 1));
+
+        let partial_drops = Rc::new(core::array::from_fn(|_| Cell::new(0)));
+        let mut iter = values(&partial_drops).into_iter();
+        drop(iter.next());
+        drop(iter.next_back());
+        drop(iter);
+        assert!(partial_drops.iter().all(|count| count.get() == 1));
     }
 
     #[test]
