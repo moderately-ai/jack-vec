@@ -52,6 +52,35 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Exact macro construction (`perf/exact-macro-construction`)
+
+- Status: pre-registered; baseline harness pending
+- Baseline implementation commit: `3e25d5e`
+- Hypothesis: `jack_vec![a, b, ...]` knows its exact arity at compile time but still
+  allocates and calls the general push path for every expression. Routing nonempty
+  literal-form macros through the accepted direct `From<[T; N]>` relocation should
+  allocate once, move the initialized array once, and publish length once while
+  preserving left-to-right expression evaluation and panic cleanup.
+- Primary workload: construct four `u64` values with `jack_vec!`; require at least
+  10% improvement in seven paired pinned-Linux rounds under the standard cleared
+  allocator protocol. Secondary singleton construction must not regress beyond 1%.
+  Setup is only scalar expression production; allocation, initialization, length
+  publication, and returned-vector destruction remain consistently bounded by the
+  Criterion batch routine.
+- Memory gate: exact requested bytes, one allocation, zero reallocations, one
+  deallocation, capacity equal to arity, and zero live bytes after drop must remain
+  unchanged.
+- Semantic gates: zero arguments still use the singleton; one, multiple, trailing
+  comma, non-Copy owning values, left-to-right evaluation, and panic during a later
+  expression must drop each earlier value exactly once. Preserve macro hygiene and
+  `$crate` behavior from an external call site.
+- Code-size gate: reuse the existing array relocation monomorphization; reject an
+  unexplained complete `.text` increase even if timing improves. Run all feature,
+  MSRV, docs, Clippy, and strict-provenance Miri gates.
+- Scope: literal-list macro arm, focused temporary 1/4 benchmark, and semantic
+  tests only. Do not add public one/two constructors, change repeat syntax, or mix
+  `from_fn`, growth policy, or inline scratch.
+
 ### Transient construction builder (`perf/transient-builder`)
 
 - Status: rejected; implementation and benchmark reverted

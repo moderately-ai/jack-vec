@@ -6,7 +6,7 @@ use criterion::measurement::WallTime;
 use criterion::{
     criterion_group, criterion_main, BatchSize, BenchmarkGroup, BenchmarkId, Criterion, Throughput,
 };
-use jackvec::JackVec;
+use jackvec::{jack_vec, JackVec};
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
@@ -375,6 +375,24 @@ fn array_into_jack(c: &mut Criterion) {
     group.finish();
 }
 
+fn macro_into_jack(c: &mut Criterion) {
+    let mut group = c.benchmark_group("macro_into_jack");
+    group.bench_function("one", |bencher| {
+        bencher.iter(|| black_box(jack_vec![black_box(1_u64)]));
+    });
+    group.bench_function("four", |bencher| {
+        bencher.iter(|| {
+            black_box(jack_vec![
+                black_box(1_u64),
+                black_box(2_u64),
+                black_box(3_u64),
+                black_box(4_u64),
+            ])
+        });
+    });
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -390,6 +408,7 @@ criterion_group!(
     jack_into_vec,
     jack_into_box,
     vec_into_jack,
-    array_into_jack
+    array_into_jack,
+    macro_into_jack
 );
 criterion_main!(benches);
