@@ -9,3 +9,13 @@ CI or experiment artifacts when investigating a result.
 
 Exploratory runs are automatically suffixed `-exploratory` and must not replace
 an authoritative platform summary.
+
+`LATEST.md` and `graphics/` are deterministic derivatives of the authoritative
+JSON. The report keeps requested heap, allocator-usable heap, and collection-owner
+size conceptually separate; combining them can either hide allocator rounding or
+double-count nested owners. Regenerate it with:
+
+```console
+uv run --project comparisons/tools --locked python comparisons/tools/generate_report.py \
+  comparisons/benchmark-results/linux-x86_64.json
+```
