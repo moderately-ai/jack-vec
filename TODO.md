@@ -18,6 +18,96 @@ The central hypothesis is:
 > ThinVec chose the right one-word owner. JackVec can improve its allocation
 > representation and construction algorithms while preserving that final density.
 
+## Active remaining work
+
+This is the authoritative actionable roadmap. The experiment record and older
+P0/P1/P2 proposal lists below are retained as an audit trail; their unchecked
+boxes are historical hypotheses, not current commitments. New work starts here,
+is pre-registered in the experiment record, and is removed or checked off when a
+decision is reached.
+
+### P0: land and complete trustworthy baselines
+
+- [ ] Land the corrected Linux system-allocator matrix from `perf/iteration-audit`.
+  It replaces the uncontrolled tcmalloc report and includes the shared iteration
+  kernel, explicit allocator provenance, five rotations, and regenerated visuals.
+- [ ] Capture the matching clean M4 macOS matrix at the same Git commit, Rust
+  1.97.0 compiler identity, schema, workload matrix, and explicit `system`
+  allocator policy. Do not pool platform measurements.
+- [ ] Validate the Linux/macOS pair and extend the existing `LATEST.md` and SVGs
+  in one reporting change. Preserve each platform's absolute and relative values.
+- [ ] Enable the already-configured CodSpeed ARM64 macro runner only after public
+  repository runner-group access is available; keep it a trend lane, not a
+  substitute for physical-host baselines.
+- [ ] Accumulate repeated clean baselines before reconsidering the ±3% practical
+  equivalence band. Never tune the band to change a desired classification.
+
+### P1: credible JackVec CPU gaps from the corrected Linux matrix
+
+- [ ] Audit four-element append (`1.334x Vec`, `0.863x ThinVec`) first. Separate
+  unavoidable one-word-header setup from avoidable reserve, branch, and relocation
+  overhead using same-binary controls, assembly, fixed-work counters, allocation
+  parity, and code size. Preserve the accepted large append (`1.020x Vec`,
+  `0.313x ThinVec`).
+- [ ] Audit `retain<u64>` (`1.245x Vec`, `0.972x ThinVec`) while preserving panic
+  repair, exact-once drops, and the accepted large-element improvement. Determine
+  whether predicate-loop/header publication overhead remains avoidable.
+- [ ] Audit dedup only after retain: `u64` is `1.069x Vec` but `0.627x ThinVec`;
+  64-byte elements are `1.100x Vec` and `0.975x ThinVec`. Avoid trading the major
+  upstream gain for a small Vec-relative improvement.
+- [ ] Audit reserved resize (`1.067x Vec`, `0.359x ThinVec`) for redundant checks
+  after reserve. Its large upstream win is a non-regression gate.
+- [ ] Revisit reserved extend only if a repeated baseline converts its current
+  `1.035x Vec` inconclusive result into a stable loss. Do not optimize a point
+  estimate inside an uncertain interval.
+- [ ] Explain why growing 1,024 elements beats Vec (`0.874x`) but trails ThinVec
+  (`1.098x`) before changing growth policy. Check capacity sequence, realloc moves,
+  allocator interaction, and code generation independently.
+
+Long sequential iteration is closed: the corrected shared-kernel result is
+`1.000x Vec` and equivalent across all five implementations. Do not reopen compact
+header alignment without a new real-workload counterexample.
+
+### P2: memory and allocator boundaries
+
+- [ ] Add allocator-size-boundary cases only when they distinguish a proposed
+  representation or growth-policy decision. Always report owner, requested heap,
+  usable heap, allocation/reallocation counts, and moved versus in-place reallocs.
+- [ ] Compare system allocators with mimalloc/tcmalloc only as separately labelled
+  situational studies. Never overwrite or merge them into the system baseline.
+- [ ] Investigate canonical capacity classes or allocator-aware growth only after
+  measured histograms show retained-memory waste. Reject undocumented
+  `malloc_usable_size` capacity as a general safe policy.
+- [ ] Preserve the one-word owner, one-word `Option`, empty singleton, contiguous
+  slice, reconstructable layout, and compact requested header. A universal
+  16-byte header is rejected unless new evidence outweighs its known density loss.
+
+### P3: motivating sqlparsers workload
+
+- [ ] Instrument `../../moderately-ai/sqlparsers` for final `(len, capacity)`
+  histograms, empty/small/large buckets, realloc movement, and mutation-after-parse
+  frequency before designing caller-informed policies.
+- [ ] Re-evaluate a transient construction builder only from those distributions.
+  The previous generalized builder prototype was rejected; a successor must avoid
+  moving final elements, retain panic-safe partial initialization, and demonstrate
+  end-to-end parser value beyond current JackVec push.
+- [ ] Integrate JackVec experimentally only after the standalone CPU work stabilizes.
+  Measure parse CPU, deterministic instructions, allocations, requested/usable and
+  retained bytes, traversal/rendering, compile cost, and pinned AST node sizes.
+- [ ] Keep final inline storage out of AST nodes. Builder-only inline scratch is
+  situational and requires measured spill/copy wins without increasing final node
+  size.
+
+### P4: release readiness after performance work
+
+- [ ] Run the complete stable/MSRV/nightly/Miri/no-std/feature/docs/Clippy matrix
+  after each accepted unsafe or layout change and before release preparation.
+- [ ] Reconcile public documentation, changelog/release notes, attribution to
+  Mozilla ThinVec, repository metadata, and the final MSRV/toolchain policy.
+- [ ] Perform a final unsafe/layout audit and downstream compatibility pass before
+  considering crates.io publication. Publication remains explicitly out of scope
+  until separately authorized.
+
 ## Cross-implementation measurement system (2026-07-11)
 
 - [x] Add the non-published `jack-vec-comparisons` workspace crate.
@@ -39,12 +129,13 @@ The central hypothesis is:
   Linux report. Extend the same report rather than opening a separate PR when the
   clean macOS half becomes available.
 - [x] Add CodSpeed CPU simulation for pull requests and `main`.
-- [ ] Enable public-repository access for the `moderately-ai` Actions runner
-  group, set `CODSPEED_MACRO_ENABLED=true`, and validate ARM64 Linux wall time.
-- [ ] Capture and commit the first clean M4 macOS summary; the Ryzen 7950X3D
-  Linux summary is complete. Retain full raw rounds outside Git.
-- [ ] Revisit the practical-equivalence band only after enough stable repeated
-  baselines exist; never tune it in response to a desired result.
+- [x] Track public-repository access for the `moderately-ai` Actions runner in the
+  active roadmap; configuration is ready but organization runner-group access and
+  `CODSPEED_MACRO_ENABLED=true` remain external prerequisites.
+- [x] Move the matching clean M4 macOS capture and pair validation into the active
+  roadmap; retain full raw rounds outside Git.
+- [x] Move practical-equivalence-band review into the active roadmap with its
+  evidence threshold unchanged.
 
 ## Non-negotiable invariants
 
@@ -67,12 +158,12 @@ The central hypothesis is:
 
 - Canonical repository: `https://github.com/moderately-ai/jack-vec`
 - Historical fork: `https://github.com/tomsanbear/thin-vec`
-- Canonical remote branch: `main` (`jackvec` remains the local working branch)
-- Working branch: `benchmarks/allocator-usable-size`
+- Canonical remote branch: `main`
+- Working branch: `perf/iteration-audit`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
-- Benchmark toolchain: Rust 1.86
+- Library MSRV: Rust 1.86; authoritative comparison toolchain: Rust 1.97.0
 - Benchmark CPU: Ryzen 9 7950X3D, pinned to CPU 0 on the 96 MiB L3 CCD
 - Benchmark OS: Ubuntu, Linux 5.15, glibc 2.35
 - Allocator warning: the login environment preloads tcmalloc globally. Every CPU
@@ -83,7 +174,7 @@ The central hypothesis is:
 
 ### Compact-header data alignment (`perf/iteration-audit`)
 
-- Status: active; root cause proven, representation experiment pending
+- Status: benchmark corrected; no representation change justified
 - Baseline: authoritative Linux comparison commit `4943262`; Rust 1.97.0 on
   pinned CPU 0 of the Ryzen 7950X3D V-cache CCD.
 - Finding: the compact 8-byte header places ordinary `u64` data at 8 modulo 16
@@ -91,8 +182,8 @@ The central hypothesis is:
   10,000,000-iteration fixed-work control measured 3.93 billion cycles for
   JackVec, 3.86 billion for an intentionally one-`u64`-offset Vec slice, and 2.93
   billion for aligned Vec. Instructions were effectively equal; IPC fell from
-  6.2 to 4.6--4.7. This proves the 1,024-element iteration loss is data alignment,
-  not generic header indirection or Criterion noise.
+  6.2 to 4.6--4.7. This proves alignment can dominate that specific fixed-work
+  kernel; it does not prove a generalized JackVec iteration loss.
 - Harness finding: a seven-round two-binary 16-byte-header control was invalidated
   by its unchanged Vec control: Vec/1024 shifted from about 102 ns in the baseline
   binary to 59 ns in the candidate, while JackVec shifted in the opposite
@@ -128,6 +219,18 @@ The central hypothesis is:
 - Decision: reject a universal policy that merely trades the compact header away.
   Accept only a clear overall representation improvement or an explicit,
   caller-selected performance mode whose tradeoff is visible in the type/API.
+- Corrected result: after routing all implementations through one shared,
+  non-inlined slice kernel and clearing injected tcmalloc, 1,024-element JackVec,
+  Vec, ThinVec, SmallVec4, and SmallVec8 iteration are equivalent; JackVec/Vec is
+  1.000x. The compact header therefore has no demonstrated generalized traversal
+  regression. Retain the fixed-work alignment finding as situational codegen
+  evidence, but do not change the representation from it.
+- Replacement matrix: authoritative system-allocator Linux report at benchmark
+  commit `2da08ee`, Rust 1.97.0, five rotations, 100% minimum pinned-core idle,
+  maximum audited one-minute load 1.18, and no host issues. JackVec records eight
+  confidence-qualified wins, five equivalents, three inconclusive results, and
+  six losses versus Vec. The next credible CPU target is four-element append,
+  followed by `retain<u64>`.
 
 ### Guarded `Splice` fill (`perf/splice-fill-guard`)
 

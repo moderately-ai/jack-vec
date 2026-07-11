@@ -309,11 +309,11 @@ def markdown_report(document: dict[str, Any]) -> str:
     lines = [
         f"# JackVec comparison: {document['platform_id']}",
         "",
-        f"Commit: `{metadata['git_commit']}`  ",
-        f"Rust: `{metadata['rustc'].splitlines()[0]}`  ",
-        f"Platform: `{metadata['platform']}`  ",
-        f"Allocator policy: `{metadata['allocator']['policy']}`; effective override environment: "
-        f"`{metadata['allocator']['effective_environment']}`  ",
+        f"- Commit: `{metadata['git_commit']}`",
+        f"- Rust: `{metadata['rustc'].splitlines()[0]}`",
+        f"- Platform: `{metadata['platform']}`",
+        f"- Allocator policy: `{metadata['allocator']['policy']}`; effective override environment: "
+        f"`{metadata['allocator']['effective_environment']}`",
         f"Rounds: {document['round_count']}; practical-equivalence band: 0.97–1.03× Vec.",
         "",
         "A win or loss requires the complete paired bootstrap interval to clear the practical-equivalence band. Results that cross a boundary are reported as inconclusive.",

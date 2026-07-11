@@ -12,22 +12,20 @@ implementation and scenario is retained, and platforms are never pooled.
 ## What this baseline says
 
 - JackVec is not an across-the-board faster `Vec`: it has
-  6 confidence-qualified wins and
-  7 losses versus `Vec` in this matrix.
+  8 confidence-qualified wins and
+  6 losses versus `Vec` in this matrix.
 - Its intended nested-density advantage is substantial: requested memory for the
   empty and sparse nested workloads is
   0.333× and
   0.526× Vec,
   respectively, while each collection owner remains one machine word.
 - The optimized large append path reaches
-  1.013× Vec and
-  0.322× upstream
+  1.020× Vec and
+  0.313× upstream
   ThinVec. This is a large targeted improvement, not a universal CPU claim.
-- The clearest JackVec CPU losses versus Vec include 1,024-element sequential
-  iteration (1.265×),
-  `u64` retain (1.246×), and
-  four-element append (1.437×).
-  They are retained here as investigation targets.
+- JackVec's three largest median CPU gaps versus Vec are `append_preallocated/4` (1.334×), `retain_mixed/u64` (1.245×), `retain_mixed/64_byte` (1.101×). They are
+  retained here as investigation targets; confidence-aware classifications remain
+  authoritative over point-estimate ordering.
 - Against the inline candidates, JackVec wins most measured CPU medians, while
   SmallVec avoids heap allocation when values fit inline. Neither representation
   dominates every workload.
@@ -40,20 +38,20 @@ silently counted as equality.
 
 | Implementation | Wins | Equivalent | Inconclusive | Losses |
 |---|---:|---:|---:|---:|
-| JackVec | 6 | 4 | 5 | 7 |
-| ThinVec | 7 | 2 | 3 | 10 |
-| SmallVec4 | 1 | 1 | 3 | 17 |
-| SmallVec8 | 1 | 3 | 3 | 15 |
+| JackVec | 8 | 5 | 3 | 6 |
+| ThinVec | 8 | 6 | 1 | 7 |
+| SmallVec4 | 5 | 3 | 1 | 13 |
+| SmallVec8 | 5 | 2 | 1 | 14 |
 
 For direct context, this simpler head-to-head table compares median CPU times
 using the same ±3% practical band. It does not replace the confidence-aware table.
 
 | JackVec compared with | JackVec faster | Within ±3% | JackVec slower |
 |---|---:|---:|---:|
-| Vec | 8 | 5 | 9 |
-| ThinVec | 8 | 7 | 7 |
-| SmallVec4 | 16 | 2 | 4 |
-| SmallVec8 | 15 | 3 | 4 |
+| Vec | 9 | 6 | 7 |
+| ThinVec | 8 | 10 | 4 |
+| SmallVec4 | 13 | 4 | 5 |
+| SmallVec8 | 13 | 4 | 5 |
 
 ## Memory outcomes
 
@@ -75,11 +73,14 @@ and spill counts.
 
 ## Run provenance
 
-- Commit: `1f6e5f8abac7152d6ef3523baaed63096ac88b0a`
+- Commit: `2da08eea786c9755fa6ac883026ebfc8eeeb904e`
 - Compiler: `1.97.0` (`2d8144b7880597b6e6d3dfd63a9a9efae3f533d3`)
+- Allocator policy: `system`; inherited injection:
+  `{'DYLD_INSERT_LIBRARIES': None, 'LD_PRELOAD': '/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4'}`; effective injection:
+  `{'DYLD_INSERT_LIBRARIES': None, 'LD_PRELOAD': None}`
 - CPU rounds: 5; CPU rows: 110; allocation rows: 60
 - Minimum pinned-core idle audit: 100.0%
-- Maximum audited one-minute load: 1.12
+- Maximum audited one-minute load: 1.18
 
 The performance profile reports the fraction of workloads within each factor of
 the fastest implementation for that workload. It is an aggregate view, not a
