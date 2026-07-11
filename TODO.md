@@ -53,6 +53,32 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Two-move `swap_remove` (`perf/swap-remove-two-move`)
+
+- Status: pre-registered; baseline harness pending
+- Baseline: `6fcaf61`
+- Hypothesis: current `ptr::swap(index, last)` writes the removed value into the
+  last slot only to read it back for return. Reading the removed value once and
+  copying the last value into the hole eliminates that store/reload and roughly
+  half the traffic for large elements while preserving unordered-removal semantics.
+- Codegen evidence: Rust 1.86 AArch64 retains the redundant store/reload for `u64`
+  and uses a 256-byte stack copy for `[u8; 256]`; x86-64 emits four bulk-copy calls
+  and a 264-byte frame. This clears the codegen-first eligibility gate.
+- Primary: middle-index removal from a preallocated `[u8; 256]` collection must
+  improve at least 20% in seven paired pinned-Linux rounds and show the same
+  direction on Apple M4. Secondary `u64` may not regress beyond 2%; `index == last`
+  must not acquire unnecessary copying. Setup and collection destruction remain
+  outside the timed routine; removal, returned-value materialization, and its
+  consumption remain inside for both implementations.
+- Safety: read the removed value before shortening length; copy the last element
+  only when index differs; publish `len - 1` after relocation. Prove exact-once Drop
+  for middle/last indices, ZST behavior, out-of-bounds panic before pointer access,
+  all feature/MSRV/Clippy/docs gates, and strict-provenance Tree Borrows Miri.
+- Size: require optimized code to eliminate write-to-last/reload and reject whole
+  `.text` growth above 512 bytes without a separate explanation.
+- Scope: `swap_remove`, one temporary two-type benchmark, and focused lifecycle
+  tests only. No other mutation, iterator, layout, growth, or public API changes.
+
 ### Adversarial safety and repository hardening (`main`)
 
 - Status: first correction set accepted; deeper panic/performance loop active

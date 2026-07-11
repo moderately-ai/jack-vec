@@ -11,6 +11,7 @@ pub trait BenchVector<T>: Sized {
     fn new() -> Self;
     fn with_capacity(capacity: usize) -> Self;
     fn push(&mut self, value: T);
+    fn swap_remove(&mut self, index: usize) -> T;
     fn append(&mut self, other: &mut Self);
     fn retain_mut<F>(&mut self, predicate: F)
     where
@@ -42,6 +43,10 @@ impl<T> BenchVector<T> for Vec<T> {
 
     fn push(&mut self, value: T) {
         Vec::push(self, value);
+    }
+
+    fn swap_remove(&mut self, index: usize) -> T {
+        Vec::swap_remove(self, index)
     }
 
     fn append(&mut self, other: &mut Self) {
@@ -102,6 +107,10 @@ impl<T> BenchVector<T> for JackVec<T> {
 
     fn push(&mut self, value: T) {
         JackVec::push(self, value);
+    }
+
+    fn swap_remove(&mut self, index: usize) -> T {
+        JackVec::swap_remove(self, index)
     }
 
     fn append(&mut self, other: &mut Self) {
