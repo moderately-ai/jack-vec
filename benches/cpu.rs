@@ -6,7 +6,7 @@ use criterion::measurement::WallTime;
 use criterion::{
     criterion_group, criterion_main, BatchSize, BenchmarkGroup, BenchmarkId, Criterion, Throughput,
 };
-use jackvec::{JackVec, JackVecBuilder};
+use jackvec::JackVec;
 
 use support::{
     build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
@@ -375,38 +375,6 @@ fn array_into_jack(c: &mut Criterion) {
     group.finish();
 }
 
-fn build_preallocated_finish(c: &mut Criterion) {
-    let mut group = c.benchmark_group("build_preallocated_finish");
-
-    for &len in OPERATION_SIZES {
-        group.throughput(Throughput::Elements(len as u64));
-        group.bench_function(BenchmarkId::new("JackVec", len), |bencher| {
-            bencher.iter_batched(
-                || JackVec::with_capacity(len),
-                |mut values| {
-                    fill_vector(&mut values, black_box(len), 0);
-                    black_box(values)
-                },
-                BatchSize::SmallInput,
-            );
-        });
-        group.bench_function(BenchmarkId::new("JackVecBuilder", len), |bencher| {
-            bencher.iter_batched(
-                || JackVecBuilder::with_capacity(len),
-                |mut builder| {
-                    for value in 0..black_box(len) {
-                        builder.push(value as u64);
-                    }
-                    black_box(builder.finish())
-                },
-                BatchSize::SmallInput,
-            );
-        });
-    }
-
-    group.finish();
-}
-
 criterion_group!(
     benches,
     nested_construct,
@@ -422,7 +390,6 @@ criterion_group!(
     jack_into_vec,
     jack_into_box,
     vec_into_jack,
-    array_into_jack,
-    build_preallocated_finish
+    array_into_jack
 );
 criterion_main!(benches);
