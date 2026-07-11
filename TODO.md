@@ -176,6 +176,51 @@ header alignment without a new real-workload counterexample.
 
 ## Experiment record
 
+### Preallocated four-element append (`perf/append-small-audit`)
+
+- Status: active; diagnostic/codegen phase
+- Baseline commit: `a6a034a` (implementation identical to canonical `55ea7c3`;
+  ledger cleanup only)
+- Observation: the corrected Linux system-allocator matrix measures JackVec at
+  `1.334x Vec` for four-element preallocated append while still beating upstream
+  ThinVec at `0.863x`. At 1,024 elements JackVec is `1.020x Vec` and `0.313x
+  ThinVec`, so any small-path change must preserve the accepted bulk path.
+- Hypothesis: `append` calls general `reserve`, which reloads destination length
+  and capacity, then reloads destination length again after return even when the
+  caller already has sufficient capacity. Loading destination header state once,
+  bypassing general reserve machinery only when capacity is already proven, and
+  retaining the original length through relocation may reduce fixed overhead
+  without specializing a particular element count.
+- Diagnostic gate: inspect optimized JackVec, Vec, and ThinVec append wrappers and
+  run one same-binary fixed-operation driver before implementation. Count cycles,
+  instructions, branches/misses, cache events, and confirm both sides perform the
+  same 32-byte relocation and length/source publication. Criterion profile totals
+  are invalid because implementations execute different operation counts.
+- Primary: `append_preallocated/JackVec/4` must improve at least 10% at the paired
+  median with the complete bootstrap interval below zero in exactly seven
+  alternating process rounds. Use Rust 1.97.0, CPU 0 of the Ryzen 7950X3D V-cache
+  CCD, explicit system allocator, performance governor, seed 20260712, 100 samples,
+  3-second warm-up, 5-second measurement, and 100,000 resamples.
+- Secondary: `append_preallocated/JackVec/1024` may not regress beyond 1%. Report
+  all Vec, ThinVec, SmallVec4, and SmallVec8 measurements from the same filter as
+  code-layout/noise controls; unchanged controls outside the calibrated envelope
+  require explanation rather than selective omission.
+- Memory/semantic gates: destination capacity, final contents, emptied source,
+  requested/usable live and peak bytes, allocations/reallocations/deallocations,
+  and zero post-drop bytes must match the parent. Cover empty source/destination,
+  preallocated no-growth, required growth, owning exact-once Drop, ZSTs,
+  over-alignment, and overflow behavior.
+- Codegen/size gate: the no-growth path must load destination state once and keep
+  growth cold/general. Reject unexplained whole `.text` growth above 512 bytes or
+  a local speedup created by duplicating reserve/layout machinery.
+- Safety gates: preserve the ordering that removes elements from `other` before
+  publishing them in `self`, so unwinding cannot double-drop. Run stable, MSRV,
+  nightly, no-std/features, Clippy, docs, and strict-provenance Miri.
+- Decision: accept only if every primary, secondary, memory, safety, and size gate
+  passes. Otherwise revert implementation and temporary diagnostics while keeping
+  the negative result here. Do not add a `len == 4` branch unless the pre-change
+  assembly proves runtime copy dispatch is the dominant avoidable mechanism.
+
 ### Compact-header data alignment (`perf/iteration-audit`)
 
 - Status: benchmark corrected; no representation change justified
