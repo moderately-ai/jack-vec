@@ -50,8 +50,13 @@ jobs:
       - name: Test comparison reporting tools
         run: uv run --project comparisons/tools --locked python -m unittest discover -s comparisons/tools -p 'test_*.py'
       - name: Validate versioned physical-host pair
-        if: hashFiles('comparisons/benchmark-results/macos-aarch64.json', 'comparisons/benchmark-results/linux-x86_64.json') != ''
+        if: hashFiles('comparisons/benchmark-results/macos-aarch64.json') != '' && hashFiles('comparisons/benchmark-results/linux-x86_64.json') != ''
         run: uv run --project comparisons/tools --locked python comparisons/tools/validate_pair.py comparisons/benchmark-results/macos-aarch64.json comparisons/benchmark-results/linux-x86_64.json
+      - name: Regenerate versioned benchmark graphics
+        if: hashFiles('comparisons/benchmark-results/linux-x86_64.json') != ''
+        run: |
+          uv run --project comparisons/tools --locked python comparisons/tools/generate_report.py comparisons/benchmark-results/linux-x86_64.json
+          git diff --exit-code -- comparisons/benchmark-results/LATEST.md comparisons/benchmark-results/graphics
 
   msrv:
     runs-on: ubuntu-latest

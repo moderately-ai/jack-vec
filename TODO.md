@@ -34,13 +34,15 @@ The central hypothesis is:
   hashes, commits, schemas, matrices, or authority status.
 - [x] Track reporting and visualization tooling as a locked uv project with an
   exact Python and Matplotlib environment, isolated from benchmark execution.
-- [ ] Generate deterministic SVG heatmaps, performance profiles, CPU/memory
-  tradeoff views, and an embedded `LATEST.md` from validated report pairs.
+- [x] Generate deterministic SVG heatmaps, a non-lossy performance profile,
+  CPU/memory tradeoff views, and an embedded `LATEST.md` from the authoritative
+  Linux report. Extend the same report rather than opening a separate PR when the
+  clean macOS half becomes available.
 - [x] Add CodSpeed CPU simulation for pull requests and `main`.
 - [ ] Enable public-repository access for the `moderately-ai` Actions runner
   group, set `CODSPEED_MACRO_ENABLED=true`, and validate ARM64 Linux wall time.
-- [ ] Capture and commit the first clean M4 macOS and Ryzen 7950X3D Linux
-  summaries; retain full raw rounds outside Git.
+- [ ] Capture and commit the first clean M4 macOS summary; the Ryzen 7950X3D
+  Linux summary is complete. Retain full raw rounds outside Git.
 - [ ] Revisit the practical-equivalence band only after enough stable repeated
   baselines exist; never tune it in response to a desired result.
 
