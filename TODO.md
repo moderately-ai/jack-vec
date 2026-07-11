@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### Tagged small-length cache (`perf/tagged-small-length`)
 
-- Status: pre-registered; prototype pending
+- Status: rejected; prototype and focused test reverted
 - Baseline commit: `bf648de`
 - Hypothesis: the low three bits of JackVec's 8-byte-aligned header pointer can
   cache lengths 0 through 6, using tag 7 as an escape to the header. Sparse nested
@@ -85,6 +85,29 @@ The central hypothesis is:
 - Scope: pointer representation helpers, length publication, focused transition
   tests, and temporary comparison filters only. No header, allocator, growth,
   builder, public API, or sqlparsers changes.
+- Prototype: encoded lengths 0 through 6 directly, used tag 7 as the escaped-header
+  sentinel, masked through strict-provenance `map_addr` before every pointer use,
+  kept the header authoritative, and updated the tag after length publication.
+  Focused 0/1/6/7/8 growth, shrink, regrowth, and clear transitions passed.
+- Primary falsification: failed catastrophically on Apple M4 Max. The baseline
+  JackVec metadata median was 3.1859 microseconds; the direct escaped-load prototype
+  measured 5.1198 microseconds, a 60.71% regression instead of the required 30%
+  improvement. Outlining the escape load as cold made it slightly worse at 5.2151
+  microseconds. The primary gate failed before full cross-platform validation.
+- Mechanism: the tag does remove header loads for lengths below seven, but `len()`
+  must test the escape value for every owner. That data-dependent control flow
+  prevents LLVM from vectorizing the scan; outlining the rare path does not remove
+  the per-owner branch. The prototype also adds pointer masking to data access and
+  tag publication to every mutation, with a local 1,024-push smoke estimate of
+  roughly 2.47 microseconds, providing an additional strong warning against the
+  representation even though no formal push comparison was needed after primary
+  failure.
+- Decision: revert all implementation and transition-test changes. Do not retry
+  low-bit cached length for the mutable one-word owner: its required escape path
+  destroys the exact AArch64 vectorization opportunity it was intended to recover,
+  while imposing pervasive mutation and provenance complexity. A fixed-arity type
+  or immutable finalized representation could avoid an escape, but is a different
+  collection contract and requires a demonstrated downstream use case.
 
 ### Nested metadata scan (`benchmarks/metadata-scan`)
 
@@ -1817,11 +1840,12 @@ workload demonstrates a win.
 
 ### Pointer-tagged cached length
 
-- [ ] Prototype low-bit caching for empty/singleton/small lengths only after the
-  builder and compact header land.
-- [ ] Measure metadata-only traversal and randomized nested access.
-- [ ] Validate pointer masking, deallocation, Option niche, drains, panicking Drop,
-  ZSTs, over-aligned elements, and cross-thread moves under strict-provenance Miri.
+- [x] Prototype and reject low-bit caching: the unavoidable escape test prevents
+  AArch64 vectorization and regresses the target metadata scan by about 61%.
+- [x] Measure the sparse metadata-only workload on macOS and Linux; do not add a
+  randomized variant after the primary mechanism failed.
+- [x] Stop before full Miri/deallocation validation because the pre-registered
+  primary performance gate failed; all pointer-tagging implementation was reverted.
 
 ### Canonical capacity classes
 
