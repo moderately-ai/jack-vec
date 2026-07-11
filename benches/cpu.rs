@@ -391,42 +391,6 @@ fn array_into_jack(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_swap_remove<V, T>(
-    group: &mut BenchmarkGroup<'_, WallTime>,
-    element: &'static str,
-    value: T,
-) where
-    V: BenchVector<T>,
-    T: Clone,
-{
-    const LEN: usize = 64;
-    group.bench_function(BenchmarkId::new(element, V::LABEL), |bencher| {
-        bencher.iter_batched_ref(
-            || {
-                let mut values = V::with_capacity(LEN);
-                values.resize(LEN, value.clone());
-                values
-            },
-            |values| {
-                let removed = values.swap_remove(black_box(LEN / 2));
-                black_box(&removed);
-                drop(removed);
-            },
-            BatchSize::SmallInput,
-        );
-    });
-}
-
-fn swap_remove_middle(c: &mut Criterion) {
-    let mut group = c.benchmark_group("swap_remove_middle");
-    group.throughput(Throughput::Elements(1));
-    bench_swap_remove::<Vec<u64>, _>(&mut group, "u64", 7);
-    bench_swap_remove::<JackVec<u64>, _>(&mut group, "u64", 7);
-    bench_swap_remove::<Vec<[u8; 256]>, _>(&mut group, "256_byte", [7; 256]);
-    bench_swap_remove::<JackVec<[u8; 256]>, _>(&mut group, "256_byte", [7; 256]);
-    group.finish();
-}
-
 criterion_group!(
     benches,
     nested_construct,
@@ -443,7 +407,6 @@ criterion_group!(
     jack_into_vec,
     jack_into_box,
     vec_into_jack,
-    array_into_jack,
-    swap_remove_middle
+    array_into_jack
 );
 criterion_main!(benches);

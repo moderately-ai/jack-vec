@@ -55,7 +55,7 @@ The central hypothesis is:
 
 ### Two-move `swap_remove` (`perf/swap-remove-two-move`)
 
-- Status: pre-registered; baseline harness pending
+- Status: accepted; temporary benchmark removed
 - Baseline: `6fcaf61`
 - Hypothesis: current `ptr::swap(index, last)` writes the removed value into the
   last slot only to read it back for return. Reading the removed value once and
@@ -78,6 +78,31 @@ The central hypothesis is:
   `.text` growth above 512 bytes without a separate explanation.
 - Scope: `swap_remove`, one temporary two-type benchmark, and focused lifecycle
   tests only. No other mutation, iterator, layout, growth, or public API changes.
+- Baseline harness: `b7bfe31`
+- Candidate: `698f551`
+- Linux primary: passed decisively. Seven pinned, alternating Rust 1.86 pairs with
+  preload cleared improved `[u8; 256]` middle removal 41.95%, from 23.29 ns to
+  13.44 ns. Every pair favored the candidate; range -43.72%..-29.37% and bootstrap
+  median interval -43.04%..-32.23% clear the 20% gate.
+- Linux secondary: `u64` also improved 15.10%, from 2.63 ns to 2.24 ns, favorable
+  in all seven pairs (range -15.75%..-14.30%, interval -15.22%..-14.75%). This is
+  a measured win, not merely absence of regression.
+- macOS direction: three Rust 1.86 Apple M4 pairs had a -26.86% median. One noisy
+  pair was +4.72%, so treat this only as the required directional confirmation,
+  not a precise Apple effect estimate.
+- Mechanism/size: the implementation reads the removed value, copies the last
+  value into the hole only when indices differ, then publishes the shorter length.
+  This removes the write-to-last/reload. Complete ELF `.text` grows 292 bytes and
+  the executable file shrinks 248 bytes, within the 512-byte gate.
+- Safety: middle and last removal, ZSTs, out-of-bounds behavior, and exact-once
+  owning Drop pass. Warning-denied Clippy, stable/MSRV feature checks, and strict-
+  provenance Tree Borrows Miri pass.
+- Decision: retain the implementation and lifecycle test. Remove the temporary
+  benchmark to keep the permanent suite focused; the optimized move pattern and
+  exact-drop test directly protect the mechanism.
+- Artifacts: `catalyzed-builder:~/thin-vec/benchmark-results/jack-vec-swap-remove-large-20260711`,
+  `.../jack-vec-swap-remove-u64-20260711`, and
+  `benchmark-results/jack-vec-swap-remove-large-macos-20260711`.
 
 ### Adversarial safety and repository hardening (`main`)
 
