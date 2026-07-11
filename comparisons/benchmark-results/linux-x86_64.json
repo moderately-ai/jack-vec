@@ -1,0 +1,2768 @@
+{
+  "allocations": [
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "240000",
+      "live_usable": "245760",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "240000",
+      "peak_usable": "245760",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "80000",
+      "live_usable": "81920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "80000",
+      "peak_usable": "81920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "80000",
+      "live_usable": "81920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "80000",
+      "peak_usable": "81920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "401408",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "401408",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "304000",
+      "live_usable": "309760",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "304000",
+      "peak_usable": "309760",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "160000",
+      "live_usable": "177920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "160000",
+      "peak_usable": "177920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "176000",
+      "live_usable": "177920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "176000",
+      "peak_usable": "177920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "401408",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "401408",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "560000",
+      "live_usable": "565760",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "560000",
+      "peak_usable": "565760",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "480000",
+      "live_usable": "561920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "480000",
+      "peak_usable": "561920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "560000",
+      "live_usable": "561920",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "560000",
+      "peak_usable": "561920",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "401408",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "401408",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "8",
+      "live_usable": "8",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "8",
+      "peak_usable": "8",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "16",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "16",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "24",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "24",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "1",
+      "live_usable": "8",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1",
+      "peak_usable": "8",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "9",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "9",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "17",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "17",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "4",
+      "live_usable": "8",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "4",
+      "peak_usable": "8",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "12",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "12",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "20",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "20",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "8",
+      "owner_bytes": "24",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8200",
+      "live_usable": "9216",
+      "moved_reallocations": "8",
+      "owner_bytes": "8",
+      "peak_requested": "8200",
+      "peak_usable": "9216",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8208",
+      "live_usable": "9216",
+      "moved_reallocations": "8",
+      "owner_bytes": "8",
+      "peak_requested": "8208",
+      "peak_usable": "9216",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "7",
+      "owner_bytes": "40",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "7",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "6",
+      "owner_bytes": "72",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "6",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8200",
+      "live_usable": "9216",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "8200",
+      "peak_usable": "9216",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8208",
+      "live_usable": "9216",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "8208",
+      "peak_usable": "9216",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1032",
+      "live_usable": "1152",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "1032",
+      "peak_usable": "1152",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1040",
+      "live_usable": "1152",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "1040",
+      "peak_usable": "1152",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "1"
+    }
+  ],
+  "cpu": [
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 161.77505719799845,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "equivalent",
+      "implementation": "JackVec",
+      "median_ns": 163.95494281430712,
+      "ratio_ci95": [
+        0.9968067917976962,
+        1.021851996291705
+      ],
+      "ratio_to_vec": 1.0146403891728422
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 508.7755249016675,
+      "ratio_ci95": [
+        3.126091837642611,
+        3.1933961619509517
+      ],
+      "ratio_to_vec": 3.1447614354622004
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 192.69557853717026,
+      "ratio_ci95": [
+        1.1770104344961798,
+        1.2282828255995037
+      ],
+      "ratio_to_vec": 1.194446822944933
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 208.08677917447972,
+      "ratio_ci95": [
+        1.2784436451729397,
+        1.2992798502694207
+      ],
+      "ratio_to_vec": 1.2872581782861556
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 2.589009125638002,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 3.7191597038244684,
+      "ratio_ci95": [
+        1.4326508604689718,
+        1.482222680158473
+      ],
+      "ratio_to_vec": 1.436101678793757
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 4.116052245175519,
+      "ratio_ci95": [
+        1.5669916975036808,
+        1.6184725493637409
+      ],
+      "ratio_to_vec": 1.585537126766058
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 5.723299667656713,
+      "ratio_ci95": [
+        2.204585844891109,
+        2.214086132111562
+      ],
+      "ratio_to_vec": 2.2114811493112905
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5.71031215270582,
+      "ratio_ci95": [
+        2.192728130873105,
+        2.2090015458612355
+      ],
+      "ratio_to_vec": 2.2004727111785836
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 8.311868970446922,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 7.682645379876533,
+      "ratio_ci95": [
+        0.9221977888382257,
+        0.9380949120486872
+      ],
+      "ratio_to_vec": 0.9269530663614397
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 7.658920989740534,
+      "ratio_ci95": [
+        0.9207554830180028,
+        0.9266491222139418
+      ],
+      "ratio_to_vec": 0.9224474426795347
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "SmallVec4",
+      "median_ns": 2.0536155396050595,
+      "ratio_ci95": [
+        0.2409117289722443,
+        0.24870737657868874
+      ],
+      "ratio_to_vec": 0.24710260180745558
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 3.2049950101053506,
+      "ratio_ci95": [
+        0.37632426004844854,
+        0.3879007871376156
+      ],
+      "ratio_to_vec": 0.37921128734980103
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 678.7348819835263,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 562.0511615597011,
+      "ratio_ci95": [
+        0.817005717550381,
+        0.8452634259565537
+      ],
+      "ratio_to_vec": 0.8266457746695103
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 550.8953346066849,
+      "ratio_ci95": [
+        0.8019214781913301,
+        0.8304769355506499
+      ],
+      "ratio_to_vec": 0.8109718569913577
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 1002.8559436664546,
+      "ratio_ci95": [
+        1.4662726621110902,
+        1.5099333239819326
+      ],
+      "ratio_to_vec": 1.4783675584747955
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 1006.0232899321475,
+      "ratio_ci95": [
+        1.4274376907364172,
+        1.5069487035696778
+      ],
+      "ratio_to_vec": 1.4746273448169824
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 9.265608441871443,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 8.94698208316751,
+      "ratio_ci95": [
+        0.9573069961137739,
+        0.9797498683903755
+      ],
+      "ratio_to_vec": 0.968763598667124
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 8.468225239740708,
+      "ratio_ci95": [
+        0.8921372739981763,
+        0.9345045459483057
+      ],
+      "ratio_to_vec": 0.9231650546653072
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 10.868385004852975,
+      "ratio_ci95": [
+        1.168956131243969,
+        1.188770074108358
+      ],
+      "ratio_to_vec": 1.1729812535287545
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 8.724095096770357,
+      "ratio_ci95": [
+        0.9282419824881796,
+        1.008598230767938
+      ],
+      "ratio_to_vec": 0.9413956728406905
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 967.3551650448137,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 1039.2353176778752,
+      "ratio_ci95": [
+        1.0708986290957339,
+        1.0756920584855694
+      ],
+      "ratio_to_vec": 1.072976578433573
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 1006.2766152117114,
+      "ratio_ci95": [
+        1.0391085467326746,
+        1.041911577095716
+      ],
+      "ratio_to_vec": 1.0401429315688266
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 1144.6561457496118,
+      "ratio_ci95": [
+        1.1787299643438678,
+        1.197650866320387
+      ],
+      "ratio_to_vec": 1.183284265295244
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 1147.1235264558886,
+      "ratio_ci95": [
+        1.1815767720060844,
+        1.196587620156839
+      ],
+      "ratio_to_vec": 1.1856014957348264
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 267.9117823332955,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 282.5486322924231,
+      "ratio_ci95": [
+        1.0017902047950298,
+        1.0665727516224783
+      ],
+      "ratio_to_vec": 1.0589503672450276
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 369.63072247497956,
+      "ratio_ci95": [
+        1.3755367445636895,
+        1.5477378785285156
+      ],
+      "ratio_to_vec": 1.3836190278425138
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 447.8860844947735,
+      "ratio_ci95": [
+        1.5893518476061512,
+        2.043953400298191
+      ],
+      "ratio_to_vec": 1.6592116901972738
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 367.33583411009477,
+      "ratio_ci95": [
+        1.306555753795462,
+        1.383774362921717
+      ],
+      "ratio_to_vec": 1.3743112956828791
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 152.20840524509512,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 164.9307118263884,
+      "ratio_ci95": [
+        1.0383200636146916,
+        1.112638448000239
+      ],
+      "ratio_to_vec": 1.0724442118020505
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 155.38174191716968,
+      "ratio_ci95": [
+        0.9771884688976008,
+        1.059219256508823
+      ],
+      "ratio_to_vec": 1.020848629659871
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 148.66015759967007,
+      "ratio_ci95": [
+        0.9288515095237042,
+        1.0210922589663562
+      ],
+      "ratio_to_vec": 1.0005831987212552
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 160.7589997937258,
+      "ratio_ci95": [
+        0.9878037048030517,
+        1.0775951895652272
+      ],
+      "ratio_to_vec": 1.0437531269978644
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 18932.941566265057,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 12071.658619505495,
+      "ratio_ci95": [
+        0.5752664646597035,
+        0.6393564531490558
+      ],
+      "ratio_to_vec": 0.6348300012584576
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 10761.008969025728,
+      "ratio_ci95": [
+        0.502946423562235,
+        0.5704376222370897
+      ],
+      "ratio_to_vec": 0.5654569799544956
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 21602.297108066974,
+      "ratio_ci95": [
+        1.1272137898541237,
+        1.1536782794097855
+      ],
+      "ratio_to_vec": 1.143328790394568
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 27141.30669111146,
+      "ratio_ci95": [
+        1.431947341112366,
+        1.4429782446672175
+      ],
+      "ratio_to_vec": 1.4374967124915767
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 113911.53565426171,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 108169.50775613275,
+      "ratio_ci95": [
+        0.9349619187296131,
+        0.9552830500944242
+      ],
+      "ratio_to_vec": 0.948390575856458
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 103041.8282395528,
+      "ratio_ci95": [
+        0.8913125867559306,
+        0.9169534191703026
+      ],
+      "ratio_to_vec": 0.9045776413049151
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 126057.1113360324,
+      "ratio_ci95": [
+        1.1007648790469693,
+        1.111522249279069
+      ],
+      "ratio_to_vec": 1.1071870606271335
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 133435.79833333334,
+      "ratio_ci95": [
+        1.1602283100913846,
+        1.1801373278098373
+      ],
+      "ratio_to_vec": 1.1699161459301493
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 37194.695593635246,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 32354.042686018507,
+      "ratio_ci95": [
+        0.8613418922675378,
+        0.877225704431685
+      ],
+      "ratio_to_vec": 0.8735633250274036
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 30068.76109540906,
+      "ratio_ci95": [
+        0.781872980811353,
+        0.8132841108086539
+      ],
+      "ratio_to_vec": 0.8107140996742704
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 40198.085527319905,
+      "ratio_ci95": [
+        1.078137071794029,
+        1.083820999924278
+      ],
+      "ratio_to_vec": 1.0798472719510126
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 45716.869277597405,
+      "ratio_ci95": [
+        1.2017461701447982,
+        1.2414908084365726
+      ],
+      "ratio_to_vec": 1.2270313214646624
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 3971.0052934407363,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 4025.5293749770076,
+      "ratio_ci95": [
+        1.0128384735330087,
+        1.057056106619877
+      ],
+      "ratio_to_vec": 1.0154805648397613
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 4018.0973693825354,
+      "ratio_ci95": [
+        1.0077931885442024,
+        1.0396325312507
+      ],
+      "ratio_to_vec": 1.0128886554333494
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 4085.2766780766297,
+      "ratio_ci95": [
+        1.0265457316595619,
+        1.0633884275454755
+      ],
+      "ratio_to_vec": 1.0276207691191632
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5346.577738372407,
+      "ratio_ci95": [
+        1.2604558682632276,
+        1.3917850934149392
+      ],
+      "ratio_to_vec": 1.3461190413262374
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 2197.8980411609086,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "equivalent",
+      "implementation": "JackVec",
+      "median_ns": 2152.7440403383716,
+      "ratio_ci95": [
+        0.978853586632099,
+        0.9843910979826089
+      ],
+      "ratio_to_vec": 0.9803607485089639
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 3955.254484770887,
+      "ratio_ci95": [
+        1.7992689975103797,
+        1.811240796556842
+      ],
+      "ratio_to_vec": 1.803737670526076
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 5873.414578891257,
+      "ratio_ci95": [
+        1.8401487842146769,
+        2.6844892329437586
+      ],
+      "ratio_to_vec": 2.678065094397275
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 6001.314672276957,
+      "ratio_ci95": [
+        2.187416494867176,
+        2.758512370160779
+      ],
+      "ratio_to_vec": 2.7368143791369315
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 21533.945176700818,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "equivalent",
+      "implementation": "JackVec",
+      "median_ns": 21523.873888067013,
+      "ratio_ci95": [
+        0.9845919748459028,
+        1.003136050685809
+      ],
+      "ratio_to_vec": 0.9992770883232633
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "equivalent",
+      "implementation": "ThinVec",
+      "median_ns": 21521.78652657832,
+      "ratio_ci95": [
+        0.9846346909790689,
+        0.9998533172609713
+      ],
+      "ratio_to_vec": 0.9994500713358617
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "equivalent",
+      "implementation": "SmallVec4",
+      "median_ns": 21421.318841568842,
+      "ratio_ci95": [
+        0.9853099756306763,
+        0.9970577443061337
+      ],
+      "ratio_to_vec": 0.9941298193685164
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "equivalent",
+      "implementation": "SmallVec8",
+      "median_ns": 21429.866093366094,
+      "ratio_ci95": [
+        0.9831328042959161,
+        0.9975399533849033
+      ],
+      "ratio_to_vec": 0.9951667433681713
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 3242.745272388791,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 3055.7283117436964,
+      "ratio_ci95": [
+        0.8272691280252745,
+        0.9943450415319834
+      ],
+      "ratio_to_vec": 0.944642006864134
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 5241.9894693486585,
+      "ratio_ci95": [
+        1.3795306770247378,
+        1.705804641948998
+      ],
+      "ratio_to_vec": 1.6225997952230866
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 5045.057546209273,
+      "ratio_ci95": [
+        1.3267374393757838,
+        1.6434602313503568
+      ],
+      "ratio_to_vec": 1.554875535397513
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5493.643374615509,
+      "ratio_ci95": [
+        1.4760755424752596,
+        1.7541472038579182
+      ],
+      "ratio_to_vec": 1.6669819766303633
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 439.967710756619,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "equivalent",
+      "implementation": "JackVec",
+      "median_ns": 432.5131836187069,
+      "ratio_ci95": [
+        0.9774324863138661,
+        0.9980499074819398
+      ],
+      "ratio_to_vec": 0.9861879579791306
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 428.7961426211896,
+      "ratio_ci95": [
+        0.9643236432752172,
+        0.9829026100730435
+      ],
+      "ratio_to_vec": 0.9740712573723846
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 714.3224119683845,
+      "ratio_ci95": [
+        1.6170948573050588,
+        1.6434356204181497
+      ],
+      "ratio_to_vec": 1.6231981788792587
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 717.5355860305373,
+      "ratio_ci95": [
+        1.6260237900536307,
+        1.639956757715747
+      ],
+      "ratio_to_vec": 1.6304104789232847
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 2.2741486535989788,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 2.1027114709346026,
+      "ratio_ci95": [
+        0.9108694955653258,
+        0.930566930368321
+      ],
+      "ratio_to_vec": 0.9199692667562522
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 2.1171564048249296,
+      "ratio_ci95": [
+        0.9168823247966023,
+        0.9445036553562008
+      ],
+      "ratio_to_vec": 0.9316944056581401
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 14.057505738270542,
+      "ratio_ci95": [
+        6.0973308545428715,
+        6.22120125403117
+      ],
+      "ratio_to_vec": 6.134575483687708
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 14.101692284542334,
+      "ratio_ci95": [
+        6.105453332680967,
+        6.252572651086494
+      ],
+      "ratio_to_vec": 6.206677949413495
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 154.6553120897317,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 165.5923017958826,
+      "ratio_ci95": [
+        1.0135380862144905,
+        1.1069930637330465
+      ],
+      "ratio_to_vec": 1.0707184871852653
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 437.1122551148427,
+      "ratio_ci95": [
+        2.7928512193274284,
+        2.917156040633894
+      ],
+      "ratio_to_vec": 2.8295539617457153
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 153.33454270597127,
+      "ratio_ci95": [
+        0.9389629898390772,
+        1.0534691590301866
+      ],
+      "ratio_to_vec": 0.9816921049259186
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 154.31301225312995,
+      "ratio_ci95": [
+        0.9408712076576596,
+        1.0389725812654502
+      ],
+      "ratio_to_vec": 1.004258407704554
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 252.4944043655198,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 294.814507165838,
+      "ratio_ci95": [
+        1.1584533310215124,
+        1.1939064764963263
+      ],
+      "ratio_to_vec": 1.1634224655878966
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 445.4600914149444,
+      "ratio_ci95": [
+        1.7595830803820292,
+        1.7845301228314359
+      ],
+      "ratio_to_vec": 1.7677596280754804
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 526.9958189902467,
+      "ratio_ci95": [
+        2.0755040332733503,
+        2.1269014674543287
+      ],
+      "ratio_to_vec": 2.088615438178562
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 531.9739625590503,
+      "ratio_ci95": [
+        2.0977049557969805,
+        2.1200152611682577
+      ],
+      "ratio_to_vec": 2.1096544906636168
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 558.547422924298,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 696.0192257807906,
+      "ratio_ci95": [
+        1.2439124583864645,
+        1.2503677637595676
+      ],
+      "ratio_to_vec": 1.2468670074838066
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 710.6699367245966,
+      "ratio_ci95": [
+        1.2662013473914222,
+        1.27470338846449
+      ],
+      "ratio_to_vec": 1.2708455194172368
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 919.6149114091737,
+      "ratio_ci95": [
+        1.642675089835722,
+        1.6514855091885443
+      ],
+      "ratio_to_vec": 1.6450629845784999
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 926.0201425281261,
+      "ratio_ci95": [
+        1.6540094301846155,
+        1.6619662740777847
+      ],
+      "ratio_to_vec": 1.6563748382298298
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 58.679027102332526,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 74.20019758151588,
+      "ratio_ci95": [
+        1.2625127729049184,
+        1.2678067738705334
+      ],
+      "ratio_to_vec": 1.264639816174463
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "equivalent",
+      "implementation": "ThinVec",
+      "median_ns": 58.846501097126776,
+      "ratio_ci95": [
+        1.0024326875504692,
+        1.003716773822228
+      ],
+      "ratio_to_vec": 1.0033713254270338
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 101.1388426433173,
+      "ratio_ci95": [
+        1.7232528291252123,
+        1.7320845310072635
+      ],
+      "ratio_to_vec": 1.724226780050877
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "equivalent",
+      "implementation": "SmallVec8",
+      "median_ns": 58.641435076552156,
+      "ratio_ci95": [
+        0.9989394487291737,
+        1.0001603392976162
+      ],
+      "ratio_to_vec": 0.9996372260746553
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 1.0748847172922882,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 1.2708135026864915,
+      "ratio_ci95": [
+        1.1789058856960262,
+        1.184571718646692
+      ],
+      "ratio_to_vec": 1.182087536411812
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 1.3980627805212236,
+      "ratio_ci95": [
+        1.2971749015293816,
+        1.303584890666557
+      ],
+      "ratio_to_vec": 1.299999241460088
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 1.223487804260425,
+      "ratio_ci95": [
+        1.135031564342506,
+        1.1402450757972542
+      ],
+      "ratio_to_vec": 1.1382502556576286
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "equivalent",
+      "implementation": "SmallVec8",
+      "median_ns": 1.0884487764363864,
+      "ratio_ci95": [
+        1.009276755585331,
+        1.0166782963110446
+      ],
+      "ratio_to_vec": 1.0121023200459793
+    }
+  ],
+  "metadata": {
+    "affinity_cpu": 0,
+    "authoritative": true,
+    "cargo": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "compiler_identity": {
+      "LLVM_version": "22.1.6",
+      "binary": "rustc",
+      "commit_date": "2026-07-07",
+      "commit_hash": "2d8144b7880597b6e6d3dfd63a9a9efae3f533d3",
+      "host": "x86_64-unknown-linux-gnu",
+      "release": "1.97.0"
+    },
+    "cpu_summary": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  32\nOn-line CPU(s) list:                     0-31\nVendor ID:                               AuthenticAMD\nModel name:                              AMD Ryzen 9 7950X3D 16-Core Processor\nCPU family:                              25\nModel:                                   97\nThread(s) per core:                      2\nCore(s) per socket:                      16\nSocket(s):                               1\nStepping:                                2\nFrequency boost:                         enabled\nCPU max MHz:                             5759.9639\nCPU min MHz:                             3000.0000\nBogoMIPS:                                8383.97\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb cat_l3 cdp_l3 hw_pstate ssbd mba ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local avx512_bf16 clzero irperf xsaveerptr rdpru wbnoinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold avic vgif v_spec_ctrl avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid overflow_recov succor smca fsrm flush_l1d ibpb_exit_to_user\nVirtualization:                          AMD-V\nL1d cache:                               512 KiB (16 instances)\nL1i cache:                               512 KiB (16 instances)\nL2 cache:                                16 MiB (16 instances)\nL3 cache:                                128 MiB (2 instances)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-31\nVulnerability Gather data sampling:      Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Mitigation; safe RET\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl and seccomp\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; STIBP always-on; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: Clear CPU buffers attempted, no microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace",
+    "git_commit": "1f6e5f8abac7152d6ef3523baaed63096ac88b0a",
+    "git_dirty": false,
+    "governor": "performance",
+    "host_issues": [],
+    "kernel": "Linux Ubuntu-2204-jammy-amd64-base 5.15.0-177-generic #187-Ubuntu SMP Sat Apr 11 22:54:33 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+    "load_average": [
+      0.06103515625,
+      0.06787109375,
+      0.2255859375
+    ],
+    "logical_cpus": 32,
+    "machine": "x86_64",
+    "platform": "Linux-5.15.0-177-generic-x86_64-with-glibc2.35",
+    "processor": "x86_64",
+    "runtime_audits": [
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-build",
+        "load_average": [
+          0.0556640625,
+          0.06640625,
+          0.22412109375
+        ],
+        "timestamp_utc": "2026-07-11T17:33:34.430120+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-round-1",
+        "load_average": [
+          1.12353515625,
+          0.7783203125,
+          0.50830078125
+        ],
+        "timestamp_utc": "2026-07-11T17:39:43.225875+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "settled-after-round-1",
+        "load_average": [
+          1.033203125,
+          0.76513671875,
+          0.50537109375
+        ],
+        "timestamp_utc": "2026-07-11T17:39:48.252931+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-round-2",
+        "load_average": [
+          1.046875,
+          0.9638671875,
+          0.69091796875
+        ],
+        "timestamp_utc": "2026-07-11T17:45:58.566877+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "settled-after-round-2",
+        "load_average": [
+          0.962890625,
+          0.94775390625,
+          0.68701171875
+        ],
+        "timestamp_utc": "2026-07-11T17:46:03.593165+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-round-3",
+        "load_average": [
+          1.0927734375,
+          1.0166015625,
+          0.81640625
+        ],
+        "timestamp_utc": "2026-07-11T17:52:14.909382+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "settled-after-round-3",
+        "load_average": [
+          1.0048828125,
+          0.99951171875,
+          0.81201171875
+        ],
+        "timestamp_utc": "2026-07-11T17:52:19.935949+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-round-4",
+        "load_average": [
+          1.06689453125,
+          1.0517578125,
+          0.91552734375
+        ],
+        "timestamp_utc": "2026-07-11T17:58:29.260676+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "settled-after-round-4",
+        "load_average": [
+          0.9814453125,
+          1.0341796875,
+          0.91015625
+        ],
+        "timestamp_utc": "2026-07-11T17:58:34.287003+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-round-5",
+        "load_average": [
+          1.00537109375,
+          1.02392578125,
+          0.96240234375
+        ],
+        "timestamp_utc": "2026-07-11T18:04:43.517074+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "settled-after-round-5",
+        "load_average": [
+          0.9248046875,
+          1.0068359375,
+          0.95703125
+        ],
+        "timestamp_utc": "2026-07-11T18:04:48.543878+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 100.0,
+        "label": "after-allocations",
+        "load_average": [
+          0.93115234375,
+          1.00634765625,
+          0.95751953125
+        ],
+        "timestamp_utc": "2026-07-11T18:04:53.616669+00:00"
+      }
+    ],
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+    "timestamp_utc": "2026-07-11T17:33:30.306543+00:00"
+  },
+  "platform_id": "linux-x86_64",
+  "practical_equivalence_band": [
+    0.97,
+    1.03
+  ],
+  "round_count": 5,
+  "schema_version": 1,
+  "toolchain": "1.97.0"
+}
