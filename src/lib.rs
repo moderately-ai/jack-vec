@@ -227,6 +227,100 @@ pub struct JackVec<T> {
 unsafe impl<T: Sync> Sync for JackVec<T> {}
 unsafe impl<T: Send> Send for JackVec<T> {}
 
+/// A transient, Vec-like construction owner for producing a [`JackVec`].
+///
+/// The builder keeps length and capacity inline while elements are appended, then
+/// publishes the final length into JackVec's allocation header in [`finish`](Self::finish).
+/// Its final allocation is a JackVec allocation from the start, so finishing does
+/// not move elements.
+pub struct JackVecBuilder<T> {
+    vec: mem::ManuallyDrop<JackVec<T>>,
+    len: usize,
+    cap: usize,
+}
+
+impl<T> JackVecBuilder<T> {
+    /// Creates an empty builder without allocating.
+    pub fn new() -> Self {
+        Self::with_capacity(0)
+    }
+
+    /// Creates an empty builder with space for at least `capacity` elements.
+    pub fn with_capacity(capacity: usize) -> Self {
+        let vec = JackVec::with_capacity(capacity);
+        let cap = vec.capacity();
+        JackVecBuilder {
+            vec: mem::ManuallyDrop::new(vec),
+            len: 0,
+            cap,
+        }
+    }
+
+    /// Returns the number of initialized elements in the builder.
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Returns `true` if the builder contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// Returns the number of elements the builder can hold without reallocating.
+    pub fn capacity(&self) -> usize {
+        self.cap
+    }
+
+    /// Appends an element to the builder.
+    #[inline]
+    pub fn push(&mut self, value: T) {
+        if self.len == self.cap {
+            self.grow();
+        }
+
+        unsafe {
+            ptr::write(self.vec.data_raw().add(self.len), value);
+        }
+        self.len += 1;
+    }
+
+    #[cold]
+    #[inline(never)]
+    fn grow(&mut self) {
+        unsafe {
+            // Publish every initialized element before reserve can panic.
+            self.vec.set_len(self.len);
+        }
+        self.vec.reserve(1);
+        self.cap = self.vec.capacity();
+    }
+
+    /// Finishes construction without moving the initialized elements.
+    pub fn finish(mut self) -> JackVec<T> {
+        unsafe {
+            self.vec.set_len(self.len);
+            let vec = ptr::read(&*self.vec);
+            mem::forget(self);
+            vec
+        }
+    }
+}
+
+impl<T> Default for JackVecBuilder<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> Drop for JackVecBuilder<T> {
+    fn drop(&mut self) {
+        unsafe {
+            self.vec.set_len(self.len);
+            mem::ManuallyDrop::drop(&mut self.vec);
+        }
+    }
+}
+
 /// Creates a `JackVec` containing the arguments.
 ///
 /// ```rust
@@ -3250,6 +3344,65 @@ mod std_tests {
     #[test]
     fn test_small_vec_struct() {
         assert!(size_of::<JackVec<u8>>() == size_of::<usize>());
+    }
+
+    #[test]
+    fn test_builder_finish_and_growth() {
+        let empty = JackVecBuilder::<u64>::new().finish();
+        assert!(empty.is_empty());
+
+        let mut builder = JackVecBuilder::with_capacity(2);
+        assert_eq!(builder.len(), 0);
+        assert!(builder.is_empty());
+        builder.push(10);
+        builder.push(20);
+        builder.push(30);
+        assert_eq!(builder.len(), 3);
+        assert!(builder.capacity() >= 3);
+        let values = builder.finish();
+        assert_eq!(values, [10, 20, 30]);
+
+        assert_eq!(size_of::<JackVecBuilder<u8>>(), 3 * size_of::<usize>());
+    }
+
+    #[test]
+    fn test_builder_zst_and_overalignment() {
+        #[repr(align(64))]
+        struct Aligned(u64);
+
+        let mut zst = JackVecBuilder::<()>::new();
+        for _ in 0..10 {
+            zst.push(());
+        }
+        assert_eq!(zst.finish().len(), 10);
+
+        let mut aligned = JackVecBuilder::with_capacity(1);
+        aligned.push(Aligned(7));
+        let values = aligned.finish();
+        assert_eq!(values.as_ptr() as usize % 64, 0);
+        assert_eq!(values[0].0, 7);
+    }
+
+    #[test]
+    fn test_unfinished_builder_drops_initialized_elements() {
+        use core::cell::Cell;
+        use alloc::rc::Rc;
+
+        struct Counted(Rc<Cell<usize>>);
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        {
+            let mut builder = JackVecBuilder::new();
+            for _ in 0..4 {
+                builder.push(Counted(Rc::clone(&drops)));
+            }
+        }
+        assert_eq!(drops.get(), 4);
     }
 
     #[test]
