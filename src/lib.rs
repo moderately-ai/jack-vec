@@ -2965,16 +2965,15 @@ mod tests {
 
     #[test]
     fn test_drain_drop_panic_leaves_valid_prefix() {
-        use alloc::rc::Rc;
         use core::cell::Cell;
         use std::panic::{catch_unwind, AssertUnwindSafe};
 
-        struct PanicDrop {
+        struct PanicDrop<'a> {
             id: usize,
-            drops: Rc<[Cell<usize>; 5]>,
+            drops: &'a [Cell<usize>; 5],
         }
 
-        impl Drop for PanicDrop {
+        impl Drop for PanicDrop<'_> {
             fn drop(&mut self) {
                 let previous = self.drops[self.id].replace(1);
                 assert_eq!(previous, 0, "element {} dropped twice", self.id);
@@ -2984,13 +2983,8 @@ mod tests {
             }
         }
 
-        let drops = Rc::new(core::array::from_fn(|_| Cell::new(0)));
-        let mut values: JackVec<_> = (0..5)
-            .map(|id| PanicDrop {
-                id,
-                drops: drops.clone(),
-            })
-            .collect();
+        let drops = core::array::from_fn(|_| Cell::new(0));
+        let mut values: JackVec<_> = (0..5).map(|id| PanicDrop { id, drops: &drops }).collect();
 
         let result = catch_unwind(AssertUnwindSafe(|| {
             let mut drain = values.drain(1..4);
