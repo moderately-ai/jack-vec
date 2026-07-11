@@ -24,6 +24,8 @@ pub trait BenchVector<T>: Sized {
     fn resize(&mut self, new_len: usize, value: T)
     where
         T: Clone;
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool;
     fn as_slice(&self) -> &[T];
 }
 
@@ -72,6 +74,14 @@ impl<T> BenchVector<T> for Vec<T> {
         T: Clone,
     {
         Vec::resize(self, new_len, value);
+    }
+
+    fn len(&self) -> usize {
+        Vec::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        Vec::is_empty(self)
     }
 
     fn as_slice(&self) -> &[T] {
@@ -124,6 +134,14 @@ impl<T> BenchVector<T> for JackVec<T> {
         T: Clone,
     {
         JackVec::resize(self, new_len, value);
+    }
+
+    fn len(&self) -> usize {
+        JackVec::len(self)
+    }
+
+    fn is_empty(&self) -> bool {
+        JackVec::is_empty(self)
     }
 
     fn as_slice(&self) -> &[T] {
@@ -191,6 +209,14 @@ pub fn sum_nested<V: BenchVector<u64>>(values: &[V]) -> u64 {
         .iter()
         .flat_map(|inner| inner.as_slice())
         .fold(0, |sum, value| sum.wrapping_add(*value))
+}
+
+pub fn nested_metadata_checksum<V: BenchVector<u64>>(values: &[V]) -> usize {
+    values.iter().fold(0, |checksum, inner| {
+        checksum
+            .wrapping_add(inner.len())
+            .wrapping_add(usize::from(inner.is_empty()).rotate_left(31))
+    })
 }
 
 pub fn sum_vector<V: BenchVector<u64>>(values: &V) -> u64 {

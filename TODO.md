@@ -60,8 +60,8 @@ The central hypothesis is:
   an empty-heavy recursive workload to justify investigating a cached/tagged
   length, or does its one-word outer representation already offset the indirection?
 - Workload: build the existing deterministic sparse population of 10,000 nested
-  `u64` containers before timing, then scan only `len`, `is_empty`, and `capacity`
-  into a checksum. Compare `Vec` and JackVec in one Criterion group. Do not touch
+  `u64` containers before timing, then scan only `len` and `is_empty` into a
+  checksum. Compare `Vec` and JackVec in one Criterion group. Do not touch
   elements, allocate, mutate, or destroy containers inside the timed operation.
 - Rationale for one workload: sparse includes 80% shared empty singletons, 15%
   singleton allocations, and 5% four-element allocations. It exercises both the
@@ -79,6 +79,11 @@ The central hypothesis is:
   semantic complexity.
 - Scope: one sparse metadata benchmark and its helper only. No library, layout,
   tagging, API, allocation, or growth-policy changes.
+- Pre-measurement correction: an initial local smoke version also read `capacity`,
+  but that would force an allocation-header access even in the proposed cached-
+  length design and therefore could not falsify that mechanism. It was removed
+  before committing or running the declared cross-platform measurements. Capacity
+  access is a distinct, less common question and does not justify another benchmark.
 
 ### Allocator usable-size and reallocation diagnostics (`benchmarks/allocator-usable-size`)
 

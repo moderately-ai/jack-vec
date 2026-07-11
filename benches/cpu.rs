@@ -9,8 +9,9 @@ use criterion::{
 use jackvec::JackVec;
 
 use support::{
-    build_growing, build_nested, build_reserved, fill_vector, sum_nested, sum_vector, BenchVector,
-    NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT, OPERATION_SIZES,
+    build_growing, build_nested, build_reserved, fill_vector, nested_metadata_checksum, sum_nested,
+    sum_vector, BenchVector, NestedWorkload, APPEND_SIZES, ITERATION_SIZES, NESTED_VECTOR_COUNT,
+    OPERATION_SIZES,
 };
 
 fn bench_nested_construct<V: BenchVector<u64>>(
@@ -55,6 +56,21 @@ fn nested_traverse(c: &mut Criterion) {
         bench_nested_traverse::<JackVec<u64>>(&mut group, workload);
     }
 
+    group.finish();
+}
+
+fn bench_nested_metadata<V: BenchVector<u64>>(group: &mut BenchmarkGroup<'_, WallTime>) {
+    let values = build_nested::<V>(NestedWorkload::Sparse, NESTED_VECTOR_COUNT);
+    group.bench_function(V::LABEL, |bencher| {
+        bencher.iter(|| black_box(nested_metadata_checksum(black_box(&values))))
+    });
+}
+
+fn nested_metadata_scan(c: &mut Criterion) {
+    let mut group = c.benchmark_group("nested_metadata_scan_sparse");
+    group.throughput(Throughput::Elements(NESTED_VECTOR_COUNT as u64));
+    bench_nested_metadata::<Vec<u64>>(&mut group);
+    bench_nested_metadata::<JackVec<u64>>(&mut group);
     group.finish();
 }
 
@@ -379,6 +395,7 @@ criterion_group!(
     benches,
     nested_construct,
     nested_traverse,
+    nested_metadata_scan,
     build_growing_and_drop,
     push_preallocated,
     sequential_iteration,
