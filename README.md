@@ -1,4 +1,4 @@
-[![Rust CI](https://github.com/tomsanbear/thin-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/tomsanbear/thin-vec/actions) [![crates.io](https://img.shields.io/crates/v/jackvec.svg)](https://crates.io/crates/jackvec) [![Docs](https://docs.rs/jackvec/badge.svg)](https://docs.rs/jackvec)
+[![Rust CI](https://github.com/tomsanbear/thin-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/tomsanbear/thin-vec/actions) [![crates.io](https://img.shields.io/crates/v/jack-vec.svg)](https://crates.io/crates/jack-vec) [![Docs](https://docs.rs/jack-vec/badge.svg)](https://docs.rs/jack-vec)
 
 # JackVec
 
@@ -11,12 +11,25 @@ than in the collection value, reducing the footprint of empty-heavy and deeply
 nested data structures.
 
 This project builds directly on the design and implementation work of ThinVec's
-original authors and Mozilla contributors. Its Rust package, primary type, and
-construction macro are `jackvec`, `JackVec`, and `jack_vec!`.
+original authors and Mozilla contributors. Its Cargo package, Rust crate path,
+primary type, and construction macro are `jack-vec`, `jack_vec`, `JackVec`, and
+`jack_vec!`.
 
 JackVec retains the one-word owner and shared allocation-free empty singleton,
 uses an eight-byte allocation header on 64-bit targets, and limits capacity to
 `u32::MAX` elements. It targets native Rust rather than Gecko/nsTArray FFI.
+
+```toml
+[dependencies]
+jack-vec = "0.1"
+```
+
+```rust
+use jack_vec::{jack_vec, JackVec};
+
+let values: JackVec<_> = jack_vec![1, 2, 3];
+assert_eq!(values.as_slice(), &[1, 2, 3]);
+```
 
 See [`benches/README.md`](benches/README.md) for CPU and allocation benchmarks
 that compare `JackVec` with `Vec`.

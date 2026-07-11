@@ -1,6 +1,7 @@
 # JackVec 0.1.0 (unreleased)
 
-* Establish the `jackvec` package, `JackVec` type, and `jack_vec!` macro while
+* Establish the `jack-vec` package, `jack_vec` crate path, `JackVec` type, and
+  `jack_vec!` macro while
   preserving explicit attribution to Mozilla's ThinVec.
 * Focus the implementation on native Rust and remove Gecko/nsTArray FFI and
   AutoThinVec compatibility.

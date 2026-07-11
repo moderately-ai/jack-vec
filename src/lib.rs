@@ -230,7 +230,7 @@ unsafe impl<T: Send> Send for JackVec<T> {}
 /// Creates a `JackVec` containing the arguments.
 ///
 /// ```rust
-/// #[macro_use] extern crate jackvec;
+/// #[macro_use] extern crate jack_vec;
 ///
 /// fn main() {
 ///     let v = jack_vec![1, 2, 3];
@@ -304,7 +304,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::JackVec;
+    /// use jack_vec::JackVec;
     ///
     /// let mut vec = JackVec::with_capacity(10);
     ///
@@ -412,7 +412,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let a = jack_vec![1, 2, 3];
     /// assert_eq!(a.len(), 3);
@@ -426,7 +426,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::JackVec;
+    /// use jack_vec::JackVec;
     ///
     /// let mut v = JackVec::new();
     /// assert!(v.is_empty());
@@ -444,7 +444,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::JackVec;
+    /// use jack_vec::JackVec;
     ///
     /// let vec: JackVec<i32> = JackVec::with_capacity(10);
     /// assert_eq!(vec.capacity(), 10);
@@ -483,7 +483,7 @@ impl<T> JackVec<T> {
     /// is serving as a buffer for other code, particularly over FFI:
     ///
     /// ```no_run
-    /// use jackvec::JackVec;
+    /// use jack_vec::JackVec;
     ///
     /// # // This is just a minimal skeleton for the doc example;
     /// # // don't use this as a starting point for a real library.
@@ -524,7 +524,7 @@ impl<T> JackVec<T> {
     /// the inner vectors were not freed prior to the `set_len` call:
     ///
     /// ```no_run
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![jack_vec![1, 0, 0],
     ///                    jack_vec![0, 1, 0],
@@ -563,7 +563,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2];
     /// vec.push(3);
@@ -608,7 +608,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// assert_eq!(vec.pop(), Some(3));
@@ -636,7 +636,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// vec.insert(1, 4);
@@ -676,7 +676,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut v = jack_vec![1, 2, 3];
     /// assert_eq!(v.remove(1), 2);
@@ -712,7 +712,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut v = jack_vec!["foo", "bar", "baz", "qux"];
     ///
@@ -752,7 +752,7 @@ impl<T> JackVec<T> {
     /// Truncating a five element vector to two elements:
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3, 4, 5];
     /// vec.truncate(2);
@@ -763,7 +763,7 @@ impl<T> JackVec<T> {
     /// length:
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// vec.truncate(8);
@@ -774,7 +774,7 @@ impl<T> JackVec<T> {
     /// method.
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// vec.truncate(0);
@@ -804,7 +804,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut v = jack_vec![1, 2, 3];
     /// v.clear();
@@ -834,7 +834,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     /// use std::io::{self, Write};
     /// let buffer = jack_vec![1, 2, 3, 5, 8];
     /// io::sink().write(buffer.as_slice()).unwrap();
@@ -850,7 +850,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     /// use std::io::{self, Read};
     /// let mut buffer = vec![0; 3];
     /// io::repeat(0b101).read_exact(buffer.as_mut_slice()).unwrap();
@@ -913,7 +913,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::JackVec;
+    /// use jack_vec::JackVec;
     ///
     /// let mut vec = JackVec::with_capacity(10);
     /// vec.extend([1, 2, 3]);
@@ -945,7 +945,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec![1, 2, 3, 4];
     /// vec.retain(|&x| x%2 == 0);
@@ -968,7 +968,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec![1, 2, 3, 4, 5];
     /// vec.retain_mut(|x| {
@@ -1071,7 +1071,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec![10, 20, 21, 30, 20];
     ///
@@ -1100,7 +1100,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec!["foo", "bar", "Bar", "baz", "bar"];
     ///
@@ -1200,7 +1200,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// let vec2 = vec.split_off(1);
@@ -1234,7 +1234,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1, 2, 3];
     /// let mut vec2 = jack_vec![4, 5, 6];
@@ -1283,7 +1283,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let mut v = jack_vec![1, 2, 3];
     /// let u: JackVec<_> = v.drain(1..).collect();
@@ -1355,7 +1355,7 @@ impl<T> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let mut v = jack_vec![1, 2, 3, 4];
     /// let new = [7, 8, 9];
@@ -1388,7 +1388,7 @@ impl<T> JackVec<T> {
     /// Using this method is equivalent to the following code:
     ///
     /// ```
-    /// # use jackvec::{JackVec, jack_vec};
+    /// # use jack_vec::{JackVec, jack_vec};
     /// # let some_predicate = |x: &mut i32| { *x == 2 || *x == 3 || *x == 6 };
     /// # let mut vec = jack_vec![1, 2, 3, 4, 5, 6];
     /// let mut i = 0;
@@ -1415,7 +1415,7 @@ impl<T> JackVec<T> {
     /// Splitting an array into evens and odds, reusing the original allocation:
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let mut numbers = jack_vec![1, 2, 3, 4, 5, 6, 8, 9, 11, 13, 14, 15];
     ///
@@ -1557,7 +1557,7 @@ impl<T: Clone> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec!["hello"];
     /// vec.resize(3, "world");
@@ -1623,7 +1623,7 @@ impl<T: Clone> JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec![1];
     /// vec.extend_from_slice(&[2, 3, 4]);
@@ -1644,7 +1644,7 @@ impl<T: PartialEq> JackVec<T> {
     /// # Examples
     ///
     /// ```rust
-    /// # #[macro_use] extern crate jackvec;
+    /// # #[macro_use] extern crate jack_vec;
     /// # fn main() {
     /// let mut vec = jack_vec![1, 2, 2, 3, 2];
     ///
@@ -2036,7 +2036,7 @@ impl<T: Clone> From<&[T]> for JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// assert_eq!(JackVec::from(&[1, 2, 3][..]), jack_vec![1, 2, 3]);
     /// ```
@@ -2051,7 +2051,7 @@ impl<T: Clone> From<&mut [T]> for JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// assert_eq!(JackVec::from(&mut [1, 2, 3][..]), jack_vec![1, 2, 3]);
     /// ```
@@ -2066,7 +2066,7 @@ impl<T, const N: usize> From<[T; N]> for JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// assert_eq!(JackVec::from([1, 2, 3]), jack_vec![1, 2, 3]);
     /// ```
@@ -2094,7 +2094,7 @@ impl<T> From<Box<[T]>> for JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let b: Box<[i32]> = jack_vec![1, 2, 3].into_iter().collect();
     /// assert_eq!(JackVec::from(b), jack_vec![1, 2, 3]);
@@ -2113,7 +2113,7 @@ impl<T> From<Vec<T>> for JackVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let b: Vec<i32> = vec![1, 2, 3];
     /// assert_eq!(JackVec::from(b), jack_vec![1, 2, 3]);
@@ -2144,7 +2144,7 @@ impl<T> From<JackVec<T>> for Vec<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// let b: JackVec<i32> = jack_vec![1, 2, 3];
     /// assert_eq!(Vec::from(b), vec![1, 2, 3]);
@@ -2181,7 +2181,7 @@ impl<T> From<JackVec<T>> for Box<[T]> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     /// assert_eq!(Box::from(jack_vec![1, 2, 3]), jack_vec![1, 2, 3].into_iter().collect());
     /// ```
     fn from(mut v: JackVec<T>) -> Self {
@@ -2208,7 +2208,7 @@ impl From<&str> for JackVec<u8> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     ///
     /// assert_eq!(JackVec::from("123"), jack_vec![b'1', b'2', b'3']);
     /// ```
@@ -2226,7 +2226,7 @@ impl<T, const N: usize> TryFrom<JackVec<T>> for [T; N] {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
     /// assert_eq!(jack_vec![1, 2, 3].try_into(), Ok([1, 2, 3]));
@@ -2235,7 +2235,7 @@ impl<T, const N: usize> TryFrom<JackVec<T>> for [T; N] {
     ///
     /// If the length doesn't match, the input comes back in `Err`:
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
     /// let r: Result<[i32; 4], _> = (0..10).collect::<JackVec<_>>().try_into();
@@ -2245,7 +2245,7 @@ impl<T, const N: usize> TryFrom<JackVec<T>> for [T; N] {
     /// If you're fine with just getting a prefix of the `JackVec<T>`,
     /// you can call [`.truncate(N)`](JackVec::truncate) first.
     /// ```
-    /// use jackvec::{JackVec, jack_vec};
+    /// use jack_vec::{JackVec, jack_vec};
     /// use std::convert::TryInto;
     ///
     /// let mut v = JackVec::from("hello world");
@@ -2281,10 +2281,10 @@ impl<T, const N: usize> TryFrom<JackVec<T>> for [T; N] {
 /// # Example
 ///
 /// ```
-/// use jackvec::jack_vec;
+/// use jack_vec::jack_vec;
 ///
 /// let v = jack_vec![0, 1, 2];
-/// let iter: jackvec::IntoIter<_> = v.into_iter();
+/// let iter: jack_vec::IntoIter<_> = v.into_iter();
 /// ```
 pub struct IntoIter<T> {
     vec: JackVec<T>,
@@ -2297,7 +2297,7 @@ impl<T> IntoIter<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let vec = jack_vec!['a', 'b', 'c'];
     /// let mut into_iter = vec.into_iter();
@@ -2314,7 +2314,7 @@ impl<T> IntoIter<T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let vec = jack_vec!['a', 'b', 'c'];
     /// let mut into_iter = vec.into_iter();
@@ -2430,10 +2430,10 @@ impl<T: Clone> Clone for IntoIter<T> {
 /// # Example
 ///
 /// ```
-/// use jackvec::jack_vec;
+/// use jack_vec::jack_vec;
 ///
 /// let mut v = jack_vec![0, 1, 2];
-/// let iter: jackvec::Drain<_> = v.drain(..);
+/// let iter: jack_vec::Drain<_> = v.drain(..);
 /// ```
 pub struct Drain<'a, T> {
     // Ok so JackVec::drain takes a range of the JackVec and yields the contents by-value,
@@ -2573,7 +2573,7 @@ impl<'a, T> Drain<'a, T> {
     /// # Examples
     ///
     /// ```
-    /// use jackvec::jack_vec;
+    /// use jack_vec::jack_vec;
     ///
     /// let mut vec = jack_vec!['a', 'b', 'c'];
     /// let mut drain = vec.drain(..);
@@ -2603,11 +2603,11 @@ impl<'a, T> AsRef<[T]> for Drain<'a, T> {
 /// # Example
 ///
 /// ```
-/// use jackvec::jack_vec;
+/// use jack_vec::jack_vec;
 ///
 /// let mut v = jack_vec![0, 1, 2];
 /// let new = [7, 8];
-/// let iter: jackvec::Splice<_> = v.splice(1.., new);
+/// let iter: jack_vec::Splice<_> = v.splice(1.., new);
 /// ```
 #[derive(Debug)]
 pub struct Splice<'a, I: Iterator + 'a> {

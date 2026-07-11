@@ -405,8 +405,9 @@ The central hypothesis is:
 ### JackVec API rename (`docs/jackvec-branding`)
 
 - Status: accepted
-- Naming contract: package and crate path `jackvec`, primary type `JackVec<T>`,
-  construction macro `jack_vec!`.
+- Naming contract: Cargo package `jack-vec`, Rust crate path `jack_vec`, primary
+  type `JackVec<T>`, and construction macro `jack_vec!`. Cargo performs the
+  conventional hyphen-to-underscore crate-path mapping automatically.
 - Compatibility: intentionally breaking. Do not retain aliases in the primary
   crate; a separate compatibility shim can be evaluated if an actual downstream
   migration requires one.
@@ -421,7 +422,8 @@ The central hypothesis is:
   docs, Clippy, Miri, macro-hygiene, allocation-smoke, and CPU-smoke gates pass;
   rename-only optimized executable code remains performance-equivalent.
 - Validation result: the active source, tests, doctests, benchmarks, allocation
-  output, and benchmark tooling contain only `jackvec`, `JackVec`, and `jack_vec!`.
+  output, and benchmark tooling use `jack-vec`, `jack_vec`, `JackVec`, and
+  `jack_vec!` according to package/path/API context.
   The remaining old-name matches are deliberate Mozilla attribution, historical
   records, or the current repository URL. All-target, no-default, serde,
   malloc-size, Rust 1.86, formatting, warning-denied Clippy, warning-denied docs,
@@ -438,6 +440,10 @@ The central hypothesis is:
   the acceptance conclusion is strictly no rename regression.
 - Rename audit artifact:
   `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-rename-audit-retry-20260710`.
+- Package-name follow-up (`docs/jack-vec-package-name`): changed the published
+  package from the unseparated `jackvec` spelling to ecosystem-idiomatic
+  `jack-vec`; Rust consumers import it as `jack_vec`. Historical branch and
+  artifact names above remain unchanged so recorded results stay addressable.
 
 ### Remove Gecko compatibility (`refactor/remove-gecko`)
 

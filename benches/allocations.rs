@@ -8,7 +8,7 @@ use std::hint::black_box;
 use std::mem::size_of;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use jackvec::JackVec;
+use jack_vec::JackVec;
 
 use support::{
     build_growing, build_nested, build_reserved, BenchVector, NestedWorkload, NESTED_VECTOR_COUNT,
