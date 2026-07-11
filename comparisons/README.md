@@ -40,11 +40,12 @@ An authoritative physical-host run requires a clean commit and performs five
 Latin-square registration rotations:
 
 ```console
-python3 comparisons/tools/run_matrix.py --output-name macos-aarch64
-python3 comparisons/tools/run_matrix.py --cpu 0 --output-name linux-x86_64
+python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --output-name macos-aarch64
+python3 comparisons/tools/run_matrix.py --toolchain 1.97.0 --cpu 0 --output-name linux-x86_64
 ```
 
-The Linux host is expected to pin CPU 0 on the Ryzen 7950X3D's 96 MiB V-cache
+The exact toolchain argument is mandatory and must match across hosts. The Linux
+host is expected to pin CPU 0 on the Ryzen 7950X3D's 96 MiB V-cache
 CCD, leave sibling CPU 16 idle, use the performance governor during measurement,
 and restore its prior governor afterwards. The runner records but does not mutate
 power-management policy. macOS runs should be on AC power with Low Power Mode

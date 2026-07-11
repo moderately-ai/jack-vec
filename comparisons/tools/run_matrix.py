@@ -233,6 +233,7 @@ def markdown_report(document: dict[str, Any]) -> str:
 
 
 def run(args: argparse.Namespace) -> None:
+    os.environ["RUSTUP_TOOLCHAIN"] = args.toolchain
     dirty = git_dirty()
     if dirty and not args.allow_dirty:
         raise SystemExit("refusing an authoritative run from a dirty worktree; use --allow-dirty for exploratory data")
@@ -282,6 +283,7 @@ def run(args: argparse.Namespace) -> None:
         "schema_version": 1,
         "platform_id": platform_id,
         "round_count": args.rounds,
+        "toolchain": args.toolchain,
         "practical_equivalence_band": list(PRACTICAL_BAND),
         "metadata": metadata,
         "cpu": summarize(rounds),
@@ -298,6 +300,7 @@ def run(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rounds", type=int, default=5)
+    parser.add_argument("--toolchain", required=True, help="exact rustup toolchain, for example 1.97.0")
     parser.add_argument("--cpu", type=int)
     parser.add_argument("--output-name")
     parser.add_argument("--allow-dirty", action="store_true")
