@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### JackVec API rename (`docs/jackvec-branding`)
 
-- Status: implementation and safety validation complete; codegen audit pending
+- Status: accepted
 - Naming contract: package and crate path `jackvec`, primary type `JackVec<T>`,
   construction macro `jack_vec!`.
 - Compatibility: intentionally breaking. Do not retain aliases in the primary
@@ -77,6 +77,17 @@ The central hypothesis is:
   malloc-size, Rust 1.86, formatting, warning-denied Clippy, warning-denied docs,
   49 doctests, 99 strict-provenance Tree Borrows Miri tests, five benchmark-runner
   unit tests, allocation smoke, CPU smoke, and diff hygiene pass.
+- Rename-only audit: a controlled Linux comparison used the same `jackvec`
+  manifest, dependency graph, benchmark names, toolchain, allocator, and pinned CPU;
+  the control exposed the pre-rename `ThinVec` implementation only through a local
+  `JackVec` import alias. Preallocated 1,024-element push improved 3.65% in every
+  paired round (range -4.38%..-2.67%, bootstrap interval -3.94%..-3.31%). The ELF
+  `.text` and `.rodata` section sizes were identical, while instruction bytes and
+  whole-file layout differed and the candidate file grew 40 bytes. Treat this as a
+  favorable Rust/LLVM name-and-layout codegen side effect, not an algorithmic claim;
+  the acceptance conclusion is strictly no rename regression.
+- Rename audit artifact:
+  `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-rename-audit-retry-20260710`.
 
 ### Remove Gecko compatibility (`refactor/remove-gecko`)
 
