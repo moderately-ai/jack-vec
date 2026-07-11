@@ -245,20 +245,13 @@ unsafe impl<T: Send> Send for JackVec<T> {}
 /// ```
 #[macro_export]
 macro_rules! jack_vec {
-    (@UNIT $($t:tt)*) => (());
-
     ($elem:expr; $n:expr) => ({
         let mut vec = $crate::JackVec::new();
         vec.resize($n, $elem);
         vec
     });
     () => {$crate::JackVec::new()};
-    ($($x:expr),*) => ({
-        let len = [$($crate::jack_vec!(@UNIT $x)),*].len();
-        let mut vec = $crate::JackVec::with_capacity(len);
-        $(vec.push($x);)*
-        vec
-    });
+    ($($x:expr),*) => ($crate::JackVec::from([$($x),*]));
     ($($x:expr,)*) => ($crate::jack_vec![$($x),*]);
 }
 
@@ -3250,6 +3243,50 @@ mod std_tests {
     #[test]
     fn test_small_vec_struct() {
         assert!(size_of::<JackVec<u8>>() == size_of::<usize>());
+    }
+
+    #[test]
+    fn test_macro_evaluates_left_to_right() {
+        use alloc::{rc::Rc, vec::Vec};
+        use core::cell::RefCell;
+
+        fn record(order: &Rc<RefCell<Vec<u8>>>, value: u8) -> u8 {
+            order.as_ref().borrow_mut().push(value);
+            value
+        }
+
+        let order = Rc::new(RefCell::new(Vec::new()));
+        let values = jack_vec![record(&order, 1), record(&order, 2), record(&order, 3),];
+        assert_eq!(values, [1, 2, 3]);
+        assert_eq!(*order.as_ref().borrow(), [1, 2, 3]);
+    }
+
+    #[test]
+    #[cfg(feature = "std")]
+    fn test_macro_panic_drops_initialized_array_prefix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        struct Counted(Rc<Cell<usize>>);
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                self.0.set(self.0.get() + 1);
+            }
+        }
+
+        fn fail() -> Counted {
+            panic!("later expression")
+        }
+
+        let drops = Rc::new(Cell::new(0));
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe({
+            let drops = Rc::clone(&drops);
+            move || {
+                let _ = jack_vec![Counted(drops), fail()];
+            }
+        }));
+        assert!(result.is_err());
+        assert_eq!(drops.get(), 1);
     }
 
     #[test]
