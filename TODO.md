@@ -55,7 +55,7 @@ The central hypothesis is:
 
 ### Fully consumed `IntoIter` drop fast path (`perf/into-iter-full-drop`)
 
-- Status: pre-registered; baseline harness pending
+- Status: rejected; implementation, test, and temporary benchmark reverted
 - Baseline: `34d7b05`
 - Hypothesis: Rust 1.86 already hoists header length and vectorizes forward consuming
   iteration, so caching an end field is rejected. After full consumption, however,
@@ -73,6 +73,21 @@ The central hypothesis is:
   empty/ZST behavior, Miri, MSRV, Clippy, docs, and code size.
 - Scope: `IntoIter::drop`, temporary 4/1,024 consumption benchmarks, and focused
   lifecycle tests only. Do not add an end field or change iterator/public layout.
+- Baseline harness: `0b4f1ee`
+- Candidate: `b71c11c` (reverted)
+- Result: failed the four-element primary on pinned Linux. Seven alternating Rust
+  1.86 pairs measured 10.78 ns baseline versus 11.47 ns candidate, a 6.82%
+  regression. The bootstrap median interval is wholly unfavorable at
+  +4.38%..+6.95%; one anomalous favorable pair does not change the conclusion.
+- Mechanism: the candidate removes the outlined remaining-tail helper call when
+  exhaustion is proven, but introduces an inline `start == len` decision before
+  publishing zero. At this size the extra hot control/state work costs more than
+  entering the existing cold helper. Forward iteration already hoists length and
+  vectorizes, so there is no loop-side gain to amortize it.
+- Decision: revert immediately without selecting the 1,024-element or Apple lanes.
+  Keep the existing guarded Drop. Do not retry cached end or exhausted fast paths
+  without a real workload dominated by alternating double-ended consumption.
+- Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/jack-vec-into-iter-drop-4-20260711`.
 
 ### Two-move `swap_remove` (`perf/swap-remove-two-move`)
 
