@@ -36,6 +36,14 @@ jobs:
         run: cargo +stable doc --no-deps --features serde,malloc_size_of,const_new
       - name: Test benchmark tooling
         run: python3 tools/test_bench_ab.py
+      - name: Test comparison harness
+        run: cargo +stable test -p jack-vec-comparisons
+      - name: Check comparison benchmark targets
+        run: cargo +stable check -p jack-vec-comparisons --all-targets
+      - name: Lint comparison harness
+        run: cargo +stable clippy -p jack-vec-comparisons --all-targets -- -D warnings
+      - name: Test comparison reporting tools
+        run: python3 -m unittest discover -s comparisons/tools -p 'test_*.py'
 
   msrv:
     runs-on: ubuntu-latest
@@ -47,15 +55,17 @@ jobs:
         run: cargo +1.86 check --all-targets --features serde,malloc_size_of,const_new
       - name: Check no_std feature interactions on the MSRV
         run: cargo +1.86 check --lib --no-default-features --features serde,malloc_size_of,const_new
+      - name: Check comparison harness on the MSRV
+        run: cargo +1.86 check -p jack-vec-comparisons --all-targets
 
   nightly:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Install pinned nightly
-        run: rustup toolchain install $NIGHTLY --profile minimal
+        run: rustup toolchain install "$NIGHTLY" --profile minimal
       - name: Test unstable feature
-        run: cargo +$NIGHTLY test --features unstable
+        run: cargo +"$NIGHTLY" test --features unstable
 
   miri:
     name: Miri
@@ -63,10 +73,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install pinned Miri
-        run: rustup toolchain install $NIGHTLY --profile minimal --component miri
+        run: rustup toolchain install "$NIGHTLY" --profile minimal --component miri
       - name: Set up Miri
-        run: cargo +$NIGHTLY miri setup
+        run: cargo +"$NIGHTLY" miri setup
       - name: Test with strict provenance and Tree Borrows
         env:
           MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-tree-borrows
-        run: cargo +$NIGHTLY miri test
+        run: cargo +"$NIGHTLY" miri test

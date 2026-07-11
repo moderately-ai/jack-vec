@@ -1,4 +1,5 @@
 [![Rust CI](https://github.com/moderately-ai/jack-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/moderately-ai/jack-vec/actions)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/moderately-ai/jack-vec)
 
 # JackVec
 
@@ -35,8 +36,11 @@ let values: JackVec<_> = jack_vec![1, 2, 3];
 assert_eq!(values.as_slice(), &[1, 2, 3]);
 ```
 
-See [`benches/README.md`](benches/README.md) for CPU and allocation benchmarks
-that compare `JackVec` with `Vec`.
+See [`benches/README.md`](benches/README.md) for focused JackVec regression
+benchmarks. The non-published [`comparisons`](comparisons/README.md) workspace
+crate provides the reproducible `Vec`, `JackVec`, upstream `ThinVec`,
+`SmallVec4`, and `SmallVec8` CPU and memory matrix tracked by CodSpeed and the
+controlled macOS/Linux protocol.
 
 ## Lineage and attribution
 

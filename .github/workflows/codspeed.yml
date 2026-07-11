@@ -1,0 +1,54 @@
+name: CodSpeed
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  simulation:
+    name: CPU simulation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust and cargo-codspeed
+        uses: moonrepo/setup-rust@v0
+        with:
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed@5.0.1
+      - name: Build comparison CPU benchmarks
+        run: cargo codspeed build -p jack-vec-comparisons --bench cpu -m simulation
+      - name: Measure comparison CPU benchmarks
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: simulation
+          run: cargo codspeed run -p jack-vec-comparisons --bench cpu
+
+  walltime:
+    name: ARM64 Linux wall time
+    if: github.event_name != 'pull_request' && vars.CODSPEED_MACRO_ENABLED == 'true'
+    runs-on: codspeed-macro
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust and cargo-codspeed
+        uses: moonrepo/setup-rust@v0
+        with:
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed@5.0.1
+      - name: Build comparison CPU benchmarks
+        run: cargo codspeed build -p jack-vec-comparisons --bench cpu -m walltime
+      - name: Measure comparison CPU benchmarks
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: walltime
+          run: cargo codspeed run -p jack-vec-comparisons --bench cpu

@@ -14,6 +14,11 @@ keywords = ["vec", "collection", "compact", "memory"]
 categories = ["data-structures", "no-std"]
 exclude = ["/.github", "/.gitignore", "/TODO.md", "/tools", "/benchmark-results"]
 
+[workspace]
+members = ["comparisons"]
+default-members = ["."]
+resolver = "2"
+
 [features]
 default = ["std"]
 std = []

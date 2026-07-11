@@ -18,6 +18,25 @@ The central hypothesis is:
 > ThinVec chose the right one-word owner. JackVec can improve its allocation
 > representation and construction algorithms while preserving that final density.
 
+## Cross-implementation measurement system (2026-07-11)
+
+- [x] Add the non-published `jack-vec-comparisons` workspace crate.
+- [x] Pin upstream ThinVec 0.2.18, optimized SmallVec 1.15.1, and CodSpeed's
+  Criterion compatibility layer exactly; commit the workspace lockfile.
+- [x] Compare `Vec`, `JackVec`, `ThinVec`, `SmallVec4`, and `SmallVec8` under
+  identical CPU timing boundaries and allocation accounting.
+- [x] Keep JackVec-only conversions out of cross-library rankings.
+- [x] Add deterministic workload checksums, adapter parity tests, allocation
+  leak/reallocation invariants, balanced physical-host rotations, and explicit
+  win/loss/equivalent/inconclusive reporting.
+- [x] Add CodSpeed CPU simulation for pull requests and `main`.
+- [ ] Enable public-repository access for the `moderately-ai` Actions runner
+  group, set `CODSPEED_MACRO_ENABLED=true`, and validate ARM64 Linux wall time.
+- [ ] Capture and commit the first clean M4 macOS and Ryzen 7950X3D Linux
+  summaries; retain full raw rounds outside Git.
+- [ ] Revisit the practical-equivalence band only after enough stable repeated
+  baselines exist; never tune it in response to a desired result.
+
 ## Non-negotiable invariants
 
 - The final collection occupies exactly one machine word.

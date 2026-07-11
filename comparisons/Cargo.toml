@@ -1,0 +1,24 @@
+[package]
+name = "jack-vec-comparisons"
+version = "0.0.0"
+publish = false
+edition = "2021"
+rust-version = "1.86"
+description = "Reproducible cross-implementation benchmarks for jack-vec."
+
+[dependencies]
+jack-vec = { path = ".." }
+smallvec = { version = "=1.15.1", features = ["const_generics", "union"] }
+thin-vec = "=0.2.18"
+
+[dev-dependencies]
+criterion = { package = "codspeed-criterion-compat", version = "=5.0.1" }
+libc = "=0.2.180"
+
+[[bench]]
+name = "cpu"
+harness = false
+
+[[bench]]
+name = "allocations"
+harness = false

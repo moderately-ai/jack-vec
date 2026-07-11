@@ -1,5 +1,5 @@
 /benchmark-results/
-/Cargo.lock
 /target/
+/comparisons/benchmark-results/raw/
 __pycache__/
 *.py[cod]
