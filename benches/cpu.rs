@@ -391,6 +391,29 @@ fn array_into_jack(c: &mut Criterion) {
     group.finish();
 }
 
+fn splice_equal_middle(c: &mut Criterion) {
+    const PREFIX: usize = 4;
+    const TAIL: usize = 4;
+    let mut group = c.benchmark_group("splice_equal_middle");
+
+    for &len in &[4, 1_024] {
+        group.throughput(Throughput::Elements(len as u64));
+        group.bench_function(BenchmarkId::new("JackVec", len), |bencher| {
+            bencher.iter_batched_ref(
+                || build_reserved::<JackVec<u64>>(PREFIX + len + TAIL),
+                |values| {
+                    values
+                        .splice(PREFIX..PREFIX + len, 0..len as u64)
+                        .for_each(drop);
+                    black_box(values);
+                },
+                BatchSize::SmallInput,
+            );
+        });
+    }
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -407,6 +430,7 @@ criterion_group!(
     jack_into_vec,
     jack_into_box,
     vec_into_jack,
-    array_into_jack
+    array_into_jack,
+    splice_equal_middle
 );
 criterion_main!(benches);

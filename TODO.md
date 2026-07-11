@@ -53,6 +53,30 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Guarded `Splice` fill (`perf/splice-fill-guard`)
+
+- Status: pre-registered; baseline harness pending
+- Baseline: `9b136e3`
+- Hypothesis: `Drain::fill` currently calls `vec.len()` and `vec.set_len()` after
+  every replacement item. Rust 1.86 AArch64 retains that header load/store inside
+  the loop. Carrying initialized length locally and publishing through a panic guard
+  should reduce header traffic to one final store while preserving unwind safety.
+- Primary: replace a dynamic 1,024-element middle range with exactly 1,024 `u64`
+  values while preserving a nonempty tail, so `Splice` must use `Drain::fill` rather
+  than the tail-empty `Extend` path. Require at least 10% pinned-Linux improvement
+  or a strong instruction/codegen reduction with statistically neutral wall time.
+  Four elements may not regress beyond 2%; confirm Apple direction.
+- Boundary: setup/allocation and final vector destruction are outside timing;
+  removed-value consumption, replacement iteration, fill, tail repair, and length
+  publication remain inside. Capacity/allocation behavior and final contents must
+  remain identical.
+- Safety: replacement `next()` may panic at any iteration. A guard must publish the
+  initialized prefix on normal return and unwind before `Drain::drop` repairs the
+  tail. Test empty/short/exact/long replacement, underestimated hints, panicking
+  iterator exact state/Drop, ZST/overalignment, MSRV, Clippy, and strict Miri.
+- Scope: `Drain::fill`, one temporary 4/1,024 benchmark, and focused tests only.
+  No public API, layout, general splice algorithm, reserve, or growth changes.
+
 ### Fully consumed `IntoIter` drop fast path (`perf/into-iter-full-drop`)
 
 - Status: rejected; implementation, test, and temporary benchmark reverted
