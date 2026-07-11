@@ -52,6 +52,40 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Tagged small-length cache (`perf/tagged-small-length`)
+
+- Status: pre-registered; prototype pending
+- Baseline commit: `bf648de`
+- Hypothesis: the low three bits of JackVec's 8-byte-aligned header pointer can
+  cache lengths 0 through 6, using tag 7 as an escape to the header. Sparse nested
+  metadata scans would avoid dependent header loads for every empty/small list,
+  allowing AArch64 to operate on the compact contiguous owner array.
+- Representation: preserve the one-word `NonNull` owner and Option niche. Mask tags
+  with strict-provenance pointer APIs before every dereference, data-pointer
+  calculation, comparison, realloc, or deallocation. Keep the authoritative full
+  length in the header and update the cache after every successful length change;
+  tag 7 means read the header, not length 7.
+- Primary gate: improve the Apple M4 Max sparse metadata scan by at least 30% in
+  seven paired Rust 1.86 rounds. The baseline gap is 70.89%, so a smaller gain does
+  not justify pervasive pointer encoding.
+- General regression gates: pinned x86-64 Linux metadata may not regress beyond
+  2%; preallocated push at 4 and 1,024 and sparse ordinary traversal may not regress
+  beyond 1% on either platform. Retained/requested/usable bytes, allocations,
+  capacities, element layout, and owner size must remain unchanged. Compare focused
+  codegen and complete text size; reject unexplained growth above 1 KiB.
+- Correctness gates: all mutation paths, drains/splice/retain/dedup, clones,
+  conversions, ZSTs, over-alignment, exact-once Drop and panic repair, singleton
+  identity, Send/Sync, all targets/features, Rust 1.86, warning-denied Clippy/docs,
+  and strict-provenance Tree Borrows Miri. Add focused transitions at cached lengths
+  0/1/6 and escaped lengths 7/8, including shrink and regrowth.
+- Decision: this is explicitly situational research. Even if the Apple primary
+  passes, reject it from the default implementation if common mutation or Linux
+  regresses, masking complicates provenance, or the safety/code-size burden is not
+  convincingly bounded.
+- Scope: pointer representation helpers, length publication, focused transition
+  tests, and temporary comparison filters only. No header, allocator, growth,
+  builder, public API, or sqlparsers changes.
+
 ### Nested metadata scan (`benchmarks/metadata-scan`)
 
 - Status: accepted as a permanent high-signal benchmark; generalized pointer
