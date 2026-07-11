@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### Exact macro construction (`perf/exact-macro-construction`)
 
-- Status: pre-registered; baseline harness pending
+- Status: accepted; temporary benchmark removed
 - Baseline implementation commit: `3e25d5e`
 - Hypothesis: `jack_vec![a, b, ...]` knows its exact arity at compile time but still
   allocates and calls the general push path for every expression. Routing nonempty
@@ -80,6 +80,27 @@ The central hypothesis is:
 - Scope: literal-list macro arm, focused temporary 1/4 benchmark, and semantic
   tests only. Do not add public one/two constructors, change repeat syntax, or mix
   `from_fn`, growth policy, or inline scratch.
+- Baseline harness commit: `33fc702`
+- Candidate commit: `ae3856f`
+- CPU result: four-element construction improved 11.50%, from 11.68 ns to
+  10.34 ns, with every round favorable and interval -14.21%..-10.37%, clearing
+  the 10% primary threshold. Singleton construction also improved 9.08%, from
+  10.65 ns to 9.67 ns (range -11.59%..-6.18%, interval
+  -9.36%..-6.25%), comfortably passing its no-regression gate.
+- Mechanism/code-size result: the literal arm now evaluates an ordinary array and
+  enters the accepted direct array relocation path, removing repeated general push
+  machinery and publishing length once. Complete `.text` shrank 336 bytes,
+  `.rodata` was unchanged, and the executable shrank 8 bytes.
+- Memory/semantic result: exact capacity and the existing direct-array allocation
+  lifecycle remain one allocation, zero reallocations, one deallocation, and zero
+  live bytes after drop. Empty and repeat arms are unchanged. Dedicated tests prove
+  trailing-comma behavior, left-to-right evaluation, and exact-once cleanup of an
+  initialized owning prefix when a later expression panics. All target/feature,
+  no-std, Rust 1.86, Clippy, docs, and strict-provenance Tree Borrows Miri gates pass.
+- Decision: retain the macro routing and semantic tests. Remove the temporary
+  macro timing group; the permanent array benchmark already protects the distinct
+  relocation mechanism.
+- Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-exact-macro-20260710`.
 
 ### Transient construction builder (`perf/transient-builder`)
 
