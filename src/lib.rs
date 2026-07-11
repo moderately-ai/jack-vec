@@ -104,7 +104,11 @@ impl Header {
 
     #[inline]
     fn set_len(&mut self, len: usize) {
-        self._len = header_size(len);
+        // Every caller must keep length within the allocation's capacity, and
+        // every stored capacity has already passed `header_size`. Avoid a
+        // redundant checked conversion on each hot-path length publication.
+        debug_assert!(len <= self.cap());
+        self._len = len as u32;
     }
 
     fn cap(&self) -> usize {
