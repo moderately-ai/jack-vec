@@ -90,7 +90,7 @@ fn header_size(value: usize) -> u32 {
 }
 
 // The allocation header of a JackVec.
-#[repr(C)]
+#[repr(C, align(8))]
 struct Header {
     _len: u32,
     _cap: u32,
