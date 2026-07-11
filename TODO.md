@@ -52,6 +52,34 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Nested metadata scan (`benchmarks/metadata-scan`)
+
+- Status: pre-registered; implementation pending
+- Baseline commit: `48ddf42`
+- Question: does JackVec's allocation-header metadata access create enough cost in
+  an empty-heavy recursive workload to justify investigating a cached/tagged
+  length, or does its one-word outer representation already offset the indirection?
+- Workload: build the existing deterministic sparse population of 10,000 nested
+  `u64` containers before timing, then scan only `len`, `is_empty`, and `capacity`
+  into a checksum. Compare `Vec` and JackVec in one Criterion group. Do not touch
+  elements, allocate, mutate, or destroy containers inside the timed operation.
+- Rationale for one workload: sparse includes 80% shared empty singletons, 15%
+  singleton allocations, and 5% four-element allocations. It exercises both the
+  compact outer array and scattered nonempty headers without adding redundant
+  empty/small benchmark variants.
+- Interpretation: this is a falsification benchmark, not an optimization claim.
+  If JackVec is competitive or faster, reject pointer-tagged cached length for lack
+  of demonstrated headroom. If materially slower, inspect optimized code and cache
+  behavior before considering a prototype; the benchmark alone cannot distinguish
+  pointer chasing from layout, cache, or compiler effects.
+- Measurement: seven alternating paired rounds on pinned Linux with preload
+  cleared, plus a macOS comparison. Retain raw estimates and inspect focused
+  assembly. Require a repeatable JackVec regression above 5% before a pointer-tag
+  prototype becomes eligible; smaller differences do not justify its unsafe and
+  semantic complexity.
+- Scope: one sparse metadata benchmark and its helper only. No library, layout,
+  tagging, API, allocation, or growth-policy changes.
+
 ### Allocator usable-size and reallocation diagnostics (`benchmarks/allocator-usable-size`)
 
 - Status: accepted as diagnostic tooling; no library policy change justified
@@ -1583,7 +1611,7 @@ preserve their evidence here.
 - [ ] Add a metadata-only nested scan: `len`, `is_empty`, and possibly `capacity`.
 - [ ] Add exact growth-transition cases only where needed by a growth experiment.
 - [ ] Add requested bytes copied and pointer-stayed versus pointer-moved reallocs.
-- [ ] Add allocator usable-byte diagnostics on macOS and glibc Linux.
+- [x] Add allocator usable-byte diagnostics on macOS and glibc Linux.
 - [x] Record rustc commit, target, CPU, OS, allocator, and governor with retained
   benchmark artifacts automatically.
 - [x] Replace mutable saved-`main` comparisons with exact-commit detached worktrees
@@ -1783,7 +1811,7 @@ Tasks:
 
 ### Linux
 
-- [ ] Add optional `malloc_usable_size` reporting as a diagnostic only.
+- [x] Add optional `malloc_usable_size` reporting as a diagnostic only.
 - [ ] Use `perf stat` for cycles, instructions, branches/misses, cache misses, dTLB
   misses, faults, context switches, and migrations.
 - [ ] Use `perf record` only to attribute demonstrated regressions or wins.
@@ -1794,10 +1822,10 @@ Tasks:
 
 ### macOS
 
-- [ ] Add optional `malloc_size` reporting and compare requested with usable bytes.
+- [x] Add optional `malloc_size` reporting and compare requested with usable bytes.
 - [ ] Use `xctrace` Time Profiler and CPU Counters on filtered, already-built
   benchmark executables.
-- [ ] Record moved reallocations and size-class transitions.
+- [x] Record moved reallocations and size-class transitions.
 - [ ] Keep macOS and Linux baselines separate.
 
 Hardware counters and allocator instrumentation explain wall-clock results; they do
