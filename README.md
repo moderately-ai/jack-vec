@@ -20,8 +20,8 @@ Its eight-byte allocation header stores length and capacity as `u32`; the actual
 maximum capacity may be lower when element layout or `isize` limits require it.
 It targets native Rust rather than Gecko/nsTArray FFI.
 
-JackVec is not yet published on crates.io. Until its first release, depend on a
-reviewed Git revision:
+JackVec is not yet published on crates.io. Until its first release, depend on the
+Git repository (and pin a reviewed revision in reproducible applications):
 
 ```toml
 [dependencies]

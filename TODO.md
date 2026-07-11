@@ -149,6 +149,11 @@ The central hypothesis is:
   and `extract_if` share one overflow-safe range normalizer, including excluded and
   inclusive `usize::MAX` bounds. Focused tests assert semantic range panics rather
   than build-mode-dependent arithmetic overflow.
+- Capacity correction: geometric reserve growth is now clamped to `MAX_CAP` before
+  comparison with the requested minimum. This makes representable capacities above
+  half of `u32::MAX` reachable while leaving genuinely excessive requests
+  unclamped for deterministic rejection. Pure boundary tests avoid impossible
+  multi-gigabyte test allocations.
 - Publication/repository correction: `publish = false` mechanically prevents an
   accidental crates.io release. Unpublished badges and version dependency text are
   removed in favor of the Git repository dependency.

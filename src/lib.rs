@@ -221,6 +221,21 @@ fn alloc_align<T>() -> usize {
     max(mem::align_of::<T>(), mem::align_of::<Header>())
 }
 
+fn growth_capacity<T>(old_cap: usize, min_cap: usize) -> usize {
+    let geometric = if old_cap == 0 {
+        // Skip to four because tiny allocations are inefficient, unless even
+        // that element count could overflow a byte-size calculation.
+        if mem::size_of::<T>() > usize::MAX / 8 {
+            1
+        } else {
+            4
+        }
+    } else {
+        old_cap.saturating_mul(2).min(MAX_CAP)
+    };
+    max(min_cap, geometric)
+}
+
 /// Gets the layout necessary to allocate a `JackVec<T>`
 ///
 /// # Panics
@@ -925,18 +940,10 @@ impl<T> JackVec<T> {
         if min_cap <= old_cap {
             return;
         }
-        // Ensure the new capacity is at least double, to guarantee exponential growth.
-        let double_cap = if old_cap == 0 {
-            // skip to 4 because tiny JackVecs are dumb; but not if that would cause overflow
-            if mem::size_of::<T>() > (!0) / 8 {
-                1
-            } else {
-                4
-            }
-        } else {
-            old_cap.saturating_mul(2)
-        };
-        let new_cap = max(min_cap, double_cap);
+        // Geometric growth is a heuristic, so clamp it to the representable
+        // capacity. `min_cap` remains unclamped so genuinely excessive requests
+        // still fail in `reallocate`.
+        let new_cap = growth_capacity::<T>(old_cap, min_cap);
         unsafe {
             self.reallocate(new_cap);
         }
@@ -2804,7 +2811,7 @@ impl std::io::Write for JackVec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::{JackVec, MAX_CAP};
+    use super::{growth_capacity, JackVec, MAX_CAP};
     use crate::alloc::{string::ToString, vec};
 
     #[test]
@@ -2827,6 +2834,23 @@ mod tests {
     #[should_panic(expected = "capacity overflow")]
     fn test_capacity_above_u32_max() {
         let _ = JackVec::<()>::with_capacity(MAX_CAP + 1);
+    }
+
+    #[test]
+    fn growth_heuristic_stays_within_representable_capacity() {
+        assert_eq!(growth_capacity::<u8>(0, 1), 4);
+        assert_eq!(growth_capacity::<u8>(8, 9), 16);
+        assert_eq!(growth_capacity::<u8>(MAX_CAP / 2 + 1, MAX_CAP), MAX_CAP);
+        assert_eq!(growth_capacity::<u8>(MAX_CAP - 1, MAX_CAP), MAX_CAP);
+
+        // Only the heuristic is clamped. An invalid requested minimum remains
+        // invalid so the allocation path can reject it deterministically.
+        if let Some(invalid_minimum) = MAX_CAP.checked_add(1) {
+            assert_eq!(
+                growth_capacity::<()>(MAX_CAP, invalid_minimum),
+                invalid_minimum
+            );
+        }
     }
 
     #[test]
