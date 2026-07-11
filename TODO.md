@@ -39,6 +39,7 @@ The central hypothesis is:
 
 - Fork: `https://github.com/tomsanbear/thin-vec`
 - Canonical branch: `jackvec`
+- Working branch: `benchmarks/allocator-usable-size`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -50,6 +51,31 @@ The central hypothesis is:
   System” means the runner recorded an empty effective preload environment.
 
 ## Experiment record
+
+### Allocator usable-size and reallocation diagnostics (`benchmarks/allocator-usable-size`)
+
+- Status: pre-registered; implementation pending
+- Baseline commit: `fe7aa89`
+- Question: where does JackVec's requested allocation size map to a smaller physical
+  allocator class, and when does growth remain in place versus move/copy? Requested
+  bytes alone cannot answer either question.
+- Instrumentation: extend only the deterministic allocation runner with live/peak/
+  post-drop usable bytes and moved/in-place reallocation counts. Use macOS
+  `malloc_size` and glibc Linux `malloc_usable_size`; preserve requested-byte
+  tracking and clearly label unsupported platforms rather than treating requested
+  bytes as measured usable bytes.
+- Measurement matrix: existing empty/sparse/four-element nested workloads and
+  growing/reserved lengths 1, 4, and 1,024 under macOS System malloc and cleared-
+  preload glibc System on the builder. Record allocator and OS independently.
+- Acceptance: instrumentation must observe zero live requested and usable bytes
+  after every workload, never report usable bytes below requested bytes, preserve
+  existing allocation/reallocation/deallocation counts, and avoid all CPU benchmark
+  paths. Run all-target, Rust 1.86, Clippy, and allocation smoke gates on both hosts.
+- Decision use: only propose allocator-class or growth-policy changes where these
+  measurements expose a concrete size-class boundary, retained-waste pattern, or
+  repeatable moved-reallocation cost. This experiment makes no speedup claim.
+- Scope: benchmark allocator wrapper and documentation only. No library source,
+  growth factor, capacity, layout, or public API changes.
 
 ### Exact macro construction (`perf/exact-macro-construction`)
 
