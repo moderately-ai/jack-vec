@@ -53,6 +53,27 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Fully consumed `IntoIter` drop fast path (`perf/into-iter-full-drop`)
+
+- Status: pre-registered; baseline harness pending
+- Baseline: `34d7b05`
+- Hypothesis: Rust 1.86 already hoists header length and vectorizes forward consuming
+  iteration, so caching an end field is rejected. After full consumption, however,
+  optimized code still calls the cold remaining-tail drop helper merely to publish
+  zero length before the owned JackVec deallocates. An inline exhausted check can
+  publish zero directly and eliminate the outlined call.
+- Primary: consume and checksum four preallocated `u64` elements, including iterator
+  destruction/deallocation but excluding construction. Require at least 5% or a
+  proved call removal with statistically neutral timing; 1,024 elements may not
+  regress beyond 1%. Seven pinned Linux pairs, then Apple direction.
+- Safety: a fully consumed non-singleton must set header length to zero before its
+  JackVec field drops, or already-moved values would be dropped twice. Partial and
+  double-ended consumption must retain the existing guarded remaining-tail drop.
+  Test exact-once Drop for fully/partially consumed and panicking element Drop,
+  empty/ZST behavior, Miri, MSRV, Clippy, docs, and code size.
+- Scope: `IntoIter::drop`, temporary 4/1,024 consumption benchmarks, and focused
+  lifecycle tests only. Do not add an end field or change iterator/public layout.
+
 ### Two-move `swap_remove` (`perf/swap-remove-two-move`)
 
 - Status: accepted; temporary benchmark removed

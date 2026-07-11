@@ -391,6 +391,26 @@ fn array_into_jack(c: &mut Criterion) {
     group.finish();
 }
 
+fn consume_into_iter(c: &mut Criterion) {
+    let mut group = c.benchmark_group("consume_into_iter");
+    for &len in &[4, 1_024] {
+        group.throughput(Throughput::Elements(len as u64));
+        group.bench_function(BenchmarkId::new("JackVec", len), |bencher| {
+            bencher.iter_batched(
+                || build_reserved::<JackVec<u64>>(len),
+                |values| {
+                    let checksum = values
+                        .into_iter()
+                        .fold(0_u64, |sum, value| sum.wrapping_add(value));
+                    black_box(checksum);
+                },
+                BatchSize::SmallInput,
+            );
+        });
+    }
+    group.finish();
+}
+
 criterion_group!(
     benches,
     nested_construct,
@@ -407,6 +427,7 @@ criterion_group!(
     jack_into_vec,
     jack_into_box,
     vec_into_jack,
-    array_into_jack
+    array_into_jack,
+    consume_into_iter
 );
 criterion_main!(benches);
