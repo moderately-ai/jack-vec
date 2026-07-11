@@ -52,6 +52,39 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Transient construction builder (`perf/transient-builder`)
+
+- Status: pre-registered; implementation pending
+- Baseline commit: `b1bae7f`
+- Hypothesis: final JackVec must keep length/capacity in its allocation header, but
+  construction can hold both in a three-word transient owner and publish length
+  only on growth, unwind, or `finish()`. Reusing the final prefix-header allocation
+  from the start avoids moving elements during finalization while removing a header
+  load/store from each successful no-growth push.
+- API prototype: `JackVecBuilder<T>::new`, `with_capacity`, `push`, `len`,
+  `capacity`, and consuming `finish() -> JackVec<T>`. Keep it opt-in and separate
+  from final `JackVec<T>`; do not alter JackVec layout or ordinary push semantics.
+- Primary CPU gate: preallocated construction and finish of 1,024 `u64` values on
+  pinned Linux must improve at least 15% over preallocated JackVec push under seven
+  paired rounds, cleared preload, seed 20260803, 100 samples, 3 s warm-up, 5 s
+  measurement, and 100,000 resamples. Allocation/setup and output destruction stay
+  outside timing; element writes, length handling, and final publication stay inside.
+- Secondary sizes: 1 and 4 elements. Neither may regress more than 5%; report them
+  even if the 1,024-element result passes. Compare whole executable and focused
+  codegen so inlining does not hide an instruction-cache cost.
+- Memory gate: final requested bytes, capacity, allocation count, and retained
+  representation must exactly match JackVec constructed with the same capacity.
+  Builder stack size is expected to be three words and must be reported, not counted
+  as retained AST memory.
+- Correctness gates: empty finish, preallocated and growing construction, ZST,
+  over-alignment, owning exact-once drops on finish and unfinished-builder drop,
+  capacity-overflow unwind after initialized values, Send/Sync behavior inherited
+  from `T`, all feature/MSRV/docs/Clippy lanes, and strict-provenance Tree Borrows
+  Miri.
+- Scope: one builder type, one high-signal benchmark group with three declared
+  sizes, and focused lifecycle tests. Do not combine inline scratch, exact small
+  constructors, growth-policy changes, or sqlparsers integration.
+
 ### Compact 32-bit allocation header (`perf/compact-header`)
 
 - Status: accepted
