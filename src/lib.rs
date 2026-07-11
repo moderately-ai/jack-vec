@@ -2679,14 +2679,35 @@ impl<T> Drain<'_, T> {
         let vec = unsafe { self.vec.as_mut() };
         let range_start = vec.len();
         let range_end = self.end;
-        let range_slice = unsafe {
-            slice::from_raw_parts_mut(vec.data_raw().add(range_start), range_end - range_start)
+        debug_assert!(range_start <= range_end);
+        if range_start == range_end {
+            return true;
+        }
+        debug_assert!(!vec.is_singleton());
+
+        struct SetLenOnDrop<'a, T> {
+            vec: &'a mut JackVec<T>,
+            initialized: usize,
+        }
+
+        impl<T> Drop for SetLenOnDrop<'_, T> {
+            fn drop(&mut self) {
+                unsafe {
+                    self.vec.set_len_non_singleton(self.initialized);
+                }
+            }
+        }
+
+        let data = unsafe { vec.data_raw().add(range_start) };
+        let mut guard = SetLenOnDrop {
+            vec,
+            initialized: range_start,
         };
 
-        for place in range_slice {
+        for offset in 0..range_end - range_start {
             if let Some(new_item) = replace_with.next() {
-                unsafe { ptr::write(place, new_item) };
-                vec.set_len(vec.len() + 1);
+                unsafe { ptr::write(data.add(offset), new_item) };
+                guard.initialized += 1;
             } else {
                 return false;
             }
