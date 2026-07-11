@@ -54,7 +54,7 @@ The central hypothesis is:
 
 ### Transient construction builder (`perf/transient-builder`)
 
-- Status: pre-registered; implementation pending
+- Status: rejected; implementation and benchmark reverted
 - Baseline commit: `b1bae7f`
 - Hypothesis: final JackVec must keep length/capacity in its allocation header, but
   construction can hold both in a three-word transient owner and publish length
@@ -84,6 +84,32 @@ The central hypothesis is:
 - Scope: one builder type, one high-signal benchmark group with three declared
   sizes, and focused lifecycle tests. Do not combine inline scratch, exact small
   constructors, growth-policy changes, or sqlparsers integration.
+- Candidate commit: `9e9279f` (reverted by `58b8e71`)
+- CPU result: failed every declared size in fourteen same-binary process
+  comparisons. Relative to ordinary preallocated JackVec construction, builder
+  construction was 268.70% slower at one element (range +264.03%..+279.48%),
+  135.19% slower at four (+94.20%..+141.24%), and 5.08% slower at 1,024
+  (+4.53%..+5.39%). Median 1,024 estimates were 428.26 ns for JackVec and
+  449.66 ns for the builder. The primary required a 15% improvement and both
+  secondaries exceeded their 5% regression ceiling.
+- Mechanism result: optimized assembly disproves the register-residency hypothesis.
+  Builder `len` and `cap` remain recoverable stack fields because the cold growth
+  call borrows the complete builder and Drop/unwind plus consuming finish must
+  preserve ownership state. Each hot iteration reloads capacity and length and
+  stores length back to the stack. Current optimized JackVec already carries loop
+  length in a register and publishes only the required header update. Finish adds a
+  singleton comparison/publication, explaining the particularly large fixed cost
+  at one and four elements.
+- Correctness result: the prototype itself passed empty/preallocated/growing, ZST,
+  64-byte alignment, unfinished exact-once Drop, all feature/no-std/MSRV/Clippy/docs,
+  and strict-provenance Tree Borrows Miri gates. Correctness does not rescue the
+  failed performance premise.
+- Decision: revert the public builder and its benchmark. A builder-only batch
+  `extend` could keep loop state local, but accepted guarded `JackVec::extend`
+  already provides that mechanism without another owner/API. Do not retry this
+  three-word builder unless a different representation or downstream profile
+  demonstrates a mechanism unavailable to ordinary JackVec.
+- Artifact: `catalyzed-builder:~/thin-vec/benchmark-results/jackvec-builder-20260710`.
 
 ### Compact 32-bit allocation header (`perf/compact-header`)
 
