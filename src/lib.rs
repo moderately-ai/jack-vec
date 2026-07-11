@@ -1,7 +1,7 @@
 #![deny(missing_docs)]
 
-//! `JackVec` is exactly the same as `Vec`, except that it stores its `len` and `capacity` in the buffer
-//! it allocates.
+//! `JackVec` is a `Vec`-like collection whose owner is one word because its `len`
+//! and `capacity` live in the allocation.
 //!
 //! This makes the memory footprint of JackVecs lower; notably in cases where space is reserved for
 //! a non-existence `JackVec<T>`. So `Vec<JackVec<T>>` and `Option<JackVec<T>>::None` will waste less
@@ -24,11 +24,13 @@
 //!
 //! # Optional Features
 //!
-//! ## `const_new`
-//!
-//! **This feature requires Rust 1.83.**
-//!
-//! This feature makes `JackVec::new()` a `const fn`.
+//! - `std` (default): enables APIs that require the standard library.
+//! - `serde`: implements Serde serialization and deserialization without requiring
+//!   Serde's `std` feature.
+//! - `malloc_size_of`: integrates with the `malloc_size_of` measurement traits.
+//! - `const_new`: makes `JackVec::new()` a `const fn`.
+//! - `unstable`: enables nightly-only optimizations and requires the project's
+//!   pinned nightly toolchain. This feature is not covered by stable semver guarantees.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -87,6 +89,52 @@ impl<T, E> UnwrapCapOverflow<T> for Result<T, E> {
 #[inline]
 fn header_size(value: usize) -> u32 {
     value.try_into().unwrap_cap_overflow()
+}
+
+#[cold]
+#[inline(never)]
+fn slice_index_fail(start: usize, end: usize, len: usize) -> ! {
+    if start > len {
+        panic!(
+            "range start index {} out of range for slice of length {}",
+            start, len
+        )
+    }
+    if end > len {
+        panic!(
+            "range end index {} out of range for slice of length {}",
+            end, len
+        )
+    }
+    if start > end {
+        panic!("slice index starts at {} but ends at {}", start, end)
+    }
+    panic!(
+        "range end index {} out of range for slice of length {}",
+        end, len
+    )
+}
+
+fn slice_range<R: RangeBounds<usize>>(range: R, len: usize) -> ops::Range<usize> {
+    let end = match range.end_bound() {
+        Bound::Included(&end) if end >= len => slice_index_fail(0, end, len),
+        // `end < len`, so this cannot overflow.
+        Bound::Included(&end) => end + 1,
+        Bound::Excluded(&end) if end > len => slice_index_fail(0, end, len),
+        Bound::Excluded(&end) => end,
+        Bound::Unbounded => len,
+    };
+
+    let start = match range.start_bound() {
+        Bound::Excluded(&start) if start >= end => slice_index_fail(start, end, len),
+        // `start < end`, so this cannot overflow.
+        Bound::Excluded(&start) => start + 1,
+        Bound::Included(&start) if start > end => slice_index_fail(start, end, len),
+        Bound::Included(&start) => start,
+        Bound::Unbounded => 0,
+    };
+
+    ops::Range { start, end }
 }
 
 // The allocation header of a JackVec.
@@ -1209,9 +1257,8 @@ impl<T> JackVec<T> {
     /// ```
     pub fn split_off(&mut self, at: usize) -> JackVec<T> {
         let old_len = self.len();
-        let new_vec_len = old_len - at;
-
         assert!(at <= old_len, "Index out of bounds");
+        let new_vec_len = old_len - at;
 
         unsafe {
             let mut new_vec = JackVec::with_capacity(new_vec_len);
@@ -1300,18 +1347,7 @@ impl<T> JackVec<T> {
     {
         // See comments in the Drain struct itself for details on this
         let len = self.len();
-        let start = match range.start_bound() {
-            Bound::Included(&n) => n,
-            Bound::Excluded(&n) => n + 1,
-            Bound::Unbounded => 0,
-        };
-        let end = match range.end_bound() {
-            Bound::Included(&n) => n + 1,
-            Bound::Excluded(&n) => n,
-            Bound::Unbounded => len,
-        };
-        assert!(start <= end);
-        assert!(end <= len);
+        let ops::Range { start, end } = slice_range(range, len);
 
         unsafe {
             // Set our length to the start bound
@@ -1433,67 +1469,8 @@ impl<T> JackVec<T> {
     where
         F: FnMut(&mut T) -> bool,
     {
-        // Copy of https://github.com/rust-lang/rust/blob/ee361e8fca1c30e13e7a31cc82b64c045339d3a8/library/core/src/slice/index.rs#L37
-        fn slice_index_fail(start: usize, end: usize, len: usize) -> ! {
-            if start > len {
-                panic!(
-                    "range start index {} out of range for slice of length {}",
-                    start, len
-                )
-            }
-
-            if end > len {
-                panic!(
-                    "range end index {} out of range for slice of length {}",
-                    end, len
-                )
-            }
-
-            if start > end {
-                panic!("slice index starts at {} but ends at {}", start, end)
-            }
-
-            // Only reachable if the range was a `RangeInclusive` or a
-            // `RangeToInclusive`, with `end == len`.
-            panic!(
-                "range end index {} out of range for slice of length {}",
-                end, len
-            )
-        }
-
-        // Backport of https://github.com/rust-lang/rust/blob/ee361e8fca1c30e13e7a31cc82b64c045339d3a8/library/core/src/slice/index.rs#L855
-        pub fn slice_range<R>(range: R, bounds: ops::RangeTo<usize>) -> ops::Range<usize>
-        where
-            R: ops::RangeBounds<usize>,
-        {
-            let len = bounds.end;
-
-            let end = match range.end_bound() {
-                ops::Bound::Included(&end) if end >= len => slice_index_fail(0, end, len),
-                // Cannot overflow because `end < len` implies `end < usize::MAX`.
-                ops::Bound::Included(&end) => end + 1,
-
-                ops::Bound::Excluded(&end) if end > len => slice_index_fail(0, end, len),
-                ops::Bound::Excluded(&end) => end,
-                ops::Bound::Unbounded => len,
-            };
-
-            let start = match range.start_bound() {
-                ops::Bound::Excluded(&start) if start >= end => slice_index_fail(start, end, len),
-                // Cannot overflow because `start < end` implies `start < usize::MAX`.
-                ops::Bound::Excluded(&start) => start + 1,
-
-                ops::Bound::Included(&start) if start > end => slice_index_fail(start, end, len),
-                ops::Bound::Included(&start) => start,
-
-                ops::Bound::Unbounded => 0,
-            };
-
-            ops::Range { start, end }
-        }
-
         let old_len = self.len();
-        let ops::Range { start, end } = slice_range(range, ..old_len);
+        let ops::Range { start, end } = slice_range(range, old_len);
 
         // Guard against the vec getting leaked (leak amplification)
         unsafe {
@@ -2944,6 +2921,23 @@ mod tests {
     fn test_drain_out_of_bounds() {
         let mut v = jack_vec![1, 2, 3, 4, 5];
         v.drain(5..6);
+    }
+
+    #[test]
+    #[should_panic(expected = "range start index")]
+    fn test_drain_excluded_max_bound() {
+        let mut v = jack_vec![1, 2, 3];
+        v.drain((
+            core::ops::Bound::Excluded(usize::MAX),
+            core::ops::Bound::Unbounded,
+        ));
+    }
+
+    #[test]
+    #[should_panic(expected = "range end index")]
+    fn test_drain_inclusive_max_bound() {
+        let mut v = jack_vec![1, 2, 3];
+        v.drain(..=usize::MAX);
     }
 
     #[test]
@@ -4710,6 +4704,13 @@ mod std_tests {
         let vec2 = vec.split_off(4);
         assert_eq!(vec, [1, 2, 3, 4]);
         assert_eq!(vec2, [5, 6]);
+    }
+
+    #[test]
+    #[should_panic(expected = "Index out of bounds")]
+    fn test_split_off_validates_before_subtraction() {
+        let mut vec = jack_vec![1, 2, 3];
+        vec.split_off(usize::MAX);
     }
 
     #[test]

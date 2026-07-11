@@ -53,6 +53,30 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Adversarial safety and repository hardening (`main`)
+
+- Status: first correction set accepted; deeper panic/performance loop active
+- Safety audit: no confirmed memory-safety defect in allocation layout, provenance,
+  singleton/ZST handling, conversions, mutation guards, or iterator repair.
+- Range correction: `split_off` now validates before subtracting. `drain`, `splice`,
+  and `extract_if` share one overflow-safe range normalizer, including excluded and
+  inclusive `usize::MAX` bounds. Focused tests assert semantic range panics rather
+  than build-mode-dependent arithmetic overflow.
+- Publication/repository correction: `publish = false` mechanically prevents an
+  accidental crates.io release. Unpublished badges and version dependency text are
+  removed in favor of the Git repository dependency.
+- Feature correction: optional dependency features are explicit and Serde no longer
+  enables its `std` default. Stable and Rust 1.86 checks cover core-only no_std and
+  no_std interactions with Serde, malloc sizing, and const construction.
+- CI correction: replace archived toolchain/cache actions with explicit rustup
+  lanes, least-privilege permissions, strict Clippy/docs, benchmark-tool tests, a
+  fixed MSRV, and one dated nightly shared by unstable tests and Miri.
+- Benchmark correction: allocator-usable documentation matches the CSV and Linux
+  `malloc_usable_size` is restricted to the tested GNU environment.
+- Next: add focused unwind-state tests, then isolate the evidenced two-move
+  `swap_remove` and fully-consumed `IntoIter::drop` opportunities as separately
+  pre-registered performance experiments.
+
 ### Tagged small-length cache (`perf/tagged-small-length`)
 
 - Status: rejected; prototype and focused test reverted

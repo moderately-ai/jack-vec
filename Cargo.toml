@@ -1,6 +1,7 @@
 [package]
 name = "jack-vec"
 version = "0.1.0"
+publish = false
 authors = ["Aria Beingessner <a.beingessner@gmail.com>"]
 edition = "2018"
 rust-version = "1.86"
@@ -14,13 +15,15 @@ categories = ["data-structures", "no-std"]
 exclude = ["/.github", "/.gitignore", "/TODO.md", "/tools", "/benchmark-results"]
 
 [features]
-unstable = []
 default = ["std"]
 std = []
+serde = ["dep:serde"]
+malloc_size_of = ["dep:malloc_size_of"]
 const_new = []
+unstable = []
 
 [dependencies]
-serde = { version = "1.0", optional = true }
+serde = { version = "1.0", default-features = false, optional = true }
 malloc_size_of = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]

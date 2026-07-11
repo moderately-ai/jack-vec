@@ -98,12 +98,13 @@ Run the deterministic allocation accounting separately:
 cargo bench --bench allocations
 ```
 
-It emits CSV with inline container size, allocation and reallocation counts, live
-requested bytes, and peak requested bytes for the nested, normally growing, and
-reserved-capacity workloads. These are the sizes requested through Rust's global
-allocator, not allocator usable size or RSS. That distinction makes the results
-portable and repeatable, but allocator rounding and process-level memory overhead
-are intentionally outside their scope.
+It emits CSV with inline container size, allocation and reallocation counts,
+moved/in-place reallocation classification, and live/peak requested and
+allocator-usable bytes for the nested, normally growing, and reserved-capacity
+workloads. Usable bytes come from `malloc_size` on macOS and
+`malloc_usable_size` on glibc Linux; other targets clearly label and report the
+requested-byte fallback. Requested bytes are portable, while allocator-usable
+bytes are allocator-specific diagnostics. Neither metric is process RSS.
 
 The allocation runner is separate because wrapping the allocator with counters can
 perturb CPU timings. Redirect its standard output to retain a machine-readable

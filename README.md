@@ -1,4 +1,4 @@
-[![Rust CI](https://github.com/moderately-ai/jack-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/moderately-ai/jack-vec/actions) [![crates.io](https://img.shields.io/crates/v/jack-vec.svg)](https://crates.io/crates/jack-vec) [![Docs](https://docs.rs/jack-vec/badge.svg)](https://docs.rs/jack-vec)
+[![Rust CI](https://github.com/moderately-ai/jack-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/moderately-ai/jack-vec/actions)
 
 # JackVec
 
@@ -15,13 +15,17 @@ original authors and Mozilla contributors. Its Cargo package, Rust crate path,
 primary type, and construction macro are `jack-vec`, `jack_vec`, `JackVec`, and
 `jack_vec!`.
 
-JackVec retains the one-word owner and shared allocation-free empty singleton,
-uses an eight-byte allocation header on 64-bit targets, and limits capacity to
-`u32::MAX` elements. It targets native Rust rather than Gecko/nsTArray FFI.
+JackVec retains the one-word owner and shared allocation-free empty singleton.
+Its eight-byte allocation header stores length and capacity as `u32`; the actual
+maximum capacity may be lower when element layout or `isize` limits require it.
+It targets native Rust rather than Gecko/nsTArray FFI.
+
+JackVec is not yet published on crates.io. Until its first release, depend on a
+reviewed Git revision:
 
 ```toml
 [dependencies]
-jack-vec = "0.1"
+jack-vec = { git = "https://github.com/moderately-ai/jack-vec" }
 ```
 
 ```rust

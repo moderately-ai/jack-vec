@@ -2,7 +2,7 @@
 mod support;
 
 use std::alloc::{GlobalAlloc, Layout, System};
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", all(target_os = "linux", target_env = "gnu")))]
 use std::ffi::c_void;
 use std::hint::black_box;
 use std::mem::size_of;
@@ -32,16 +32,16 @@ unsafe extern "C" {
     fn malloc_size(pointer: *const c_void) -> usize;
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 unsafe extern "C" {
     fn malloc_usable_size(pointer: *mut c_void) -> usize;
 }
 
 #[cfg(target_os = "macos")]
 const USABLE_SIZE_SOURCE: &str = "malloc_size";
-#[cfg(target_os = "linux")]
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
 const USABLE_SIZE_SOURCE: &str = "malloc_usable_size";
-#[cfg(not(any(target_os = "macos", target_os = "linux")))]
+#[cfg(not(any(target_os = "macos", all(target_os = "linux", target_env = "gnu"))))]
 const USABLE_SIZE_SOURCE: &str = "requested_fallback";
 
 fn usable_size(pointer: *mut u8, _requested: usize) -> usize {
@@ -49,11 +49,11 @@ fn usable_size(pointer: *mut u8, _requested: usize) -> usize {
     unsafe {
         malloc_size(pointer.cast())
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(all(target_os = "linux", target_env = "gnu"))]
     unsafe {
         malloc_usable_size(pointer.cast())
     }
-    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    #[cfg(not(any(target_os = "macos", all(target_os = "linux", target_env = "gnu"))))]
     {
         let _ = pointer;
         _requested

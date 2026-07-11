@@ -2,94 +2,71 @@ name: Rust
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
+  NIGHTLY: nightly-2026-05-03
 
 jobs:
-  miri:
-    name: "Miri"
+  stable:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Miri
-        run: |
-          rustup toolchain install nightly --component miri
-          rustup override set nightly
-          cargo miri setup
-      # We do not use Stacked Borrows anymore, since ExtractIf (which is lifted from std) does not pass SB,
-      # and if std can do it in non-magical data structure code, we can do it too.
-      - name: Test (default) with Miri + Tree Borrows
-        run: MIRIFLAGS="-Zmiri-strict-provenance -Zmiri-tree-borrows" cargo miri test
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Build benchmarks
-      run: cargo check --benches --verbose
-    - name: Build (malloc_size_of)
-      run: cargo build --features=malloc_size_of --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run tests (serde)
-      run: cargo test --features=serde --verbose
-    - name: Run tests (no_std)
-      run: cargo test --tests --no-default-features --verbose
-    - name: Run tests (unstable)
-      run: cargo +nightly test --features=unstable --verbose
+      - uses: actions/checkout@v4
+      - name: Install stable toolchain
+        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt
+      - name: Test stable features and all targets
+        run: cargo +stable test --all-targets --features serde,malloc_size_of,const_new
+      - name: Check core-only no_std configuration
+        run: cargo +stable check --lib --no-default-features
+      - name: Check no_std feature interactions
+        run: cargo +stable check --lib --no-default-features --features serde,malloc_size_of,const_new
+      - name: Check formatting
+        run: cargo +stable fmt --all -- --check
+      - name: Run Clippy with warnings denied
+        run: cargo +stable clippy --all-targets --features serde,malloc_size_of,const_new -- -D warnings
+      - name: Build documentation with warnings denied
+        env:
+          RUSTDOCFLAGS: -Dwarnings
+        run: cargo +stable doc --no-deps --features serde,malloc_size_of,const_new
+      - name: Test benchmark tooling
+        run: python3 tools/test_bench_ab.py
 
   msrv:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Rust 1.86
         run: rustup toolchain install 1.86 --profile minimal
       - name: Check all targets on the MSRV
-        run: cargo +1.86 check --all-targets
+        run: cargo +1.86 check --all-targets --features serde,malloc_size_of,const_new
+      - name: Check no_std feature interactions on the MSRV
+        run: cargo +1.86 check --lib --no-default-features --features serde,malloc_size_of,const_new
 
-  fmt:
+  nightly:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          components: rustfmt
-          override: true
-      - run: cargo fmt --all -- --check
+      - uses: actions/checkout@v4
+      - name: Install pinned nightly
+        run: rustup toolchain install $NIGHTLY --profile minimal
+      - name: Test unstable feature
+        run: cargo +$NIGHTLY test --features unstable
 
-
-  clippy:
+  miri:
+    name: Miri
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-            toolchain: stable
-            profile: minimal
-            components: clippy
-            override: true
-      - run: cargo clippy --workspace --all-targets
-
-
-  docs:
-    runs-on: ubuntu-latest
-    env:
-      RUSTDOCFLAGS: -Dwarnings
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          components: rust-docs
-          override: true
-      - uses: swatinem/rust-cache@v1
-      - run: cargo doc --workspace --no-deps
+      - uses: actions/checkout@v4
+      - name: Install pinned Miri
+        run: rustup toolchain install $NIGHTLY --profile minimal --component miri
+      - name: Set up Miri
+        run: cargo +$NIGHTLY miri setup
+      - name: Test with strict provenance and Tree Borrows
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance -Zmiri-tree-borrows
+        run: cargo +$NIGHTLY miri test
