@@ -55,7 +55,7 @@ The central hypothesis is:
 
 ### Guarded `Splice` fill (`perf/splice-fill-guard`)
 
-- Status: pre-registered; baseline harness pending
+- Status: accepted; temporary benchmark removed
 - Baseline: `9b136e3`
 - Hypothesis: `Drain::fill` currently calls `vec.len()` and `vec.set_len()` after
   every replacement item. Rust 1.86 AArch64 retains that header load/store inside
@@ -76,6 +76,30 @@ The central hypothesis is:
   iterator exact state/Drop, ZST/overalignment, MSRV, Clippy, and strict Miri.
 - Scope: `Drain::fill`, one temporary 4/1,024 benchmark, and focused tests only.
   No public API, layout, general splice algorithm, reserve, or growth changes.
+- Baseline harness: `024da0b`
+- Candidate: `729a43a`
+- Linux primary: seven pinned, alternating Rust 1.86 pairs improved 1,024 equal
+  replacements 72.48%, from 626.41 ns to 172.32 ns. Every pair is tightly
+  favorable (range -73.83%..-72.37%, bootstrap interval -73.27%..-72.37%).
+- Linux small: four replacements improve 4.74%, from 9.39 ns to 8.95 ns, favorable
+  in every pair (range -5.29%..-3.27%, interval -5.22%..-3.76%).
+- macOS direction: three Apple M4 Rust 1.86 pairs improve 83.65%, all favorable
+  (range -83.92%..-82.72%). This confirms the header-traffic mechanism across both
+  code-generation contexts.
+- Mechanism: the fill loop now carries initialized length locally and a Drop guard
+  publishes it once on success, short replacement, or iterator panic. Optimized
+  code removes per-element header load/store. Complete ELF `.text` grows 968 bytes
+  and the executable grows 480 bytes; record this sub-1-KiB cost rather than hiding
+  it, but it is proportionate to the large generalized hot-path win.
+- Safety: existing empty/short/exact/long, underestimated, ZST, capacity, and panic
+  tests pass. The dedicated replacement-panic state remains `[0, 9, 3]`. Stable,
+  Rust 1.86, warning-denied Clippy, and strict-provenance Tree Borrows splice Miri
+  lanes pass.
+- Decision: retain guarded fill and remove the temporary benchmark. The existing
+  splice behavior and panic regression tests directly protect the mechanism.
+- Artifacts: `catalyzed-builder:~/thin-vec/benchmark-results/jack-vec-splice-fill-1024-20260711`,
+  `.../jack-vec-splice-fill-4-20260711`, and
+  `benchmark-results/jack-vec-splice-fill-macos-20260711`.
 
 ### Fully consumed `IntoIter` drop fast path (`perf/into-iter-full-drop`)
 
