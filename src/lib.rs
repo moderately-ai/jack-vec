@@ -776,10 +776,14 @@ impl<T> JackVec<T> {
         assert!(idx < old_len, "Index out of bounds");
 
         unsafe {
-            let ptr = self.data_raw();
-            ptr::swap(ptr.add(idx), ptr.add(old_len - 1));
+            let data = self.data_raw();
+            let last = old_len - 1;
+            let removed = ptr::read(data.add(idx));
+            if idx != last {
+                ptr::copy_nonoverlapping(data.add(last), data.add(idx), 1);
+            }
             self.set_len_non_singleton(old_len - 1);
-            ptr::read(ptr.add(old_len - 1))
+            removed
         }
     }
 
@@ -4476,6 +4480,52 @@ mod std_tests {
     fn test_swap_remove_empty() {
         let mut vec = JackVec::<i32>::new();
         vec.swap_remove(0);
+    }
+
+    #[test]
+    fn test_swap_remove_drops_each_value_once() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+
+        struct Counted {
+            id: usize,
+            drops: Rc<[Cell<usize>; 4]>,
+        }
+
+        impl Drop for Counted {
+            fn drop(&mut self) {
+                let previous = self.drops[self.id].replace(1);
+                assert_eq!(previous, 0, "value {} dropped twice", self.id);
+            }
+        }
+
+        fn run(index: usize, expected: &[usize]) {
+            let drops = Rc::new(core::array::from_fn(|_| Cell::new(0)));
+            let mut values: JackVec<_> = (0..4)
+                .map(|id| Counted {
+                    id,
+                    drops: drops.clone(),
+                })
+                .collect();
+
+            let removed = values.swap_remove(index);
+            assert_eq!(removed.id, index);
+            assert_eq!(
+                values.iter().map(|value| value.id).collect::<Vec<_>>(),
+                expected
+            );
+            drop(removed);
+            assert_eq!(drops[index].get(), 1);
+            drop(values);
+            assert!(drops.iter().all(|count| count.get() == 1));
+        }
+
+        run(1, &[0, 3, 2]);
+        run(3, &[0, 1, 2]);
+
+        let mut zst = jack_vec![(), (), ()];
+        assert_eq!(zst.swap_remove(1), ());
+        assert_eq!(zst.len(), 2);
     }
 
     #[test]
