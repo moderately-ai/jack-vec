@@ -101,6 +101,14 @@ The central hypothesis is:
   comparison (and explaining the implausible spilled SmallVec4/SmallVec8 split).
   The permanent benchmark must call one shared, non-inlined slice kernel so real
   data alignment remains measured without comparing five different loop bodies.
+- Environment finding: the builder globally injects tcmalloc through
+  `LD_PRELOAD`, but the first matrix runner neither cleared nor recorded it. The
+  published Linux measurements are valid only as an uncontrolled tcmalloc result,
+  not as the intended system-allocator baseline. The runner now requires an
+  explicit allocator policy, records inherited/effective injection variables,
+  clears both Linux and macOS injection variables for `system`, and rejects a
+  cross-platform pair without that policy. Replace—not relabel—the Linux baseline
+  with a clean system-allocator run.
 - Hypothesis: a reconstructable layout that preserves 16-byte data alignment can
   recover vectorized traversal and other bulk-loop throughput. A universal
   16-byte header is only a diagnostic control because it gives back JackVec's
