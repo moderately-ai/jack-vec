@@ -2960,6 +2960,56 @@ mod tests {
     }
 
     #[test]
+    fn test_drain_drop_panic_leaves_valid_prefix() {
+        use alloc::rc::Rc;
+        use core::cell::Cell;
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        struct PanicDrop {
+            id: usize,
+            drops: Rc<[Cell<usize>; 5]>,
+        }
+
+        impl Drop for PanicDrop {
+            fn drop(&mut self) {
+                let previous = self.drops[self.id].replace(1);
+                assert_eq!(previous, 0, "element {} dropped twice", self.id);
+                if self.id == 2 {
+                    panic!("drop panic");
+                }
+            }
+        }
+
+        let drops = Rc::new(core::array::from_fn(|_| Cell::new(0)));
+        let mut values: JackVec<_> = (0..5)
+            .map(|id| PanicDrop {
+                id,
+                drops: drops.clone(),
+            })
+            .collect();
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            let mut drain = values.drain(1..4);
+            drop(drain.next());
+            drop(drain.next_back());
+            drop(drain);
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(values.len(), 1);
+        assert_eq!(values[0].id, 0);
+        assert_eq!(
+            drops.iter().map(Cell::get).collect::<Vec<_>>(),
+            [0, 1, 1, 1, 0]
+        );
+        drop(values);
+        assert_eq!(
+            drops.iter().map(Cell::get).collect::<Vec<_>>(),
+            [1, 1, 1, 1, 0]
+        );
+    }
+
+    #[test]
     fn test_drain_max_vec_size() {
         let mut v = JackVec::<()>::with_capacity(MAX_CAP);
         unsafe {
@@ -4572,6 +4622,48 @@ mod std_tests {
         assert_eq!(v, &[1, 2, 10, 11, 12, 5]);
         v.splice(1..3, Some(20));
         assert_eq!(v, &[1, 20, 11, 12, 5]);
+    }
+
+    #[test]
+    fn test_splice_replacement_panic_repairs_tail() {
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let mut values = jack_vec![0, 1, 2, 3];
+        let mut yielded = false;
+        let replacement = core::iter::from_fn(|| {
+            if !yielded {
+                yielded = true;
+                Some(9)
+            } else {
+                panic!("replacement panic")
+            }
+        });
+
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            drop(values.splice(1..3, replacement));
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(values, [0, 9, 3]);
+    }
+
+    #[test]
+    fn test_extract_if_predicate_panic_repairs_subrange() {
+        use std::panic::{catch_unwind, AssertUnwindSafe};
+
+        let mut values = jack_vec![0, 1, 2, 3, 4];
+        let result = catch_unwind(AssertUnwindSafe(|| {
+            let mut extracted = values.extract_if(1..4, |value| match *value {
+                1 => true,
+                2 => panic!("predicate panic"),
+                _ => false,
+            });
+            assert_eq!(extracted.next(), Some(1));
+            let _ = extracted.next();
+        }));
+
+        assert!(result.is_err());
+        assert_eq!(values, [0, 2, 3, 4]);
     }
 
     #[test]
