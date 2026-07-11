@@ -81,6 +81,38 @@ The central hypothesis is:
 
 ## Experiment record
 
+### Compact-header data alignment (`perf/iteration-audit`)
+
+- Status: active; root cause proven, representation experiment pending
+- Baseline: authoritative Linux comparison commit `4943262`; Rust 1.97.0 on
+  pinned CPU 0 of the Ryzen 7950X3D V-cache CCD.
+- Finding: the compact 8-byte header places ordinary `u64` data at 8 modulo 16
+  under the measured allocator. Both JackVec and Vec folds vectorize, but a
+  10,000,000-iteration fixed-work control measured 3.93 billion cycles for
+  JackVec, 3.86 billion for an intentionally one-`u64`-offset Vec slice, and 2.93
+  billion for aligned Vec. Instructions were effectively equal; IPC fell from
+  6.2 to 4.6--4.7. This proves the 1,024-element iteration loss is data alignment,
+  not generic header indirection or Criterion noise.
+- Hypothesis: a reconstructable layout that preserves 16-byte data alignment can
+  recover vectorized traversal and other bulk-loop throughput. A universal
+  16-byte header is only a diagnostic control because it gives back JackVec's
+  eight requested-byte header saving.
+- CPU gates: reproduce the iteration recovery in a same-binary fixed-work test
+  and the cross-vector benchmark; check nested traversal, push, append, retain,
+  dedup, extend, and resize for both gains and regressions. Do not infer a broad
+  win from iteration alone.
+- Memory gates: report owner, requested, and allocator-usable bytes independently
+  for every existing allocation scenario. Nested sparse/small requested-byte
+  regressions are first-class costs even where glibc size-class rounding leaves
+  usable bytes unchanged.
+- Safety gates: allocation and deallocation layouts must remain reconstructable;
+  empty singleton pointers must satisfy alignment without adding a dynamic
+  capacity branch to ordinary `data_raw`; over-aligned and ZST behavior, boundary
+  rejection, strict-provenance Miri, and all existing lanes must pass.
+- Decision: reject a universal policy that merely trades the compact header away.
+  Accept only a clear overall representation improvement or an explicit,
+  caller-selected performance mode whose tradeoff is visible in the type/API.
+
 ### Guarded `Splice` fill (`perf/splice-fill-guard`)
 
 - Status: accepted; temporary benchmark removed
