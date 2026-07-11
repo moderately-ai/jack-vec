@@ -27,7 +27,7 @@ serde = { version = "1.0", default-features = false, optional = true }
 malloc_size_of = { version = "0.1", default-features = false, optional = true }
 
 [dev-dependencies]
-criterion = "=0.8.2"
+criterion = { version = "5.0.1", package = "codspeed-criterion-compat" }
 serde_test = "1.0"
 
 [[bench]]

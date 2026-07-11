@@ -1,4 +1,5 @@
 [![Rust CI](https://github.com/moderately-ai/jack-vec/actions/workflows/rust.yml/badge.svg)](https://github.com/moderately-ai/jack-vec/actions)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/moderately-ai/jack-vec?utm_source=badge)
 
 # JackVec
 
