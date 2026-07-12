@@ -307,15 +307,17 @@ header alignment without a new real-workload counterexample.
   already at focused Vec parity or better for `u64` on both hosts and within about
   3% for Linux 64-byte elements. The remaining M3 Pro 64-byte difference is not
   explained by removable per-element instructions, pointer derivation, copy
-  alignment, or allocation alignment. The five-library scalar ratio is
+  alignment, or ordinary 16-byte allocation alignment. The Apple cache-line
+  follow-up below establishes a real data-offset effect, but rejects its costly
+  allocation specialization. The five-library scalar ratio is
   code-layout-sensitive and must not motivate specialization. Preserve all raw
   artifacts under `retain-{cursor,pointer,aligned-copy,large-align}-*` on their
   respective hosts and do not reopen retain without a new workload or mechanism.
 
 ### Apple large-element cache-line alignment (`perf/apple-large-align-audit`)
 
-- Status: in progress; pre-registered after controlled offset diagnosis and
-  before the allocation-layout prototype
+- Status: rejected; pre-registered after controlled offset diagnosis and before
+  the allocation-layout prototype, then restored to the canonical layout
 - Observation: the M3 Pro reports a 128-byte cache line. A fixed-operation
   same-binary driver measures Vec 64-byte retain at 291.8 ns with data at offset
   0, 319.8 ns at offset 8, 311.8 ns at offset 16, 319.4 ns at offset 32, and
@@ -343,6 +345,26 @@ header alignment without a new real-workload counterexample.
   `target_vendor = "apple"`, where the controlled mechanism and 128-byte line are
   established. Do not infer cache geometry from generic AArch64 or add runtime
   syscalls to the no-std collection.
+- Exact result: against baseline `d6af750`, static prototype `9c714bc` improved
+  M3 Pro 64-byte JackVec retain by 5.32%, with a seven-pair bootstrap interval of
+  [-6.59%, -4.50%]. JackVec `u64` was effectively unchanged (+0.56%, interval
+  [+0.41%, +1.16%]); the unchanged Vec lanes moved -0.36% and +0.19% by their
+  paired medians. The prototype therefore missed the declared 7% CPU gate.
+- Cross-architecture result: x86-64 Linux benchmark binaries have identical
+  3,089,934-byte `.text` sections with SHA-256
+  `84e91e015c2c375e940d5d638cf16a4f3d5f5e17db8b9677b6a56f958b5b2f67`.
+  Whole-file hashes differ only through non-code build metadata.
+- Workload explanation: the controlled driver streams 8,192 independent 16 KiB
+  vectors (about 128 MiB), making extra cache-line fetches dominant. Criterion
+  operates on one freshly constructed 16 KiB vector per timed routine, which is
+  predominantly L1-resident; eliminating straddles therefore closes only about
+  half of its baseline JackVec/Vec difference.
+- Decision: do not implement the capacity-aware successor. Static alignment is
+  its CPU upper bound and already misses the gate, while the successor adds an
+  unsafe threshold-crossing relocation path and either 120 bytes per qualifying
+  allocation or a capacity-dependent layout. Keep the controlled diagnosis as
+  evidence that streaming workloads can be alignment-sensitive, but require a
+  demonstrated application workload before reopening Apple-only layout policy.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 

@@ -218,12 +218,7 @@ fn padding<T>() -> usize {
 
 /// Gets the align necessary to allocate a `JackVec<T>`
 fn alloc_align<T>() -> usize {
-    let natural = max(mem::align_of::<T>(), mem::align_of::<Header>());
-    #[cfg(all(target_arch = "aarch64", target_vendor = "apple"))]
-    if mem::size_of::<T>() >= 64 && mem::align_of::<T>() == 8 {
-        return max(natural, 128);
-    }
-    natural
+    max(mem::align_of::<T>(), mem::align_of::<Header>())
 }
 
 fn growth_capacity<T>(old_cap: usize, min_cap: usize) -> usize {
@@ -2901,13 +2896,6 @@ mod tests {
         let v = JackVec::<u64>::new();
         assert!(v.data_raw() as usize % core::mem::align_of::<u64>() == 0);
 
-        #[cfg(all(target_arch = "aarch64", target_vendor = "apple"))]
-        {
-            type Large = [u64; 8];
-            let v = JackVec::<Large>::with_capacity(1);
-            assert_eq!(v.data_raw().addr() % 128, 0);
-            assert_eq!(super::alloc_size::<Large>(1), 192);
-        }
     }
 
     #[test]
