@@ -208,6 +208,48 @@ header alignment without a new real-workload counterexample.
 - Decision: publish the validated pair, platform-specific graphics, and combined
   non-pooled report. The next credible implementation audit remains `retain<u64>`.
 
+### Retain cursor and publication audit (`perf/retain-cursor-audit`)
+
+- Status: in progress; pre-registered before committing the candidate
+- Baseline: this ledger-only commit, whose `src/lib.rs` is identical to canonical
+  merge commit `323ae2f`.
+- Observation: the canonical Linux matrix measures `retain_mixed/u64` at 1.234x
+  Vec and the 64-byte workload at 1.113x. The paired macOS matrix measures 1.150x
+  and 1.070x. Both platforms therefore show a credible scalar loss while the
+  previously accepted guarded backshift remains substantially faster than
+  upstream ThinVec.
+- Hypothesis: the accepted two-phase loop repeatedly derives the allocation data
+  pointer and maintains processed/deleted state after the first rejection. A
+  single read/write-cursor loop with one cached data pointer may reduce scalar
+  predicate-loop overhead while retaining one move per post-hole survivor and
+  identical unwind repair.
+- Workloads: run the existing `retain_mixed` group without changing benchmark
+  code, preserving both `u64` and 64-byte JackVec measurements plus unchanged Vec
+  controls. Use the exact baseline and candidate commits in the paired runner.
+- Hosts: exactly seven alternating rounds on the canonical Ryzen 7950X3D Linux
+  host pinned to CPU 0 with explicit system allocator, and exactly seven rounds
+  on the dedicated M3 Pro macOS host with explicit system allocator. Seed both
+  runs with `20260712`; use 100 samples, 3-second warm-up, 5-second measurement,
+  100,000 resamples, and the strict host-idle gate. Never bypass host noise.
+- Primary gate: `retain_mixed/u64/JackVec` must improve at least 5% at the paired
+  median on both hosts with each complete paired bootstrap interval below zero.
+  Continue mechanism-driven iteration toward Vec parity, but do not tune gates or
+  select rounds after observing results.
+- Secondary gate: `retain_mixed/64_byte/JackVec` may not regress beyond 1% on
+  either host. Unchanged Vec controls outside the calibrated envelope require
+  explanation. Preserve the accepted large-element advantage over ThinVec.
+- Safety gates: stable order and mutation semantics; exact-once owning drops;
+  empty, all-kept, all-rejected, ZST, over-aligned, predicate-panic, and rejected-
+  destructor-panic behavior; stable/MSRV/nightly/no-std/features/Clippy/docs; and
+  strict-provenance Tree Borrows Miri.
+- Codegen/size gate: confirm the cached pointer and cursor state survive
+  optimization, retain one relocation per post-hole survivor, and reject
+  unexplained whole-text growth above 512 bytes. Record platform-specific codegen
+  differences rather than pooling them.
+- Decision rule: accept only if every primary, secondary, safety, and size gate
+  passes. Otherwise revert the implementation and retain the complete negative
+  result. Any successor must state a new mechanism before measurement.
+
 ### Preallocated four-element append (`perf/append-small-audit`)
 
 - Status: rejected; implementation and temporary diagnostic reverted
