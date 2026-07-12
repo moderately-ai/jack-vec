@@ -249,6 +249,31 @@ header alignment without a new real-workload counterexample.
 - Decision rule: accept only if every primary, secondary, safety, and size gate
   passes. Otherwise revert the implementation and retain the complete negative
   result. Any successor must state a new mechanism before measurement.
+- Candidate 1 (`d466740`, reverted by `10c87f6`): rejected. Combining pointer
+  caching with a single branchy read/write loop regressed Linux `u64` by 19.21%
+  (interval +18.11%..+20.19%) and 64-byte elements by 6.61%
+  (+3.25%..+8.16%), with neutral Vec controls. On the M3 Pro it regressed `u64`
+  by 9.15% (+6.42%..+10.66%) and was neutral for 64-byte elements, again with
+  neutral controls. The existing const-specialized pre-hole/post-hole loops are
+  essential; do not unify them.
+- Focused-baseline finding: in the controlled retain-only binary, baseline
+  JackVec `u64` is already at parity with or faster than Vec on both hosts. The
+  larger five-library ratio is not a stable scalar implementation gap. The
+  reproducible focused gap is the 64-byte M3 Pro case (roughly 11%).
+- Successor 1 (`03bd598`, reverted by `20ccd48`): rejected. Preserving both loops
+  while caching only the data pointer was neutral on the M3 Pro (`u64` +0.54%,
+  64-byte -0.15%, both intervals spanning zero), and the baseline/candidate
+  Mach-O benchmark executables were byte-identical. Linux was also inconclusive
+  while unchanged Vec controls moved materially, so it supplies no acceptance
+  evidence. LLVM already eliminates the proposed pointer work.
+- Successor 2 mechanism, pre-registered before implementation: for a 64-byte,
+  8-aligned element whose source and destination are both 8 modulo 16, test an
+  8-byte edge / 48-byte 16-aligned body / 8-byte edge relocation. The ordinary
+  `copy_nonoverlapping<T>` path remains the fallback. This targets the M3 Pro's
+  compact-header alignment without changing allocation layout. Accept only if
+  the 64-byte workload improves at least 5% on the M3 Pro with its interval below
+  zero, Linux 64-byte and both `u64` workloads stay within 1%, strict Miri passes,
+  and local/whole-text growth stays within the existing size gate.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
