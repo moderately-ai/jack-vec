@@ -17,5 +17,6 @@ double-count nested owners. Regenerate it with:
 
 ```console
 uv run --project comparisons/tools --locked python comparisons/tools/generate_report.py \
-  comparisons/benchmark-results/linux-x86_64.json
+  comparisons/benchmark-results/linux-x86_64.json \
+  comparisons/benchmark-results/macos-aarch64.json
 ```

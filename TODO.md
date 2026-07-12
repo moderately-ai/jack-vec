@@ -34,14 +34,13 @@ decision is reached.
 - [x] Capture and validate a clean Ryzen 7950X3D Linux matrix from canonical
   `main` merge commit `2dc82e0`, using Rust 1.97.0 and the explicit `system`
   allocator policy, then regenerate the Linux-only `LATEST.md` and SVGs.
-- [ ] Deferred: capture the matching macOS matrix only when dedicated,
-  controllable Apple Silicon hardware is available. The local M4 host is not an
-  acceptable canonical source while interactive iTerm2/WindowServer load prevents
-  the runner from satisfying its idle gate. Never bypass that gate with
-  `--allow-host-noise`.
-- [ ] Deferred with macOS: validate the Linux/macOS pair and extend `LATEST.md` and
-  the SVGs without pooling either platform's absolute or relative values. The
-  absence of a macOS result does not block publishing the canonical Linux result.
+- [x] Capture the matching macOS matrix on the dedicated, normally idle M3 Pro
+  host using the exact Linux source/compiler matrix, AC power, Low Power Mode off,
+  and the strict host-idle gate. Never use `--allow-host-noise` to manufacture a
+  pair.
+- [x] Validate the Linux/macOS pair and extend `LATEST.md` and the SVGs with
+  separate platform sections. Never pool either platform's absolute or relative
+  values.
 - [ ] Enable the already-configured CodSpeed ARM64 macro runner only after public
   repository runner-group access is available; keep it a trend lane, not a
   substitute for physical-host baselines.
@@ -138,9 +137,9 @@ header alignment without a new real-workload counterexample.
 - [x] Track public-repository access for the `moderately-ai` Actions runner in the
   active roadmap; configuration is ready but organization runner-group access and
   `CODSPEED_MACRO_ENABLED=true` remain external prerequisites.
-- [x] Move the matching clean M4 macOS capture and pair validation into the active
-  roadmap; subsequently defer it until dedicated hardware is available, retaining
-  full raw rounds outside Git and publishing no rejected/noisy local result.
+- [x] Capture and validate the matching clean M3 Pro macOS half on dedicated
+  hardware, retain full raw rounds outside Git, and publish only the accepted
+  compact result.
 - [x] Move practical-equivalence-band review into the active roadmap with its
   evidence threshold unchanged.
 
@@ -179,9 +178,9 @@ header alignment without a new real-workload counterexample.
 
 ## Experiment record
 
-### Canonical Linux comparison baseline (`bench/canonical-linux-baseline`)
+### Canonical Linux/macOS comparison baseline (`bench/canonical-linux-baseline`)
 
-- Status: complete on Linux; macOS deliberately deferred
+- Status: complete on Linux and macOS
 - Source: canonical `main` merge commit
   `2dc82e0656ba2c3997c4dc2dd26b905ce621bb2f`; Rust 1.97.0
   (`2d8144b7880597b6e6d3dfd63a9a9efae3f533d3`); explicit system allocator.
@@ -197,14 +196,17 @@ header alignment without a new real-workload counterexample.
   inconclusive results, and six losses versus Vec. Empty and sparse nested
   requested heap are 0.333x and 0.526x Vec. This remains a situational density
   design with targeted CPU wins, not an across-the-board faster Vec.
-- Rejected macOS capture: the local M4 runner correctly refused to proceed when
-  iTerm2 and WindowServer each sustained roughly 28% CPU and two consecutive
-  >=90% idle samples could not be obtained. No local macOS result is authoritative
-  or published. Retry only on dedicated controllable hardware; never use
-  `--allow-host-noise` to manufacture a pair.
-- Decision: publish the canonical Linux result and Linux-only graphics now.
-  Cross-platform validation and graphics remain deferred and do not block Linux
-  performance work; the next credible implementation audit is `retain<u64>`.
+- macOS quality: five balanced rotations on the normally idle M3 Pro,
+  using the exact source commit, Rust 1.97.0 compiler identity, and explicit
+  system allocator. All settle gates passed, no host issue was recorded, and the
+  final noisy post-round sample recovered to 96.7% idle before allocation
+  accounting. The report contains 110 CPU rows and 60 allocation rows.
+- macOS result: JackVec has four confidence-qualified wins, one equivalent,
+  eleven inconclusive results, and six losses versus Vec. `retain_mixed/u64`
+  remains a credible loss at 1.150x and `retain_mixed/64_byte` at 1.070x;
+  reserved resize is a 0.777x win. Results remain platform-specific.
+- Decision: publish the validated pair, platform-specific graphics, and combined
+  non-pooled report. The next credible implementation audit remains `retain<u64>`.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
