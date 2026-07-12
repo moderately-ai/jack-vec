@@ -312,6 +312,38 @@ header alignment without a new real-workload counterexample.
   artifacts under `retain-{cursor,pointer,aligned-copy,large-align}-*` on their
   respective hosts and do not reopen retain without a new workload or mechanism.
 
+### Apple large-element cache-line alignment (`perf/apple-large-align-audit`)
+
+- Status: in progress; pre-registered after controlled offset diagnosis and
+  before the allocation-layout prototype
+- Observation: the M3 Pro reports a 128-byte cache line. A fixed-operation
+  same-binary driver measures Vec 64-byte retain at 291.8 ns with data at offset
+  0, 319.8 ns at offset 8, 311.8 ns at offset 16, 319.4 ns at offset 32, and
+  302.4 ns at offset 64. JackVec's natural offset 8 measures 321.4 ns. Giving Vec
+  JackVec's offset reproduces the complete gap, while forcing function alignment
+  from 4 through 128 bytes leaves the JackVec/Vec ratio between 1.084x and 1.099x.
+- Mechanism: with two 64-byte elements per 128-byte Apple cache line, an 8-byte
+  header offset makes every second element cross a line. Alternating retain reads
+  every element and relocates half, increasing cache-line traffic despite
+  instruction-identical JackVec and Vec loops.
+- Static upper-bound prototype: on Apple AArch64 only, align allocations for
+  `size_of::<T>() >= 64 && align_of::<T>() == 8` to 128 bytes. This adds 120
+  requested bytes to every affected non-empty allocation and is not independently
+  acceptable; it exists only to establish the recoverable CPU ceiling.
+- Static primary gate: improve M3 Pro `retain_mixed/64_byte/JackVec` at least 7%
+  with the complete seven-round interval below zero; `u64` and unchanged Vec must
+  remain within 1%. Linux code and benchmark executable must remain byte-identical
+  through target cfg.
+- Capacity-aware successor: proceed only if the static prototype passes. Apply
+  cache-line padding only when its requested-byte cost is at most 1% of element
+  storage, and correctly relocate initialized data when growth or shrink crosses
+  the padding threshold. Measure retain, dedup, construction, traversal, requested
+  and usable bytes, realloc movement, code size, all safety gates, and both hosts.
+- Architecture policy: specialize only for `target_arch = "aarch64"` plus
+  `target_vendor = "apple"`, where the controlled mechanism and 128-byte line are
+  established. Do not infer cache geometry from generic AArch64 or add runtime
+  syscalls to the no-std collection.
+
 ### Preallocated four-element append (`perf/append-small-audit`)
 
 - Status: rejected; implementation and temporary diagnostic reverted
