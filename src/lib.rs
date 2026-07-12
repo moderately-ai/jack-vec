@@ -646,9 +646,8 @@ impl<T> JackVec<T> {
         }
     }
 
-    /// Outlines allocation and layout handling from the common push path.
-    #[cold]
-    #[inline(never)]
+    /// Handles allocation and layout changes on the growth path.
+    #[inline]
     fn grow_for_push(&mut self) {
         self.reserve(1);
     }
