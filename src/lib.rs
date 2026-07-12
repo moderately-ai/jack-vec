@@ -1083,27 +1083,6 @@ impl<T> JackVec<T> {
         ) where
             F: FnMut(&mut T) -> bool,
         {
-            #[inline(always)]
-            unsafe fn copy_retained<T>(source: *mut T, destination: *mut T) {
-                if mem::size_of::<T>() == 64
-                    && mem::align_of::<T>() == 8
-                    && source.addr() & 15 == 8
-                    && destination.addr() & 15 == 8
-                {
-                    let source = source.cast::<u8>();
-                    let destination = destination.cast::<u8>();
-                    ptr::copy_nonoverlapping(source, destination, 8);
-                    ptr::copy_nonoverlapping(
-                        source.add(8).cast::<u128>(),
-                        destination.add(8).cast::<u128>(),
-                        3,
-                    );
-                    ptr::copy_nonoverlapping(source.add(56), destination.add(56), 8);
-                } else {
-                    ptr::copy_nonoverlapping(source, destination, 1);
-                }
-            }
-
             while guard.processed_len != original_len {
                 let current = unsafe { &mut *guard.vec.data_raw().add(guard.processed_len) };
                 if !f(current) {
@@ -1126,7 +1105,7 @@ impl<T> JackVec<T> {
                             .vec
                             .data_raw()
                             .add(guard.processed_len - guard.deleted_count);
-                        copy_retained(current, hole);
+                        ptr::copy_nonoverlapping(current, hole, 1);
                     }
                 }
                 guard.processed_len += 1;
