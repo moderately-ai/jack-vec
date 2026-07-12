@@ -274,6 +274,24 @@ header alignment without a new real-workload counterexample.
   the 64-byte workload improves at least 5% on the M3 Pro with its interval below
   zero, Linux 64-byte and both `u64` workloads stay within 1%, strict Miri passes,
   and local/whole-text growth stays within the existing size gate.
+- Successor 2 result (`7a7f78e`, reverted by `326a79b`): rejected. The M3 Pro
+  64-byte workload improved 3.13% with an interval of -4.30%..-1.62%, but missed
+  the fixed 5% threshold. Linux 64-byte was inconclusive and Linux `u64`
+  regressed 8.95% despite the specialized branch being compile-time unreachable;
+  an unchanged Linux Vec control also moved -3.05%. Keeping the specialization
+  would select a sub-threshold platform point while ignoring layout-sensitive
+  regressions.
+- Successor 3 mechanism, pre-registered before implementation: align the data
+  region to 16 bytes when `T` is at least 64 bytes with natural alignment 8.
+  This adds exactly 8 requested bytes per non-empty allocation while preserving
+  the one-word owner, 8-byte header, contiguous slice, and reconstructable layout.
+  It should remove the compact-header 8-mod-16 offset for every operation on such
+  large elements rather than specializing retain's copy loop. Primary gate: M3
+  Pro 64-byte retain improves at least 5% with the interval below zero. Linux
+  64-byte and both `u64` retain workloads may not regress beyond 1%; record the
+  requested/usable allocation delta and require no allocation-count change.
+  Acceptance additionally requires targeted dedup and traversal evidence because
+  this is a representation-layout change, plus the complete safety/size gates.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
