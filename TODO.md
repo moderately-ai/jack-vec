@@ -208,6 +208,110 @@ header alignment without a new real-workload counterexample.
 - Decision: publish the validated pair, platform-specific graphics, and combined
   non-pooled report. The next credible implementation audit remains `retain<u64>`.
 
+### Retain cursor and publication audit (`perf/retain-cursor-audit`)
+
+- Status: complete; all candidates rejected and implementation restored
+- Baseline: this ledger-only commit, whose `src/lib.rs` is identical to canonical
+  merge commit `323ae2f`.
+- Observation: the canonical Linux matrix measures `retain_mixed/u64` at 1.234x
+  Vec and the 64-byte workload at 1.113x. The paired macOS matrix measures 1.150x
+  and 1.070x. Both platforms therefore show a credible scalar loss while the
+  previously accepted guarded backshift remains substantially faster than
+  upstream ThinVec.
+- Hypothesis: the accepted two-phase loop repeatedly derives the allocation data
+  pointer and maintains processed/deleted state after the first rejection. A
+  single read/write-cursor loop with one cached data pointer may reduce scalar
+  predicate-loop overhead while retaining one move per post-hole survivor and
+  identical unwind repair.
+- Workloads: run the existing `retain_mixed` group without changing benchmark
+  code, preserving both `u64` and 64-byte JackVec measurements plus unchanged Vec
+  controls. Use the exact baseline and candidate commits in the paired runner.
+- Hosts: exactly seven alternating rounds on the canonical Ryzen 7950X3D Linux
+  host pinned to CPU 0 with explicit system allocator, and exactly seven rounds
+  on the dedicated M3 Pro macOS host with explicit system allocator. Seed both
+  runs with `20260712`; use 100 samples, 3-second warm-up, 5-second measurement,
+  100,000 resamples, and the strict host-idle gate. Never bypass host noise.
+- Primary gate: `retain_mixed/u64/JackVec` must improve at least 5% at the paired
+  median on both hosts with each complete paired bootstrap interval below zero.
+  Continue mechanism-driven iteration toward Vec parity, but do not tune gates or
+  select rounds after observing results.
+- Secondary gate: `retain_mixed/64_byte/JackVec` may not regress beyond 1% on
+  either host. Unchanged Vec controls outside the calibrated envelope require
+  explanation. Preserve the accepted large-element advantage over ThinVec.
+- Safety gates: stable order and mutation semantics; exact-once owning drops;
+  empty, all-kept, all-rejected, ZST, over-aligned, predicate-panic, and rejected-
+  destructor-panic behavior; stable/MSRV/nightly/no-std/features/Clippy/docs; and
+  strict-provenance Tree Borrows Miri.
+- Codegen/size gate: confirm the cached pointer and cursor state survive
+  optimization, retain one relocation per post-hole survivor, and reject
+  unexplained whole-text growth above 512 bytes. Record platform-specific codegen
+  differences rather than pooling them.
+- Decision rule: accept only if every primary, secondary, safety, and size gate
+  passes. Otherwise revert the implementation and retain the complete negative
+  result. Any successor must state a new mechanism before measurement.
+- Candidate 1 (`d466740`, reverted by `10c87f6`): rejected. Combining pointer
+  caching with a single branchy read/write loop regressed Linux `u64` by 19.21%
+  (interval +18.11%..+20.19%) and 64-byte elements by 6.61%
+  (+3.25%..+8.16%), with neutral Vec controls. On the M3 Pro it regressed `u64`
+  by 9.15% (+6.42%..+10.66%) and was neutral for 64-byte elements, again with
+  neutral controls. The existing const-specialized pre-hole/post-hole loops are
+  essential; do not unify them.
+- Focused-baseline finding: in the controlled retain-only binary, baseline
+  JackVec `u64` is already at parity with or faster than Vec on both hosts. The
+  larger five-library ratio is not a stable scalar implementation gap. The
+  reproducible focused gap is the 64-byte M3 Pro case (roughly 11%).
+- Successor 1 (`03bd598`, reverted by `20ccd48`): rejected. Preserving both loops
+  while caching only the data pointer was neutral on the M3 Pro (`u64` +0.54%,
+  64-byte -0.15%, both intervals spanning zero), and the baseline/candidate
+  Mach-O benchmark executables were byte-identical. Linux was also inconclusive
+  while unchanged Vec controls moved materially, so it supplies no acceptance
+  evidence. LLVM already eliminates the proposed pointer work.
+- Successor 2 mechanism, pre-registered before implementation: for a 64-byte,
+  8-aligned element whose source and destination are both 8 modulo 16, test an
+  8-byte edge / 48-byte 16-aligned body / 8-byte edge relocation. The ordinary
+  `copy_nonoverlapping<T>` path remains the fallback. This targets the M3 Pro's
+  compact-header alignment without changing allocation layout. Accept only if
+  the 64-byte workload improves at least 5% on the M3 Pro with its interval below
+  zero, Linux 64-byte and both `u64` workloads stay within 1%, strict Miri passes,
+  and local/whole-text growth stays within the existing size gate.
+- Successor 2 result (`7a7f78e`, reverted by `326a79b`): rejected. The M3 Pro
+  64-byte workload improved 3.13% with an interval of -4.30%..-1.62%, but missed
+  the fixed 5% threshold. Linux 64-byte was inconclusive and Linux `u64`
+  regressed 8.95% despite the specialized branch being compile-time unreachable;
+  an unchanged Linux Vec control also moved -3.05%. Keeping the specialization
+  would select a sub-threshold platform point while ignoring layout-sensitive
+  regressions.
+- Successor 3 mechanism, pre-registered before implementation: align the data
+  region to 16 bytes when `T` is at least 64 bytes with natural alignment 8.
+  This adds exactly 8 requested bytes per non-empty allocation while preserving
+  the one-word owner, 8-byte header, contiguous slice, and reconstructable layout.
+  It should remove the compact-header 8-mod-16 offset for every operation on such
+  large elements rather than specializing retain's copy loop. Primary gate: M3
+  Pro 64-byte retain improves at least 5% with the interval below zero. Linux
+  64-byte and both `u64` retain workloads may not regress beyond 1%; record the
+  requested/usable allocation delta and require no allocation-count change.
+  Acceptance additionally requires targeted dedup and traversal evidence because
+  this is a representation-layout change, plus the complete safety/size gates.
+- Successor 3 result (`64890d3`, reverted by `5e6bab5`): rejected. Adding eight
+  requested bytes aligned the large-element data region but regressed Linux
+  64-byte retain 9.77% with interval +6.99%..+10.63%. The M3 Pro result was an
+  inconclusive -1.40%; all scalar and Vec controls were neutral. Data alignment
+  is not the dominant retain cost, and the memory trade cannot be justified.
+- Final codegen audit: isolated no-inline AArch64 JackVec and Vec wrappers emit
+  the same predicate test and the same four 128-bit load/store instructions for
+  each retained 64-byte element. JackVec's remaining differences load and publish
+  its allocation-header length outside the per-element hot loop. The pointer-only
+  candidate produces a byte-identical M3 Pro benchmark executable, proving LLVM
+  already removes that proposed work.
+- Final decision: retain the canonical guarded two-phase implementation. It is
+  already at focused Vec parity or better for `u64` on both hosts and within about
+  3% for Linux 64-byte elements. The remaining M3 Pro 64-byte difference is not
+  explained by removable per-element instructions, pointer derivation, copy
+  alignment, or allocation alignment. The five-library scalar ratio is
+  code-layout-sensitive and must not motivate specialization. Preserve all raw
+  artifacts under `retain-{cursor,pointer,aligned-copy,large-align}-*` on their
+  respective hosts and do not reopen retain without a new workload or mechanism.
+
 ### Preallocated four-element append (`perf/append-small-audit`)
 
 - Status: rejected; implementation and temporary diagnostic reverted
