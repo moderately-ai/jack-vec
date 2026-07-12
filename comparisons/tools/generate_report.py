@@ -36,6 +36,8 @@ def load_report(path: Path) -> dict:
         raise ValueError(f"{path}: unsupported schema version")
     if report.get("metadata", {}).get("authoritative") is not True:
         raise ValueError(f"{path}: report is not authoritative")
+    if report["metadata"].get("allocator", {}).get("policy") != "system":
+        raise ValueError(f"{path}: report does not use the system allocator policy")
     return report
 
 
@@ -106,7 +108,7 @@ def comparison_counts(cpu: list[dict], left: str, right: str) -> tuple[int, int,
             sum(ratio > 1.03 for ratio in ratios))
 
 
-def write_latest(report: dict, output: Path) -> None:
+def platform_section(report: dict) -> str:
     metadata = report["metadata"]
     audits = metadata["runtime_audits"]
     classifications = {
@@ -144,18 +146,15 @@ def write_latest(report: dict, output: Path) -> None:
     )[:3]
     gap_summary = ", ".join(f"`{benchmark}` ({ratio:.3f}×)" for ratio, benchmark in largest_jack_gaps)
 
-    output.write_text(f"""# Latest benchmark comparison
+    return f"""## `{report['platform_id']}`
 
-This is the authoritative `{report['platform_id']}` baseline. Lower ratios are
-better. CPU classifications and heatmap ratios use `Vec` as the baseline; red
-does not mean an implementation lost to every other candidate. Every measured
-implementation and scenario is retained, and platforms are never pooled.
+This is the authoritative `{report['platform_id']}` baseline.
 
 ![CPU performance profile](graphics/{report['platform_id']}-cpu-profile.svg)
 
 ![Complete CPU ratio heatmap](graphics/{report['platform_id']}-cpu-heatmap.svg)
 
-## What this baseline says
+### What this baseline says
 
 - JackVec is not an across-the-board faster `Vec`: it has
   {classifications['JackVec']['win']} confidence-qualified wins and
@@ -176,7 +175,7 @@ implementation and scenario is retained, and platforms are never pooled.
   SmallVec avoids heap allocation when values fit inline. Neither representation
   dominates every workload.
 
-## CPU outcomes
+### CPU outcomes
 
 The confidence-aware classifications below compare each implementation with
 `Vec`. “Inconclusive” means the paired 95% interval crosses a boundary; it is not
@@ -193,7 +192,7 @@ using the same ±3% practical band. It does not replace the confidence-aware tab
 |---|---:|---:|---:|
 {head_to_head_rows}
 
-## Memory outcomes
+### Memory outcomes
 
 Requested and allocator-usable heap are deliberately separate. Requested bytes
 show representation savings; usable bytes show what the measured allocator
@@ -211,7 +210,7 @@ count memory. See [the complete platform table]({report['platform_id']}.md) for
 owner bytes, absolute requested/usable bytes, allocation counts, reallocations,
 and spill counts.
 
-## Run provenance
+### Run provenance
 
 - Commit: `{metadata['git_commit']}`
 - Compiler: `{metadata['compiler_identity']['release']}` (`{metadata['compiler_identity']['commit_hash']}`)
@@ -226,13 +225,57 @@ The performance profile reports the fraction of workloads within each factor of
 the fastest implementation for that workload. It is an aggregate view, not a
 claim that all workloads are equally representative. The heatmaps preserve the
 individual results. These microbenchmarks describe the listed operations, element
-types, sizes, compiler, allocator, and machine—not every application. macOS
-remains pending until a clean authoritative run is available.
+types, sizes, compiler, allocator, and machine—not every application.
+"""
+
+
+def pair_issues(left: dict, right: dict) -> list[str]:
+    issues = []
+    for field in ("schema_version", "round_count", "toolchain"):
+        if left.get(field) != right.get(field):
+            issues.append(f"{field} differs")
+    if left["metadata"].get("git_commit") != right["metadata"].get("git_commit"):
+        issues.append("git commits differ")
+    for field in ("release", "commit_hash", "LLVM_version"):
+        if (left["metadata"]["compiler_identity"].get(field)
+                != right["metadata"]["compiler_identity"].get(field)):
+            issues.append(f"compiler {field} differs")
+    cpu_key = lambda row: (row["benchmark"], row["implementation"])
+    if {cpu_key(row) for row in left["cpu"]} != {cpu_key(row) for row in right["cpu"]}:
+        issues.append("CPU matrices differ")
+    allocation_key = lambda row: (
+        row["benchmark"], row["input"], row["element_size"], row["implementation"]
+    )
+    if ({allocation_key(row) for row in left["allocations"]}
+            != {allocation_key(row) for row in right["allocations"]}):
+        issues.append("allocation matrices differ")
+    return issues
+
+
+def write_latest(reports: list[dict], output: Path) -> None:
+    if not reports:
+        raise ValueError("at least one report is required")
+    platforms = [report["platform_id"] for report in reports]
+    if len(platforms) != len(set(platforms)):
+        raise ValueError("platform reports must be unique")
+    for report in reports[1:]:
+        issues = pair_issues(reports[0], report)
+        if issues:
+            raise ValueError("reports are not comparable: " + "; ".join(issues))
+    sections = "\n\n".join(platform_section(report).rstrip() for report in reports)
+    output.write_text(f"""# Latest benchmark comparison
+
+These are the authoritative physical-host baselines. Lower ratios are better.
+CPU classifications and heatmap ratios use `Vec` as the baseline; red does not
+mean an implementation lost to every other candidate. Every measured
+implementation and scenario is retained. Platform results are presented in
+separate sections and are never pooled.
+
+{sections}
 """)
 
 
-def generate(report_path: Path, results_dir: Path) -> None:
-    report = load_report(report_path)
+def generate_graphics(report: dict, results_dir: Path) -> None:
     platform = report["platform_id"]
     graphics = results_dir / "graphics"
     graphics.mkdir(parents=True, exist_ok=True)
@@ -252,16 +295,28 @@ def generate(report_path: Path, results_dir: Path) -> None:
             f"{platform} · usable bytes relative to Vec · includes allocator size-class rounding",
             graphics / f"{platform}-memory-usable-heatmap.svg")
     performance_profile(report["cpu"], platform, graphics / f"{platform}-cpu-profile.svg")
-    write_latest(report, results_dir / "LATEST.md")
+
+
+def generate(report_paths: list[Path], results_dir: Path) -> None:
+    reports = [load_report(path) for path in report_paths]
+    reports.sort(key=lambda report: report["platform_id"])
+    # Validate the complete set before changing any generated file.
+    for report in reports[1:]:
+        issues = pair_issues(reports[0], report)
+        if issues:
+            raise ValueError("reports are not comparable: " + "; ".join(issues))
+    for report in reports:
+        generate_graphics(report, results_dir)
+    write_latest(reports, results_dir / "LATEST.md")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("report", type=Path)
+    parser.add_argument("reports", type=Path, nargs="+")
     parser.add_argument("--results-dir", type=Path, default=Path("comparisons/benchmark-results"))
     args = parser.parse_args()
     mpl.rcParams.update({"font.family": "DejaVu Sans", "svg.hashsalt": "jack-vec"})
-    generate(args.report, args.results_dir)
+    generate(args.reports, args.results_dir)
 
 
 if __name__ == "__main__":

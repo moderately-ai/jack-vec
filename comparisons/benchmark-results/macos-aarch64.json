@@ -1,0 +1,2791 @@
+{
+  "allocations": [
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "240000",
+      "live_usable": "262144",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "240000",
+      "peak_usable": "262144",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "80000",
+      "live_usable": "98304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "80000",
+      "peak_usable": "98304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "80000",
+      "live_usable": "98304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "80000",
+      "peak_usable": "98304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "425984",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "425984",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "empty",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "304000",
+      "live_usable": "326144",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "304000",
+      "peak_usable": "326144",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "160000",
+      "live_usable": "194304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "160000",
+      "peak_usable": "194304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "2001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "2001",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "176000",
+      "live_usable": "194304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "176000",
+      "peak_usable": "194304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "425984",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "425984",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "sparse",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "560000",
+      "live_usable": "582144",
+      "moved_reallocations": "0",
+      "owner_bytes": "240000",
+      "peak_requested": "560000",
+      "peak_usable": "582144",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "480000",
+      "live_usable": "578304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "480000",
+      "peak_usable": "578304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "10001",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "10001",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "560000",
+      "live_usable": "578304",
+      "moved_reallocations": "0",
+      "owner_bytes": "80000",
+      "peak_requested": "560000",
+      "peak_usable": "578304",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "400000",
+      "live_usable": "425984",
+      "moved_reallocations": "0",
+      "owner_bytes": "400000",
+      "peak_requested": "400000",
+      "peak_usable": "425984",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "nested",
+      "capacity": "10000",
+      "container_count": "10000",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "small",
+      "len": "10000",
+      "live_requested": "720000",
+      "live_usable": "720896",
+      "moved_reallocations": "0",
+      "owner_bytes": "720000",
+      "peak_requested": "720000",
+      "peak_usable": "720896",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "8",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "8",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "16",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "16",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "24",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "24",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "1",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "9",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "9",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1",
+      "len": "1",
+      "live_requested": "17",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "17",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1",
+      "len": "1",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "build_growing",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "32",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "32",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "40",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "40",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "48",
+      "live_usable": "48",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "48",
+      "peak_usable": "48",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "4",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "4",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "12",
+      "live_usable": "16",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "12",
+      "peak_usable": "16",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "4",
+      "len": "4",
+      "live_requested": "20",
+      "live_usable": "32",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "20",
+      "peak_usable": "32",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "4",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "0",
+      "benchmark": "push_reserved",
+      "capacity": "8",
+      "container_count": "1",
+      "deallocations": "0",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "4",
+      "len": "4",
+      "live_requested": "0",
+      "live_usable": "0",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "0",
+      "peak_usable": "0",
+      "reallocations": "0",
+      "spilled_count": "0"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "3",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "5",
+      "owner_bytes": "24",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "3",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8200",
+      "live_usable": "8704",
+      "moved_reallocations": "5",
+      "owner_bytes": "8",
+      "peak_requested": "8200",
+      "peak_usable": "8704",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "2",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8208",
+      "live_usable": "8704",
+      "moved_reallocations": "6",
+      "owner_bytes": "8",
+      "peak_requested": "8208",
+      "peak_usable": "8704",
+      "reallocations": "8",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "3",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "4",
+      "owner_bytes": "40",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "7",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "build_growing",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "3",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "3",
+      "owner_bytes": "72",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "6",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8200",
+      "live_usable": "8704",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "8200",
+      "peak_usable": "8704",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8208",
+      "live_usable": "8704",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "8208",
+      "peak_usable": "8704",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "40",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "8",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "8192",
+      "live_usable": "8192",
+      "moved_reallocations": "0",
+      "owner_bytes": "72",
+      "peak_requested": "8192",
+      "peak_usable": "8192",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "Vec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "JackVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1032",
+      "live_usable": "1536",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "1032",
+      "peak_usable": "1536",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "ThinVec",
+      "in_place_reallocations": "0",
+      "inline_capacity": "0",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1040",
+      "live_usable": "1536",
+      "moved_reallocations": "0",
+      "owner_bytes": "8",
+      "peak_requested": "1040",
+      "peak_usable": "1536",
+      "reallocations": "0",
+      "spilled_count": "na"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "SmallVec4",
+      "in_place_reallocations": "0",
+      "inline_capacity": "4",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "1"
+    },
+    {
+      "after_drop_requested": "0",
+      "after_drop_usable": "0",
+      "allocations": "1",
+      "benchmark": "push_reserved",
+      "capacity": "1024",
+      "container_count": "1",
+      "deallocations": "1",
+      "element_size": "1",
+      "implementation": "SmallVec8",
+      "in_place_reallocations": "0",
+      "inline_capacity": "8",
+      "input": "1024",
+      "len": "1024",
+      "live_requested": "1024",
+      "live_usable": "1024",
+      "moved_reallocations": "0",
+      "owner_bytes": "24",
+      "peak_requested": "1024",
+      "peak_usable": "1024",
+      "reallocations": "0",
+      "spilled_count": "1"
+    }
+  ],
+  "cpu": [
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 376.3396360153257,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 321.3401990087881,
+      "ratio_ci95": [
+        0.8369786982025732,
+        0.9855837974506486
+      ],
+      "ratio_to_vec": 0.8538412286067826
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 887.0600454237987,
+      "ratio_ci95": [
+        2.2477722973148513,
+        2.7800790084859868
+      ],
+      "ratio_to_vec": 2.4121303097004305
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "win",
+      "implementation": "SmallVec4",
+      "median_ns": 261.5621794871795,
+      "ratio_ci95": [
+        0.5802089948382168,
+        0.7981207584379048
+      ],
+      "ratio_to_vec": 0.7210117618079005
+    },
+    {
+      "benchmark": "append_preallocated/1024",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 241.17127913752915,
+      "ratio_ci95": [
+        0.5968527953661465,
+        0.715850834158342
+      ],
+      "ratio_to_vec": 0.6864862927115691
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 3.2023830034298095,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 4.238788455732392,
+      "ratio_ci95": [
+        1.288080148963291,
+        1.3547909445451984
+      ],
+      "ratio_to_vec": 1.3266165683069502
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 3.649421444180409,
+      "ratio_ci95": [
+        1.1221715782720416,
+        1.2483688462716205
+      ],
+      "ratio_to_vec": 1.136942162025953
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 4.477281804193209,
+      "ratio_ci95": [
+        1.3800784931693437,
+        1.4519753102203097
+      ],
+      "ratio_to_vec": 1.394854097373809
+    },
+    {
+      "benchmark": "append_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 4.433418267406246,
+      "ratio_ci95": [
+        1.3182490923212506,
+        1.4272257667601511
+      ],
+      "ratio_to_vec": 1.3867830291535594
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 15.409905364689706,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 16.204453592356668,
+      "ratio_ci95": [
+        1.0180014759719833,
+        1.052022887654811
+      ],
+      "ratio_to_vec": 1.0511318752727106
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 15.950407084740394,
+      "ratio_ci95": [
+        1.0334557052820086,
+        1.0493342990474175
+      ],
+      "ratio_to_vec": 1.0350749538857775
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "SmallVec4",
+      "median_ns": 2.550070673246914,
+      "ratio_ci95": [
+        0.16168082982481913,
+        0.18635831296854652
+      ],
+      "ratio_to_vec": 0.16526350365699752
+    },
+    {
+      "benchmark": "build_growing_and_drop/1",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 2.737058800798264,
+      "ratio_ci95": [
+        0.17101479255730834,
+        0.2033245262460249
+      ],
+      "ratio_to_vec": 0.17751977460766444
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 648.0834262101534,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 720.5980377637911,
+      "ratio_ci95": [
+        1.0045191796118835,
+        1.1935777796902787
+      ],
+      "ratio_to_vec": 1.108649457501383
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 724.4890462795527,
+      "ratio_ci95": [
+        1.0508175808501143,
+        1.1832916116164522
+      ],
+      "ratio_to_vec": 1.125698746642296
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 2113.0669697456447,
+      "ratio_ci95": [
+        1.346500850407733,
+        3.4703256704560155
+      ],
+      "ratio_to_vec": 3.248702294757611
+    },
+    {
+      "benchmark": "build_growing_and_drop/1024",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 2102.540689699793,
+      "ratio_ci95": [
+        1.3558729408454862,
+        3.4176580269600394
+      ],
+      "ratio_to_vec": 3.266891930683818
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 18.058758343261974,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 17.53183694886381,
+      "ratio_ci95": [
+        0.9700870783431199,
+        1.085891220202052
+      ],
+      "ratio_to_vec": 0.9710926207066823
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 17.283340814917125,
+      "ratio_ci95": [
+        0.9559600685995624,
+        1.039378819858256
+      ],
+      "ratio_to_vec": 1.0182651670763239
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 17.327295131646345,
+      "ratio_ci95": [
+        0.9539146135122185,
+        1.053027126075033
+      ],
+      "ratio_to_vec": 0.9675364777165495
+    },
+    {
+      "benchmark": "build_growing_and_drop/4",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 17.102797439320707,
+      "ratio_ci95": [
+        0.8959020967623404,
+        1.0035191531729528
+      ],
+      "ratio_to_vec": 0.9924704652266627
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 389.94842522446686,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 411.9819623280588,
+      "ratio_ci95": [
+        1.0482451049069863,
+        1.0758494116612087
+      ],
+      "ratio_to_vec": 1.053081681307918
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 497.67316335032535,
+      "ratio_ci95": [
+        1.26597915136672,
+        1.2970369345725496
+      ],
+      "ratio_to_vec": 1.2710676111599168
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 519.1801042379223,
+      "ratio_ci95": [
+        1.311906413063843,
+        1.3487008779393013
+      ],
+      "ratio_to_vec": 1.3259967855468273
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 519.9669977027862,
+      "ratio_ci95": [
+        1.277521518485431,
+        1.3390876933514635
+      ],
+      "ratio_to_vec": 1.3343146672292523
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 570.2348720359503,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 567.3685483870968,
+      "ratio_ci95": [
+        0.9570791885499799,
+        1.0531390804500798
+      ],
+      "ratio_to_vec": 0.9955446766477417
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 374.05797984356195,
+      "ratio_ci95": [
+        0.6330504596487834,
+        0.6701964272473278
+      ],
+      "ratio_to_vec": 0.6501076813670008
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "win",
+      "implementation": "SmallVec4",
+      "median_ns": 362.4822522065448,
+      "ratio_ci95": [
+        0.6255661456415896,
+        0.6518301946238453
+      ],
+      "ratio_to_vec": 0.6360368011046358
+    },
+    {
+      "benchmark": "dedup_adjacent_pairs/u64",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 368.75155297129186,
+      "ratio_ci95": [
+        0.6240699375062317,
+        0.6567858708182276
+      ],
+      "ratio_to_vec": 0.6378419292087346
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 289.3007391749246,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 322.3141785166007,
+      "ratio_ci95": [
+        1.0390401631613524,
+        1.176391423677758
+      ],
+      "ratio_to_vec": 1.1346241462655637
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 294.25317969130776,
+      "ratio_ci95": [
+        0.9885875692664995,
+        1.12574992733394
+      ],
+      "ratio_to_vec": 1.0192644044969716
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 285.24132579784754,
+      "ratio_ci95": [
+        0.940292660285466,
+        1.0070999019266513
+      ],
+      "ratio_to_vec": 0.9666965304625968
+    },
+    {
+      "benchmark": "extend_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 288.0080992957134,
+      "ratio_ci95": [
+        0.9577783695912956,
+        1.0110337151503739
+      ],
+      "ratio_to_vec": 1.0057081943925696
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 11617.426551226552,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 9314.571754750266,
+      "ratio_ci95": [
+        0.7961761716199807,
+        0.8068950282621061
+      ],
+      "ratio_to_vec": 0.805170640137743
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 9368.621368339001,
+      "ratio_ci95": [
+        0.8018612760548246,
+        0.8180446475188945
+      ],
+      "ratio_to_vec": 0.8146643489704871
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 23067.21134563532,
+      "ratio_ci95": [
+        1.8969990270925772,
+        2.035937047848296
+      ],
+      "ratio_to_vec": 2.00914928755669
+    },
+    {
+      "benchmark": "nested_construct_and_drop/empty",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 22798.722063492063,
+      "ratio_ci95": [
+        1.951708655581117,
+        2.0532883490870932
+      ],
+      "ratio_to_vec": 1.9669017322635094
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 196601.3508064516,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 211247.93002136753,
+      "ratio_ci95": [
+        1.0116168924847668,
+        1.097358995892996
+      ],
+      "ratio_to_vec": 1.0609943088677387
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 210396.8275462963,
+      "ratio_ci95": [
+        1.0495620027915435,
+        1.0836318282581154
+      ],
+      "ratio_to_vec": 1.0756756600854418
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 182436.16944444444,
+      "ratio_ci95": [
+        0.6633850388302579,
+        1.0454112618382463
+      ],
+      "ratio_to_vec": 0.892718024868375
+    },
+    {
+      "benchmark": "nested_construct_and_drop/small",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 150758.0904516129,
+      "ratio_ci95": [
+        0.7439975182876386,
+        0.7847186164187007
+      ],
+      "ratio_to_vec": 0.7670819529473795
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 48617.34550865801,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 49504.635627297794,
+      "ratio_ci95": [
+        0.998022725352167,
+        1.0382403298900105
+      ],
+      "ratio_to_vec": 1.0135215458810203
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 49137.618250229774,
+      "ratio_ci95": [
+        0.9906235862963682,
+        1.0456295205723056
+      ],
+      "ratio_to_vec": 1.0017184871599538
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "win",
+      "implementation": "SmallVec4",
+      "median_ns": 25679.18700667881,
+      "ratio_ci95": [
+        0.5225095211424711,
+        0.5782133217711761
+      ],
+      "ratio_to_vec": 0.5281898206907603
+    },
+    {
+      "benchmark": "nested_construct_and_drop/sparse",
+      "classification": "win",
+      "implementation": "SmallVec8",
+      "median_ns": 32746.079340277778,
+      "ratio_ci95": [
+        0.6433747449937846,
+        0.7291024239681683
+      ],
+      "ratio_to_vec": 0.6674773396487986
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 1825.3876603689873,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 3726.4853028503567,
+      "ratio_ci95": [
+        2.022906320374539,
+        2.049256021479456
+      ],
+      "ratio_to_vec": 2.04255775137864
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 3660.726872454145,
+      "ratio_ci95": [
+        1.9631078790400733,
+        2.1367654496817083
+      ],
+      "ratio_to_vec": 2.0054517470081716
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 3776.559579326923,
+      "ratio_ci95": [
+        2.0459152009212715,
+        2.103003089663656
+      ],
+      "ratio_to_vec": 2.065269945915572
+    },
+    {
+      "benchmark": "nested_metadata_scan_sparse",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5636.778715512211,
+      "ratio_ci95": [
+        3.084498174129891,
+        3.11112788845916
+      ],
+      "ratio_to_vec": 3.0971429114970093
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 2688.550117287098,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 2544.0039530644794,
+      "ratio_ci95": [
+        0.9432671600353816,
+        0.9932130160173097
+      ],
+      "ratio_to_vec": 0.9875859082175072
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 2562.218402858696,
+      "ratio_ci95": [
+        0.9530112109065395,
+        0.991313847762415
+      ],
+      "ratio_to_vec": 0.9624483615420418
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 3761.467371079213,
+      "ratio_ci95": [
+        1.384403195670988,
+        1.4954150587777275
+      ],
+      "ratio_to_vec": 1.39716668210039
+    },
+    {
+      "benchmark": "nested_traverse/empty",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5985.809274850624,
+      "ratio_ci95": [
+        2.164464061642524,
+        2.3747057061963255
+      ],
+      "ratio_to_vec": 2.2233805212643083
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 18038.168464006478,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 18137.06104144897,
+      "ratio_ci95": [
+        0.9992929413162972,
+        1.0453091341508707
+      ],
+      "ratio_to_vec": 1.0054824067997716
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 18221.910867795392,
+      "ratio_ci95": [
+        0.9805346561746519,
+        1.0449354662536203
+      ],
+      "ratio_to_vec": 1.0310841708378462
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 18330.28057660967,
+      "ratio_ci95": [
+        0.9997324801683847,
+        1.0542704358041728
+      ],
+      "ratio_to_vec": 1.019259545481273
+    },
+    {
+      "benchmark": "nested_traverse/small",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 18483.35104166667,
+      "ratio_ci95": [
+        0.9946029475221954,
+        1.0310463814904713
+      ],
+      "ratio_to_vec": 1.007774938645821
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 5214.037268932618,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 5225.068512508452,
+      "ratio_ci95": [
+        0.9595593378514221,
+        1.0611025074391933
+      ],
+      "ratio_to_vec": 0.9827384819740215
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "equivalent",
+      "implementation": "ThinVec",
+      "median_ns": 5214.488944802727,
+      "ratio_ci95": [
+        0.9807486614994811,
+        1.0189463202113076
+      ],
+      "ratio_to_vec": 1.0023343062973362
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 5349.031820508816,
+      "ratio_ci95": [
+        1.0060536811590883,
+        1.04624054405033
+      ],
+      "ratio_to_vec": 1.0330763964873455
+    },
+    {
+      "benchmark": "nested_traverse/sparse",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 5908.741879429888,
+      "ratio_ci95": [
+        1.117311172875115,
+        1.1583566162049637
+      ],
+      "ratio_to_vec": 1.141957080126436
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 793.1865869738714,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 647.3710250162444,
+      "ratio_ci95": [
+        0.8026034342315038,
+        0.8783108381843442
+      ],
+      "ratio_to_vec": 0.8295940422317805
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "win",
+      "implementation": "ThinVec",
+      "median_ns": 676.9313787954206,
+      "ratio_ci95": [
+        0.8526170870210406,
+        0.895689701935426
+      ],
+      "ratio_to_vec": 0.8652830970952453
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 1843.2173389425798,
+      "ratio_ci95": [
+        2.080907414999717,
+        2.5154511968667936
+      ],
+      "ratio_to_vec": 2.3189431284719575
+    },
+    {
+      "benchmark": "push_preallocated/1024",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 1878.9362120205737,
+      "ratio_ci95": [
+        2.1230095860263507,
+        2.5546579745457154
+      ],
+      "ratio_to_vec": 2.3708863428937956
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 2.7158926283260927,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 1.8597067598049914,
+      "ratio_ci95": [
+        0.6574664601666137,
+        0.6859867825113143
+      ],
+      "ratio_to_vec": 0.680216346019057
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "equivalent",
+      "implementation": "ThinVec",
+      "median_ns": 2.737276950064732,
+      "ratio_ci95": [
+        0.9963497762954385,
+        1.028564252472458
+      ],
+      "ratio_to_vec": 1.0061324811709702
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 9.980862553493322,
+      "ratio_ci95": [
+        3.4340734106611928,
+        3.7224469165003136
+      ],
+      "ratio_to_vec": 3.6098490302265036
+    },
+    {
+      "benchmark": "push_preallocated/4",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 9.855623164668103,
+      "ratio_ci95": [
+        3.4702815818782264,
+        3.744124678157397
+      ],
+      "ratio_to_vec": 3.654072224639185
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 276.87363409245916,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "win",
+      "implementation": "JackVec",
+      "median_ns": 218.82857130897185,
+      "ratio_ci95": [
+        0.7605132599204222,
+        0.791845056955279
+      ],
+      "ratio_to_vec": 0.7770680241922918
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 688.9579365079364,
+      "ratio_ci95": [
+        2.3135914423091046,
+        2.658054215871248
+      ],
+      "ratio_to_vec": 2.488347938098959
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec4",
+      "median_ns": 285.866526342539,
+      "ratio_ci95": [
+        0.9577509266261036,
+        1.0696368118962583
+      ],
+      "ratio_to_vec": 0.9961820964819588
+    },
+    {
+      "benchmark": "resize_reserved_1024",
+      "classification": "inconclusive",
+      "implementation": "SmallVec8",
+      "median_ns": 288.86052700773797,
+      "ratio_ci95": [
+        0.973080156452465,
+        1.0715159818301356
+      ],
+      "ratio_to_vec": 1.023853938720083
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 350.561586178118,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 372.41691921896194,
+      "ratio_ci95": [
+        1.0421087781700906,
+        1.1021044887866982
+      ],
+      "ratio_to_vec": 1.0698388925443034
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 401.13869463869463,
+      "ratio_ci95": [
+        1.125143295925373,
+        1.2074067508548247
+      ],
+      "ratio_to_vec": 1.146197274508975
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 498.51028730305836,
+      "ratio_ci95": [
+        1.3874188818140865,
+        1.5008646825170064
+      ],
+      "ratio_to_vec": 1.4192533632809616
+    },
+    {
+      "benchmark": "retain_mixed/64_byte",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 499.66594832580233,
+      "ratio_ci95": [
+        1.4065849711065368,
+        1.4872316280154165
+      ],
+      "ratio_to_vec": 1.4316793692682255
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 507.01032357473036,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "JackVec",
+      "median_ns": 582.3989961446498,
+      "ratio_ci95": [
+        1.113059457302559,
+        1.1724157589591564
+      ],
+      "ratio_to_vec": 1.1504373571402438
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "ThinVec",
+      "median_ns": 688.7254212263332,
+      "ratio_ci95": [
+        1.3409092302535368,
+        1.3658612846749125
+      ],
+      "ratio_to_vec": 1.3584051235296377
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "SmallVec4",
+      "median_ns": 792.4424670901026,
+      "ratio_ci95": [
+        1.5519252197639637,
+        1.579457962641107
+      ],
+      "ratio_to_vec": 1.5672783884206214
+    },
+    {
+      "benchmark": "retain_mixed/u64",
+      "classification": "loss",
+      "implementation": "SmallVec8",
+      "median_ns": 793.9940040507751,
+      "ratio_ci95": [
+        1.5616335022280465,
+        1.5722326798503348
+      ],
+      "ratio_to_vec": 1.5622350744192994
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 59.406774527142574,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "inconclusive",
+      "implementation": "JackVec",
+      "median_ns": 59.16517112952789,
+      "ratio_ci95": [
+        0.986370904585429,
+        1.2372133602030488
+      ],
+      "ratio_to_vec": 1.012012488766307
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "inconclusive",
+      "implementation": "ThinVec",
+      "median_ns": 59.728405519632986,
+      "ratio_ci95": [
+        0.9843702463690198,
+        1.0725467967942677
+      ],
+      "ratio_to_vec": 1.0059489346738753
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "equivalent",
+      "implementation": "SmallVec4",
+      "median_ns": 58.998593956586504,
+      "ratio_ci95": [
+        0.9720580858639529,
+        1.013188616374075
+      ],
+      "ratio_to_vec": 0.9940082243179592
+    },
+    {
+      "benchmark": "sequential_iteration/1024",
+      "classification": "equivalent",
+      "implementation": "SmallVec8",
+      "median_ns": 59.42766924125398,
+      "ratio_ci95": [
+        0.9842348468001347,
+        1.0134839065141121
+      ],
+      "ratio_to_vec": 1.0003805524165696
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "baseline",
+      "implementation": "Vec",
+      "median_ns": 1.593718663268371,
+      "ratio_ci95": [
+        1.0,
+        1.0
+      ],
+      "ratio_to_vec": 1.0
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "equivalent",
+      "implementation": "JackVec",
+      "median_ns": 1.5935747225501244,
+      "ratio_ci95": [
+        0.9990943722141988,
+        1.0110422342672292
+      ],
+      "ratio_to_vec": 0.9999582499659367
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "equivalent",
+      "implementation": "ThinVec",
+      "median_ns": 1.5935943653161488,
+      "ratio_ci95": [
+        0.9995949989537691,
+        1.01961599150134
+      ],
+      "ratio_to_vec": 1.0000517993382827
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "equivalent",
+      "implementation": "SmallVec4",
+      "median_ns": 1.5935295655067319,
+      "ratio_ci95": [
+        0.9948317500330298,
+        1.0002530950920752
+      ],
+      "ratio_to_vec": 0.9994949068222467
+    },
+    {
+      "benchmark": "sequential_iteration/8",
+      "classification": "equivalent",
+      "implementation": "SmallVec8",
+      "median_ns": 1.5940139666800035,
+      "ratio_ci95": [
+        0.9996966604295245,
+        1.0197936659162616
+      ],
+      "ratio_to_vec": 1.0001059263060155
+    }
+  ],
+  "metadata": {
+    "affinity_cpu": null,
+    "allocator": {
+      "effective_environment": {
+        "DYLD_INSERT_LIBRARIES": null,
+        "LD_PRELOAD": null
+      },
+      "inherited_environment": {
+        "DYLD_INSERT_LIBRARIES": null,
+        "LD_PRELOAD": null
+      },
+      "policy": "system"
+    },
+    "authoritative": true,
+    "cargo": "cargo 1.97.0 (c980f4866 2026-06-30)",
+    "compiler_identity": {
+      "LLVM_version": "22.1.6",
+      "binary": "rustc",
+      "commit_date": "2026-07-07",
+      "commit_hash": "2d8144b7880597b6e6d3dfd63a9a9efae3f533d3",
+      "host": "aarch64-apple-darwin",
+      "release": "1.97.0"
+    },
+    "cpu_model": "Apple M3 Pro",
+    "git_commit": "2dc82e0656ba2c3997c4dc2dd26b905ce621bb2f",
+    "git_dirty": false,
+    "host_issues": [],
+    "load_average": [
+      1.64453125,
+      2.9140625,
+      3.33251953125
+    ],
+    "logical_cpus": 11,
+    "low_power_mode": "Battery Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n ttyskeepawake        1\n womp                 0\n displaysleep         2\n networkoversleep     0\n sleep                1\n lessbright           1\n tcpkeepalive         1\n disksleep            10\nAC Power:\n Sleep On Power Button 1\n lowpowermode         0\n standby              1\n hibernatemode        3\n powernap             1\n hibernatefile        /var/vm/sleepimage\n ttyskeepawake        1\n womp                 1\n displaysleep         10\n networkoversleep     0\n sleep                1\n tcpkeepalive         1\n disksleep            10",
+    "machine": "arm64",
+    "memory_bytes": "19327352832",
+    "platform": "macOS-15.7.4-arm64-arm-64bit",
+    "processor": "arm",
+    "runtime_audits": [
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 95.33,
+        "label": "after-build",
+        "load_average": [
+          2.38232421875,
+          3.0126953125,
+          3.3583984375
+        ],
+        "timestamp_utc": "2026-07-12T16:00:39.257557+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 94.83,
+        "label": "after-round-1",
+        "load_average": [
+          2.35302734375,
+          2.23486328125,
+          2.806640625
+        ],
+        "timestamp_utc": "2026-07-12T16:06:50.919491+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 92.2,
+        "label": "settled-after-round-1",
+        "load_average": [
+          2.24462890625,
+          2.21435546875,
+          2.7958984375
+        ],
+        "timestamp_utc": "2026-07-12T16:06:56.358402+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 95.22,
+        "label": "after-round-2",
+        "load_average": [
+          2.77685546875,
+          2.38232421875,
+          2.6435546875
+        ],
+        "timestamp_utc": "2026-07-12T16:13:00.387744+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 95.75,
+        "label": "settled-after-round-2",
+        "load_average": [
+          2.4228515625,
+          2.31982421875,
+          2.6181640625
+        ],
+        "timestamp_utc": "2026-07-12T16:13:05.816739+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 94.29,
+        "label": "after-round-3",
+        "load_average": [
+          1.89697265625,
+          1.97998046875,
+          2.3251953125
+        ],
+        "timestamp_utc": "2026-07-12T16:19:17.607928+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 96.15,
+        "label": "settled-after-round-3",
+        "load_average": [
+          1.83837890625,
+          1.9638671875,
+          2.3154296875
+        ],
+        "timestamp_utc": "2026-07-12T16:19:23.040899+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 97.31,
+        "label": "after-round-4",
+        "load_average": [
+          1.87353515625,
+          1.9755859375,
+          2.20703125
+        ],
+        "timestamp_utc": "2026-07-12T16:25:31.331367+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 95.89,
+        "label": "settled-after-round-4",
+        "load_average": [
+          1.80322265625,
+          1.958984375,
+          2.19970703125
+        ],
+        "timestamp_utc": "2026-07-12T16:25:36.764518+00:00"
+      },
+      {
+        "busy_processes": [
+          {
+            "command": "/System/Library/PrivateFrameworks/StreamingExtractor.framework/Versions/A/XPCServices/STExtractionService.privileged.xpc/Contents/MacOS/STExtractionService.privileged",
+            "cpu_percent": 97.5,
+            "pid": 4184
+          }
+        ],
+        "cpu_idle_percent": 88.2,
+        "label": "after-round-5",
+        "load_average": [
+          2.09375,
+          1.89794921875,
+          2.064453125
+        ],
+        "timestamp_utc": "2026-07-12T16:31:48.788613+00:00"
+      },
+      {
+        "busy_processes": [
+          {
+            "command": "/usr/libexec/mobileassetd",
+            "cpu_percent": 49.6,
+            "pid": 179
+          }
+        ],
+        "cpu_idle_percent": 96.7,
+        "label": "settled-after-round-5",
+        "load_average": [
+          1.599609375,
+          1.7880859375,
+          2.0126953125
+        ],
+        "timestamp_utc": "2026-07-12T16:32:41.130722+00:00"
+      },
+      {
+        "busy_processes": [],
+        "cpu_idle_percent": 98.4,
+        "label": "after-allocations",
+        "load_average": [
+          1.55126953125,
+          1.77490234375,
+          2.00634765625
+        ],
+        "timestamp_utc": "2026-07-12T16:32:46.940129+00:00"
+      }
+    ],
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: aarch64-apple-darwin\nrelease: 1.97.0\nLLVM version: 22.1.6",
+    "timestamp_utc": "2026-07-12T16:00:19.495816+00:00"
+  },
+  "platform_id": "macos-aarch64",
+  "practical_equivalence_band": [
+    0.97,
+    1.03
+  ],
+  "round_count": 5,
+  "schema_version": 1,
+  "toolchain": "1.97.0"
+}

@@ -65,7 +65,9 @@ sustained system load indicates contamination. `validate_pair.py` independently
 refuses reports whose commit, compiler identity, schema, workload matrix, or
 authoritative status differs.
 
-Compact JSON and Markdown summaries in `benchmark-results/` are versioned. Raw
+Compact JSON and Markdown summaries in `benchmark-results/` are versioned. Run
+`generate_report.py` with every validated platform JSON to regenerate a single
+non-pooled `LATEST.md` and the platform-specific graphics. Raw
 per-round estimates and allocation CSV files live under the ignored
 `benchmark-results/raw/` directory.
 
@@ -81,7 +83,7 @@ CodSpeed CPU simulation runs on every pull request and `main` update. Managed
 ARM64 Linux wall time runs on `main` and manual dispatch after the organization
 enables public-repository macro-runner access and sets the repository variable
 `CODSPEED_MACRO_ENABLED=true`. These continuous trends complement rather than
-replace the controlled M4 macOS and x86_64 Linux reports.
+replace the controlled M3 Pro macOS and x86_64 Linux reports.
 
 ## Python tooling
 
