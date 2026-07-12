@@ -54,17 +54,16 @@ decision is reached.
   was reverted. The focused JackVec/Vec gap was about 3.45%, not the five-library
   binary's code-layout-sensitive 33.4%; preserve this as a benchmark interpretation
   warning rather than manufacturing a specialized implementation.
-- [ ] Audit `retain<u64>` (`1.245x Vec`, `0.972x ThinVec`) while preserving panic
-  repair, exact-once drops, and the accepted large-element improvement. Determine
-  whether predicate-loop/header publication overhead remains avoidable.
-- [ ] Audit dedup only after retain: `u64` is `1.069x Vec` but `0.627x ThinVec`;
-  64-byte elements are `1.100x Vec` and `0.975x ThinVec`. Avoid trading the major
-  upstream gain for a small Vec-relative improvement.
-- [ ] Audit reserved resize (`1.067x Vec`, `0.359x ThinVec`) for redundant checks
-  after reserve. Its large upstream win is a non-regression gate.
-- [ ] Revisit reserved extend only if a repeated baseline converts its current
-  `1.035x Vec` inconclusive result into a stable loss. Do not optimize a point
-  estimate inside an uncertain interval.
+- [x] Audit `retain<u64>` while preserving panic repair, exact-once drops, and the
+  accepted large-element improvement. Focused binaries are already at Vec parity;
+  cursor, pointer, copy-alignment, and Apple allocation-layout successors were
+  rejected, and the canonical guarded implementation is restored.
+- [x] Audit dedup after retain. The guarded first-hole/backshift implementation was
+  accepted with its major large-element improvement over upstream ThinVec intact.
+- [x] Audit reserved resize for redundant checks after reserve. The guarded
+  unchecked reserved-growth path was accepted with its upstream win intact.
+- [x] Audit reserved extend. The guarded local-length implementation was accepted;
+  reopen it only if repeated canonical baselines establish a new stable loss.
 - [ ] Explain why growing 1,024 elements beats Vec (`0.874x`) but trails ThinVec
   (`1.098x`) before changing growth policy. Check capacity sequence, realloc moves,
   allocator interaction, and code generation independently.
@@ -165,7 +164,7 @@ header alignment without a new real-workload counterexample.
 - Canonical repository: `https://github.com/moderately-ai/jack-vec`
 - Historical fork: `https://github.com/tomsanbear/thin-vec`
 - Canonical remote branch: `main`
-- Working branch: `perf/append-small-audit`
+- Working branch: `perf/apple-large-align-audit`
 - Initial benchmark commit: `5e4845a`
 - Refined timing-boundary commit: `f8fa1e8`
 - Persistent benchmark checkout: `catalyzed-builder:~/thin-vec`
@@ -365,6 +364,32 @@ header alignment without a new real-workload counterexample.
   allocation or a capacity-dependent layout. Keep the controlled diagnosis as
   evidence that streaming workloads can be alignment-sensitive, but require a
   demonstrated application workload before reopening Apple-only layout policy.
+
+### Growing 1,024-element attribution (`perf/growth-attribution-audit`)
+
+- Status: in progress; pre-registered before adding focused diagnostics
+- Observation: the corrected canonical Linux matrix measures JackVec growing and
+  dropping 1,024 `u64` values at 0.904x Vec but 1.041x upstream ThinVec. All three
+  finish at capacity 1,024. Vec and JackVec each perform eight reallocations with
+  one moved and seven in place; ThinVec performs eight with two moved and six in
+  place. Final requested bytes are 8,192, 8,200, and 8,208 respectively, so the
+  residual ThinVec advantage is not explained by fewer reallocations, less final
+  requested memory, or more in-place growth.
+- Hypothesis: the remaining difference is fixed push/growth code generation or
+  allocator placement rather than a superior capacity policy. Isolate capacity
+  transitions, requested sizes, pointer movement, push/grow instruction shape,
+  and fixed-work timing before changing library code.
+- Diagnostic order: first compare exact capacity/request sequences and optimized
+  wrappers; then use a same-binary fixed-operation driver on pinned Linux with
+  explicit System allocation. Run paired wall time only if codegen exposes a
+  removable JackVec mechanism. Use macOS only for a mechanism that is not
+  allocator- or x86-specific.
+- Acceptance rule: do not change growth policy merely to beat upstream ThinVec.
+  A candidate must state the removed work, improve the focused 1,024-element lane
+  at least 5% with its complete interval below zero, preserve JackVec's Vec win,
+  and pass allocation, requested/usable memory, code-size, safety, MSRV, and both
+  architecture non-regression gates. Otherwise close the anomaly as attributed
+  but non-actionable.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
