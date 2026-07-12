@@ -1045,6 +1045,7 @@ impl<T> JackVec<T> {
         if original_len == 0 {
             return;
         }
+        let data = self.data_raw();
 
         unsafe {
             // Prevent double-drop if a predicate or destructor panics after a
@@ -1054,6 +1055,7 @@ impl<T> JackVec<T> {
 
         struct BackshiftOnDrop<'a, T> {
             vec: &'a mut JackVec<T>,
+            data: *mut T,
             processed_len: usize,
             deleted_count: usize,
             original_len: usize,
@@ -1063,10 +1065,9 @@ impl<T> JackVec<T> {
             fn drop(&mut self) {
                 unsafe {
                     if self.deleted_count > 0 {
-                        let data = self.vec.data_raw();
                         ptr::copy(
-                            data.add(self.processed_len),
-                            data.add(self.processed_len - self.deleted_count),
+                            self.data.add(self.processed_len),
+                            self.data.add(self.processed_len - self.deleted_count),
                             self.original_len - self.processed_len,
                         );
                     }
@@ -1084,7 +1085,7 @@ impl<T> JackVec<T> {
             F: FnMut(&mut T) -> bool,
         {
             while guard.processed_len != original_len {
-                let current = unsafe { &mut *guard.vec.data_raw().add(guard.processed_len) };
+                let current = unsafe { &mut *guard.data.add(guard.processed_len) };
                 if !f(current) {
                     // Advance before dropping so the guard will not touch this
                     // element again if its destructor panics.
@@ -1101,10 +1102,7 @@ impl<T> JackVec<T> {
 
                 if DELETED {
                     unsafe {
-                        let hole = guard
-                            .vec
-                            .data_raw()
-                            .add(guard.processed_len - guard.deleted_count);
+                        let hole = guard.data.add(guard.processed_len - guard.deleted_count);
                         ptr::copy_nonoverlapping(current, hole, 1);
                     }
                 }
@@ -1114,6 +1112,7 @@ impl<T> JackVec<T> {
 
         let mut guard = BackshiftOnDrop {
             vec: self,
+            data,
             processed_len: 0,
             deleted_count: 0,
             original_len,
