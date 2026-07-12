@@ -287,6 +287,9 @@ pub struct JackVec<T> {
     boo: PhantomData<T>,
 }
 
+/// Temporary compatibility name used by the downstream integration experiment.
+pub type ThinVec<T> = JackVec<T>;
+
 unsafe impl<T: Sync> Sync for JackVec<T> {}
 unsafe impl<T: Send> Send for JackVec<T> {}
 
@@ -317,6 +320,8 @@ macro_rules! jack_vec {
     ($($x:expr),*) => ($crate::JackVec::from([$($x),*]));
     ($($x:expr,)*) => ($crate::jack_vec![$($x),*]);
 }
+
+pub use jack_vec as thin_vec;
 
 impl<T> JackVec<T> {
     /// Creates a new empty JackVec.
