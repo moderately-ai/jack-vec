@@ -2895,7 +2895,6 @@ mod tests {
 
         let v = JackVec::<u64>::new();
         assert!(v.data_raw() as usize % core::mem::align_of::<u64>() == 0);
-
     }
 
     #[test]
