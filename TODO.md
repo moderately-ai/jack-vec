@@ -210,7 +210,7 @@ header alignment without a new real-workload counterexample.
 
 ### Retain cursor and publication audit (`perf/retain-cursor-audit`)
 
-- Status: in progress; pre-registered before committing the candidate
+- Status: complete; all candidates rejected and implementation restored
 - Baseline: this ledger-only commit, whose `src/lib.rs` is identical to canonical
   merge commit `323ae2f`.
 - Observation: the canonical Linux matrix measures `retain_mixed/u64` at 1.234x
@@ -292,6 +292,25 @@ header alignment without a new real-workload counterexample.
   requested/usable allocation delta and require no allocation-count change.
   Acceptance additionally requires targeted dedup and traversal evidence because
   this is a representation-layout change, plus the complete safety/size gates.
+- Successor 3 result (`64890d3`, reverted by `5e6bab5`): rejected. Adding eight
+  requested bytes aligned the large-element data region but regressed Linux
+  64-byte retain 9.77% with interval +6.99%..+10.63%. The M3 Pro result was an
+  inconclusive -1.40%; all scalar and Vec controls were neutral. Data alignment
+  is not the dominant retain cost, and the memory trade cannot be justified.
+- Final codegen audit: isolated no-inline AArch64 JackVec and Vec wrappers emit
+  the same predicate test and the same four 128-bit load/store instructions for
+  each retained 64-byte element. JackVec's remaining differences load and publish
+  its allocation-header length outside the per-element hot loop. The pointer-only
+  candidate produces a byte-identical M3 Pro benchmark executable, proving LLVM
+  already removes that proposed work.
+- Final decision: retain the canonical guarded two-phase implementation. It is
+  already at focused Vec parity or better for `u64` on both hosts and within about
+  3% for Linux 64-byte elements. The remaining M3 Pro 64-byte difference is not
+  explained by removable per-element instructions, pointer derivation, copy
+  alignment, or allocation alignment. The five-library scalar ratio is
+  code-layout-sensitive and must not motivate specialization. Preserve all raw
+  artifacts under `retain-{cursor,pointer,aligned-copy,large-align}-*` on their
+  respective hosts and do not reopen retain without a new workload or mechanism.
 
 ### Preallocated four-element append (`perf/append-small-audit`)
 
