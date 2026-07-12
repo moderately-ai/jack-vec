@@ -1045,82 +1045,108 @@ impl<T> JackVec<T> {
         if original_len == 0 {
             return;
         }
+        // Cache the data pointer as a raw pointer. This removes the per-element
+        // `self.data_raw()` indirection (one load + one LEA per element).
+        // `retain_mut` does not perform any operation that can reallocate, and
+        // safe predicate code receives only the current element, so this pointer
+        // remains valid for the loop.
+        let data: *mut T = self.data_raw();
 
         unsafe {
-            // Prevent double-drop if a predicate or destructor panics after a
-            // hole has been created. The guard restores the initialized prefix.
+            // Prevent double-drop if a predicate or destructor panics.
+            // The guard restores the correct initialized prefix on drop.
             self.set_len_non_singleton(0);
         }
 
-        struct BackshiftOnDrop<'a, T> {
+        struct PanicGuard<'a, T> {
             vec: &'a mut JackVec<T>,
-            processed_len: usize,
-            deleted_count: usize,
+            data: *mut T,
+            /// Next element to process (read cursor).
+            read: usize,
+            /// Next slot for a kept element (write cursor).
+            write: usize,
+            /// Length at the start of the call; bounds the unprocessed suffix.
             original_len: usize,
         }
 
-        impl<T> Drop for BackshiftOnDrop<'_, T> {
+        impl<T> Drop for PanicGuard<'_, T> {
             fn drop(&mut self) {
                 unsafe {
-                    if self.deleted_count > 0 {
-                        let data = self.vec.data_raw();
+                    let deleted_count = self.read - self.write;
+                    if deleted_count > 0 {
+                        // Shift unprocessed elements [read..original_len]
+                        // forward to overwrite the gap left by dropped
+                        // elements. Matches the original
+                        // `BackshiftOnDrop::drop` behavior: the post-panic
+                        // vector state retains all non-rejected elements
+                        // (kept + unprocessed) so the caller can observe
+                        // and drop them. The slots [write..read) are
+                        // "logically uninitialized" (moved from via
+                        // ptr::read) and are not separately dropped.
                         ptr::copy(
-                            data.add(self.processed_len),
-                            data.add(self.processed_len - self.deleted_count),
-                            self.original_len - self.processed_len,
+                            self.data.add(self.read),
+                            self.data.add(self.write),
+                            self.original_len - self.read,
                         );
                     }
+                    // Set final length. On success `read == original_len`, the
+                    // copy count is zero, and `original_len - deleted_count`
+                    // equals `write`, the number of retained elements. On panic,
+                    // it's
+                    // `original_len - deleted_count` (the kept count plus
+                    // the unprocessed suffix).
                     self.vec
-                        .set_len_non_singleton(self.original_len - self.deleted_count);
+                        .set_len_non_singleton(self.original_len - deleted_count);
                 }
             }
         }
 
-        fn process_loop<F, T, const DELETED: bool>(
-            original_len: usize,
-            f: &mut F,
-            guard: &mut BackshiftOnDrop<'_, T>,
-        ) where
-            F: FnMut(&mut T) -> bool,
-        {
-            while guard.processed_len != original_len {
-                let current = unsafe { &mut *guard.vec.data_raw().add(guard.processed_len) };
-                if !f(current) {
-                    // Advance before dropping so the guard will not touch this
-                    // element again if its destructor panics.
-                    guard.processed_len += 1;
-                    guard.deleted_count += 1;
-                    unsafe {
-                        ptr::drop_in_place(current);
-                    }
-                    if DELETED {
-                        continue;
-                    }
-                    break;
-                }
-
-                if DELETED {
-                    unsafe {
-                        let hole = guard
-                            .vec
-                            .data_raw()
-                            .add(guard.processed_len - guard.deleted_count);
-                        ptr::copy_nonoverlapping(current, hole, 1);
-                    }
-                }
-                guard.processed_len += 1;
-            }
-        }
-
-        let mut guard = BackshiftOnDrop {
+        let mut guard = PanicGuard {
             vec: self,
-            processed_len: 0,
-            deleted_count: 0,
+            data,
+            read: 0,
+            write: 0,
             original_len,
         };
-        process_loop::<F, T, false>(original_len, &mut f, &mut guard);
-        process_loop::<F, T, true>(original_len, &mut f, &mut guard);
-        drop(guard);
+
+        // Single-pass scan with read/write cursors. For each element, if kept,
+        // move it to the write position (no-op if write == read); if dropped,
+        // call its destructor. Avoids the per-iter data_raw() indirection
+        // and the deleted_count subtraction of the two-phase design.
+        while guard.read < guard.original_len {
+            let current = unsafe { &mut *guard.data.add(guard.read) };
+            if f(current) {
+                if guard.write < guard.read {
+                    // Ownership transfer via memcpy: ptr::read leaves the
+                    // source slot logically uninitialized (no destructor
+                    // call), ptr::write constructs the value at the write
+                    // position. The source slot is not accessed again.
+                    unsafe {
+                        ptr::write(
+                            guard.data.add(guard.write),
+                            ptr::read(guard.data.add(guard.read)),
+                        );
+                    }
+                }
+                guard.write += 1;
+            } else {
+                // Advance read BEFORE drop so that the PanicGuard's drop
+                // sees the correct unprocessed count, and so that the
+                // drop's ptr::copy shift excludes the element we just
+                // processed (matching the original code's "Advance before
+                // dropping" comment).
+                guard.read += 1;
+                unsafe {
+                    ptr::drop_in_place(current);
+                }
+                continue;
+            }
+            guard.read += 1;
+        }
+
+        // Successful completion: let the PanicGuard drop run. Since
+        // `read == original_len`, its copy is a zero-length no-op and it
+        // publishes `write` as the retained length.
     }
 
     /// Removes consecutive elements in the vector that resolve to the same key.
